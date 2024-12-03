@@ -15,8 +15,8 @@ class ApiFeatures {
         this.searchQuery = searchQuery;
         this.prismaQuery = { where: {} };
     }
-    filter() {
-        let filterObj = Object.assign({}, this.searchQuery);
+    filter(baseFilter = {}) {
+        let filterObj = Object.assign(Object.assign({}, baseFilter), this.searchQuery);
         let excludedFields = ["page", "sort", "limit", "fields", "keyword"];
         excludedFields.forEach((val) => {
             delete filterObj[val];

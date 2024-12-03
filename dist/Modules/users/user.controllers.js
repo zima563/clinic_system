@@ -45,15 +45,19 @@ let userControllers = class userControllers {
     allUsers(query, res) {
         return __awaiter(this, void 0, void 0, function* () {
             try {
+                // Add isDeleted = false condition to the query
+                const baseFilter = {
+                    isDeleted: false, // Ensure we only fetch users where isDeleted is false
+                };
                 // Initialize ApiFeatures with the Prisma model and the search query
                 const apiFeatures = new ApiFeatures_1.default(prisma.user, query);
                 // Apply filters, sorting, field selection, search, and pagination
                 yield apiFeatures
-                    .filter()
+                    .filter(baseFilter)
                     .sort()
                     .limitedFields()
                     .search("user") // Specify the model name, 'user' in this case
-                    .paginateWithCount(yield prisma.user.count()); // Get the total count for pagination
+                    .paginateWithCount(yield prisma.user.count({ where: baseFilter })); // Get the total count for pagination
                 // Execute the query and get the result and pagination
                 const { result, pagination } = yield apiFeatures.exec("user");
                 // Return the result along with pagination information
@@ -76,18 +80,45 @@ let userControllers = class userControllers {
             let user = yield prisma.user.findUnique({
                 where: { id }
             });
-            !user && next(new ApiError_1.default("user not found", 404));
+            if (!user)
+                throw new ApiError_1.default("user not found", 404);
             return res.status(201).json(user);
         });
     }
     updateUser(id, body, res, next) {
         return __awaiter(this, void 0, void 0, function* () {
-            let user = yield prisma.user.update({
+            let user = yield prisma.user.findUnique({ where: { id } });
+            if (!user)
+                throw new ApiError_1.default("user not found", 404);
+            yield prisma.user.update({
                 where: { id },
                 data: body
             });
-            !user && next(new ApiError_1.default("user not found", 404));
             return res.status(201).json({ message: "user updated successfully", user });
+        });
+    }
+    deactiveUser(id, body, res, next) {
+        return __awaiter(this, void 0, void 0, function* () {
+            let user = yield prisma.user.findUnique({ where: { id } });
+            if (!user)
+                throw new ApiError_1.default("user not found", 404);
+            yield prisma.user.update({
+                where: { id },
+                data: { isActive: false }
+            });
+            return res.status(201).json({ message: "user Deactivated successfully" });
+        });
+    }
+    DeleteUser(id, body, res, next) {
+        return __awaiter(this, void 0, void 0, function* () {
+            let user = yield prisma.user.findUnique({ where: { id } });
+            if (!user)
+                throw new ApiError_1.default("user not found", 404);
+            yield prisma.user.update({
+                where: { id },
+                data: { isDeleted: true }
+            });
+            return res.status(201).json({ message: "user Deleted successfully" });
         });
     }
 };
@@ -128,6 +159,24 @@ __decorate([
     __metadata("design:paramtypes", [Number, Object, Object, Function]),
     __metadata("design:returntype", Promise)
 ], userControllers.prototype, "updateUser", null);
+__decorate([
+    (0, routing_controllers_1.Patch)("/:id"),
+    __param(0, (0, routing_controllers_1.Param)("id")),
+    __param(1, (0, routing_controllers_1.Body)()),
+    __param(2, (0, routing_controllers_1.Res)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Number, Object, Object, Function]),
+    __metadata("design:returntype", Promise)
+], userControllers.prototype, "deactiveUser", null);
+__decorate([
+    (0, routing_controllers_1.Patch)("/soft/:id"),
+    __param(0, (0, routing_controllers_1.Param)("id")),
+    __param(1, (0, routing_controllers_1.Body)()),
+    __param(2, (0, routing_controllers_1.Res)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Number, Object, Object, Function]),
+    __metadata("design:returntype", Promise)
+], userControllers.prototype, "DeleteUser", null);
 exports.userControllers = userControllers = __decorate([
     (0, routing_controllers_1.JsonController)("/api/users")
 ], userControllers);

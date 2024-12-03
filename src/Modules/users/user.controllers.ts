@@ -1,6 +1,6 @@
 import { PrismaClient } from "@prisma/client";
 import { NextFunction, Response } from "express";
-import { Body, Get, JsonController, Param, Params, Post, Put, QueryParam, QueryParams, Res, UseBefore } from "routing-controllers";
+import { Body, Get, JsonController, Param, Params, Patch, Post, Put, QueryParam, QueryParams, Res, UseBefore } from "routing-controllers";
 import { createValidationMiddleware } from "../../middlewares/validation";
 import { addUser, UpdateUser } from "./user.validations";
 import { CheckEmailMiddleware } from "../../middlewares/emailExists";
@@ -26,16 +26,20 @@ export class userControllers {
     @Get("/all")
     async allUsers(@QueryParams() query: any, @Res() res: Response) {
         try {
+             // Add isDeleted = false condition to the query
+        const baseFilter = {
+            isDeleted: false, // Ensure we only fetch users where isDeleted is false
+        };
             // Initialize ApiFeatures with the Prisma model and the search query
             const apiFeatures = new ApiFeatures(prisma.user, query);
 
             // Apply filters, sorting, field selection, search, and pagination
             await apiFeatures
-                .filter()
+                .filter(baseFilter)
                 .sort()
                 .limitedFields()
                 .search("user")  // Specify the model name, 'user' in this case
-                .paginateWithCount(await prisma.user.count())  // Get the total count for pagination
+                .paginateWithCount(await prisma.user.count({where: baseFilter}))  // Get the total count for pagination
 
             // Execute the query and get the result and pagination
             const { result, pagination } = await apiFeatures.exec("user");
@@ -59,19 +63,45 @@ export class userControllers {
          let user = await prisma.user.findUnique({
             where: {id}
          });
-         !user && next(new ApiError("user not found",404));
+         if(!user) throw new ApiError("user not found",404);
          return res.status(201).json(user);
     }
 
     @Put("/:id")
     @UseBefore(createValidationMiddleware(UpdateUser))
     async updateUser(@Param("id") id: number ,@Body() body:any, @Res() res:Response, next: NextFunction){
-         let user = await prisma.user.update({
+        let user = await prisma.user.findUnique({where:{ id }})
+        if(!user) throw new ApiError("user not found",404);
+         await prisma.user.update({
             where: {id},
             data: body
          });
-         !user && next(new ApiError("user not found",404));
+         
          return res.status(201).json({message: "user updated successfully", user})
+    }
+
+    @Patch("/:id")
+    async deactiveUser(@Param("id") id:number, @Body() body: any, @Res() res:Response,next: NextFunction){
+        let user = await prisma.user.findUnique({where:{id}})
+        if(!user) throw new ApiError("user not found",404);
+        await prisma.user.update({
+            where:{id},
+            data:{isActive: false}
+        });
+        
+        return res.status(201).json({message: "user Deactivated successfully"})
+    }
+
+    @Patch("/soft/:id")
+    async DeleteUser(@Param("id") id:number, @Body() body: any, @Res() res:Response,next: NextFunction){
+        let user = await prisma.user.findUnique({where:{id}})
+        if(!user) throw new ApiError("user not found",404);
+        await prisma.user.update({
+            where:{id},
+            data:{isDeleted: true}
+        });
+        
+        return res.status(201).json({message: "user Deleted successfully"})
     }
 }
 
