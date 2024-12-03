@@ -31,6 +31,7 @@ const validation_1 = require("../../middlewares/validation");
 const user_validations_1 = require("./user.validations");
 const emailExists_1 = require("../../middlewares/emailExists");
 const ApiFeatures_1 = __importDefault(require("../../utils/ApiFeatures"));
+const ApiError_1 = __importDefault(require("../../utils/ApiError"));
 const prisma = new client_1.PrismaClient();
 let userControllers = class userControllers {
     // Apply CheckEmailMiddleware only for the POST route (user creation)
@@ -70,6 +71,15 @@ let userControllers = class userControllers {
             }
         });
     }
+    getOneUser(id, res, next) {
+        return __awaiter(this, void 0, void 0, function* () {
+            let user = yield prisma.user.findUnique({
+                where: { id }
+            });
+            !user && next(new ApiError_1.default("user not found", 404));
+            return res.status(201).json(user);
+        });
+    }
 };
 exports.userControllers = userControllers;
 __decorate([
@@ -90,6 +100,14 @@ __decorate([
     __metadata("design:paramtypes", [Object, Object]),
     __metadata("design:returntype", Promise)
 ], userControllers.prototype, "allUsers", null);
+__decorate([
+    (0, routing_controllers_1.Get)("/:id"),
+    __param(0, (0, routing_controllers_1.Param)("id")),
+    __param(1, (0, routing_controllers_1.Res)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Number, Object, Function]),
+    __metadata("design:returntype", Promise)
+], userControllers.prototype, "getOneUser", null);
 exports.userControllers = userControllers = __decorate([
     (0, routing_controllers_1.JsonController)("/api/users")
 ], userControllers);

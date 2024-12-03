@@ -1,10 +1,11 @@
 import { PrismaClient } from "@prisma/client";
-import { query, Response } from "express";
-import { Body, Get, JsonController, Post, QueryParam, QueryParams, Res, UseBefore } from "routing-controllers";
+import { NextFunction, Response } from "express";
+import { Body, Get, JsonController, Param, Params, Post, QueryParam, QueryParams, Res, UseBefore } from "routing-controllers";
 import { createValidationMiddleware } from "../../middlewares/validation";
 import { addUser } from "./user.validations";
 import { CheckEmailMiddleware } from "../../middlewares/emailExists";
 import ApiFeatures from "../../utils/ApiFeatures";
+import ApiError from "../../utils/ApiError";
 
 const prisma = new PrismaClient();
 
@@ -51,6 +52,15 @@ export class userControllers {
                 return res.status(500).json({ message: "Internal Server Error" });
             }
         }
+    }
+
+    @Get("/:id")
+    async getOneUser(@Param("id") id: number, @Res() res: Response, next: NextFunction) {
+         let user = await prisma.user.findUnique({
+            where: {id}
+         });
+         !user && next(new ApiError("user not found",404));
+         return res.status(201).json(user);
     }
 }
 
