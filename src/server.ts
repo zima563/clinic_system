@@ -20,12 +20,17 @@ app.use(express.urlencoded({ extended: true })); // Parses application/x-www-for
 // Set up routing-controllers
 useExpressServer(app, {
   controllers: [userControllers], // Adjust path to your controllers
-  middlewares: [createValidationMiddleware,ErrorHandler,CheckEmailMiddleware],
+  middlewares: [createValidationMiddleware,ErrorHandler],
+  defaultErrorHandler: false
 });
 
 
 app.use(compression()); // Add GZIP compression
-app.use(cors());        // Add CORS
+app.use(cors({
+  origin: '*',  // adjust this to fit your use case
+  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+}));      // Add CORS
 // app.use("/uploads", express.static("uploads")); // Serve static files
 
 const port = process.env.PORT || 3000;

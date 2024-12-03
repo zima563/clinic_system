@@ -20,6 +20,9 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.userControllers = void 0;
 const client_1 = require("@prisma/client");
@@ -27,12 +30,44 @@ const routing_controllers_1 = require("routing-controllers");
 const validation_1 = require("../../middlewares/validation");
 const user_validations_1 = require("./user.validations");
 const emailExists_1 = require("../../middlewares/emailExists");
+const ApiFeatures_1 = __importDefault(require("../../utils/ApiFeatures"));
 const prisma = new client_1.PrismaClient();
 let userControllers = class userControllers {
+    // Apply CheckEmailMiddleware only for the POST route (user creation)
     addUser(body, res) {
         return __awaiter(this, void 0, void 0, function* () {
             let user = yield prisma.user.create({ data: body });
             return res.status(201).json(user);
+        });
+    }
+    // GET /all does not use CheckEmailMiddleware
+    allUsers(query, res) {
+        return __awaiter(this, void 0, void 0, function* () {
+            try {
+                // Initialize ApiFeatures with the Prisma model and the search query
+                const apiFeatures = new ApiFeatures_1.default(prisma.user, query);
+                // Apply filters, sorting, field selection, search, and pagination
+                yield apiFeatures
+                    .filter()
+                    .sort()
+                    .limitedFields()
+                    .search("user") // Specify the model name, 'user' in this case
+                    .paginateWithCount(yield prisma.user.count()); // Get the total count for pagination
+                // Execute the query and get the result and pagination
+                const { result, pagination } = yield apiFeatures.exec("user");
+                // Return the result along with pagination information
+                return res.status(200).json({
+                    data: result,
+                    pagination: pagination, // Use the pagination here
+                });
+            }
+            catch (error) {
+                console.error("Error fetching users:", error);
+                // Ensure no further responses are sent
+                if (!res.headersSent) {
+                    return res.status(500).json({ message: "Internal Server Error" });
+                }
+            }
         });
     }
 };
@@ -47,6 +82,14 @@ __decorate([
     __metadata("design:paramtypes", [Object, Object]),
     __metadata("design:returntype", Promise)
 ], userControllers.prototype, "addUser", null);
+__decorate([
+    (0, routing_controllers_1.Get)("/all"),
+    __param(0, (0, routing_controllers_1.QueryParams)()),
+    __param(1, (0, routing_controllers_1.Res)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, Object]),
+    __metadata("design:returntype", Promise)
+], userControllers.prototype, "allUsers", null);
 exports.userControllers = userControllers = __decorate([
     (0, routing_controllers_1.JsonController)("/api/users")
 ], userControllers);

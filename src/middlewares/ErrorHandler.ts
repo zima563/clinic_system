@@ -8,14 +8,14 @@ export class ErrorHandler implements ExpressErrorMiddlewareInterface {
     request: Request,
     response: Response,
     next: NextFunction
-  ): void {
+  ){
     const statusCode = error.httpCode || 500;
 
     // Log the error for debugging purposes
     console.error("Error stack:", error.stack);
 
     // Send JSON response
-    response.status(statusCode).json({
+    return response.status(statusCode).json({
       status: "error",
       message: error.message || "Internal Server Error",
       stack: process.env.NODE_ENV === "development" ? error.stack : undefined, // Include stack only in development mode
