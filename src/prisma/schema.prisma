@@ -60,7 +60,7 @@ model User {
   id        Int      @id @default(autoincrement())
   userName  String
   email     String   @unique
-  phone     String
+  phone     String   @unique
   password  String
   isActive  Boolean  @default(true)
   isDeleted Boolean  @default(false)

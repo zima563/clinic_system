@@ -26,6 +26,8 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.userControllers = void 0;
 const client_1 = require("@prisma/client");
+const bcrypt_1 = __importDefault(require("bcrypt"));
+const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const routing_controllers_1 = require("routing-controllers");
 const validation_1 = require("../../middlewares/validation");
 const user_validations_1 = require("./user.validations");
@@ -37,6 +39,7 @@ let userControllers = class userControllers {
     // Apply CheckEmailMiddleware only for the POST route (user creation)
     addUser(body, res) {
         return __awaiter(this, void 0, void 0, function* () {
+            body.password = bcrypt_1.default.hashSync(body.password, 10);
             let user = yield prisma.user.create({ data: body });
             return res.status(201).json(user);
         });
@@ -121,6 +124,25 @@ let userControllers = class userControllers {
             return res.status(201).json({ message: "user Deleted successfully" });
         });
     }
+    login(body, res) {
+        return __awaiter(this, void 0, void 0, function* () {
+            let user = yield prisma.user.findFirst({
+                where: {
+                    OR: [
+                        { phone: body.emailOrPhone },
+                        { email: body.emailOrPhone },
+                    ],
+                },
+            });
+            if (!(user && bcrypt_1.default.compareSync(body.password, user.password))) {
+                throw new ApiError_1.default("email or password incorrect");
+            }
+            else {
+                let token = jsonwebtoken_1.default.sign({ user }, process.env.JWT_KEY);
+                return res.status(200).json(token);
+            }
+        });
+    }
 };
 exports.userControllers = userControllers;
 __decorate([
@@ -177,6 +199,15 @@ __decorate([
     __metadata("design:paramtypes", [Number, Object, Object, Function]),
     __metadata("design:returntype", Promise)
 ], userControllers.prototype, "DeleteUser", null);
+__decorate([
+    (0, routing_controllers_1.Post)("/login"),
+    (0, routing_controllers_1.UseBefore)((0, validation_1.createValidationMiddleware)(user_validations_1.loginValidation)),
+    __param(0, (0, routing_controllers_1.Body)()),
+    __param(1, (0, routing_controllers_1.Res)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, Object]),
+    __metadata("design:returntype", Promise)
+], userControllers.prototype, "login", null);
 exports.userControllers = userControllers = __decorate([
     (0, routing_controllers_1.JsonController)("/api/users")
 ], userControllers);

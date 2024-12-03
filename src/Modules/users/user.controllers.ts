@@ -1,8 +1,10 @@
 import { PrismaClient } from "@prisma/client";
+import bcrypt from "bcrypt"
+import jwt from "jsonwebtoken"
 import { NextFunction, Response } from "express";
 import { Body, Get, JsonController, Param, Params, Patch, Post, Put, QueryParam, QueryParams, Res, UseBefore } from "routing-controllers";
 import { createValidationMiddleware } from "../../middlewares/validation";
-import { addUser, UpdateUser } from "./user.validations";
+import { addUser, loginValidation, UpdateUser } from "./user.validations";
 import { CheckEmailMiddleware } from "../../middlewares/emailExists";
 import ApiFeatures from "../../utils/ApiFeatures";
 import ApiError from "../../utils/ApiError";
@@ -18,6 +20,7 @@ export class userControllers {
     @UseBefore(createValidationMiddleware(addUser))
     @UseBefore(CheckEmailMiddleware)
     async addUser(@Body() body: any, @Res() res: Response) {
+        body.password = bcrypt.hashSync(body.password,10);
         let user = await prisma.user.create({ data: body });
         return res.status(201).json(user);
     }
@@ -102,6 +105,24 @@ export class userControllers {
         });
         
         return res.status(201).json({message: "user Deleted successfully"})
+    }
+
+    @Post("/login")
+    @UseBefore(createValidationMiddleware(loginValidation))
+    async login(@Body() body: any, @Res() res: Response) {
+        let user = await prisma.user.findFirst({
+            where: {
+            OR: [
+                { phone: body.emailOrPhone },
+                { email: body.emailOrPhone },
+            ],
+        },});
+        if(!(user && bcrypt.compareSync(body.password,user.password))){
+            throw new ApiError("email or password incorrect")
+        }else{
+            let token = jwt.sign({user},process.env.JWT_KEY!);
+          return res.status(200).json(token)
+        }
     }
 }
 

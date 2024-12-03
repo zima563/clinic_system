@@ -3,7 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.UpdateUser = exports.addUser = void 0;
+exports.loginValidation = exports.UpdateUser = exports.addUser = void 0;
 const joi_1 = __importDefault(require("joi"));
 exports.addUser = joi_1.default.object({
     userName: joi_1.default.string()
@@ -61,4 +61,19 @@ exports.UpdateUser = joi_1.default.object({
         .messages({
         "string.pattern.base": "Invalid email format.",
     })
+});
+exports.loginValidation = joi_1.default.object({
+    emailOrPhone: joi_1.default.string()
+        .required()
+        .messages({
+        "string.empty": "Email or Phone is required",
+        "any.required": "Email or Phone is required",
+    }),
+    password: joi_1.default.string()
+        .pattern(/^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[@$!%*?&])[A-Za-z0-9@$!%*?&]{8,}$/)
+        .required()
+        .messages({
+        "string.pattern.base": "Password must be at least 8 characters long, including uppercase, lowercase, a number, and a special character.",
+        "any.required": "Password is required.",
+    }),
 });
