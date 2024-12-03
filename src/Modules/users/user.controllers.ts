@@ -1,8 +1,8 @@
 import { PrismaClient } from "@prisma/client";
 import { NextFunction, Response } from "express";
-import { Body, Get, JsonController, Param, Params, Post, QueryParam, QueryParams, Res, UseBefore } from "routing-controllers";
+import { Body, Get, JsonController, Param, Params, Post, Put, QueryParam, QueryParams, Res, UseBefore } from "routing-controllers";
 import { createValidationMiddleware } from "../../middlewares/validation";
-import { addUser } from "./user.validations";
+import { addUser, UpdateUser } from "./user.validations";
 import { CheckEmailMiddleware } from "../../middlewares/emailExists";
 import ApiFeatures from "../../utils/ApiFeatures";
 import ApiError from "../../utils/ApiError";
@@ -61,6 +61,17 @@ export class userControllers {
          });
          !user && next(new ApiError("user not found",404));
          return res.status(201).json(user);
+    }
+
+    @Put("/:id")
+    @UseBefore(createValidationMiddleware(UpdateUser))
+    async updateUser(@Param("id") id: number ,@Body() body:any, @Res() res:Response, next: NextFunction){
+         let user = await prisma.user.update({
+            where: {id},
+            data: body
+         });
+         !user && next(new ApiError("user not found",404));
+         return res.status(201).json({message: "user updated successfully", user})
     }
 }
 

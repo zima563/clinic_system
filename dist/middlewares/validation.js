@@ -15,7 +15,18 @@ const ApiError_1 = __importDefault(require("../utils/ApiError"));
 function createValidationMiddleware(schema) {
     let ValidationMiddleware = class ValidationMiddleware {
         use(request, response, next) {
-            const { error } = schema.validate(request.body, { abortEarly: false });
+            // Combine request data (body, params, query)
+            let filter = {};
+            if (request.file) {
+                filter = Object.assign(Object.assign(Object.assign({ image: request.file }, request.params), request.body), request.query);
+            }
+            else if (request.files) {
+                filter = Object.assign(Object.assign(Object.assign(Object.assign({}, request.files), request.params), request.body), request.query);
+            }
+            else {
+                filter = Object.assign(Object.assign(Object.assign({}, request.params), request.body), request.query);
+            }
+            const { error } = schema.validate(filter, { abortEarly: false });
             if (error) {
                 const errMsg = error.details.map((detail) => detail.message).join(", ");
                 return next(new ApiError_1.default(errMsg, 400));

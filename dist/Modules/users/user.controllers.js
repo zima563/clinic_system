@@ -80,6 +80,16 @@ let userControllers = class userControllers {
             return res.status(201).json(user);
         });
     }
+    updateUser(id, body, res, next) {
+        return __awaiter(this, void 0, void 0, function* () {
+            let user = yield prisma.user.update({
+                where: { id },
+                data: body
+            });
+            !user && next(new ApiError_1.default("user not found", 404));
+            return res.status(201).json({ message: "user updated successfully", user });
+        });
+    }
 };
 exports.userControllers = userControllers;
 __decorate([
@@ -108,6 +118,16 @@ __decorate([
     __metadata("design:paramtypes", [Number, Object, Function]),
     __metadata("design:returntype", Promise)
 ], userControllers.prototype, "getOneUser", null);
+__decorate([
+    (0, routing_controllers_1.Put)("/:id"),
+    (0, routing_controllers_1.UseBefore)((0, validation_1.createValidationMiddleware)(user_validations_1.UpdateUser)),
+    __param(0, (0, routing_controllers_1.Param)("id")),
+    __param(1, (0, routing_controllers_1.Body)()),
+    __param(2, (0, routing_controllers_1.Res)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Number, Object, Object, Function]),
+    __metadata("design:returntype", Promise)
+], userControllers.prototype, "updateUser", null);
 exports.userControllers = userControllers = __decorate([
     (0, routing_controllers_1.JsonController)("/api/users")
 ], userControllers);
