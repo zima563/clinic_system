@@ -3,7 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.createRoleValidation = exports.loginValidation = exports.UpdateUser = exports.addUser = void 0;
+exports.assignRoleToUserValidation = exports.createRoleValidation = exports.loginValidation = exports.UpdateUser = exports.addUser = void 0;
 const joi_1 = __importDefault(require("joi"));
 exports.addUser = joi_1.default.object({
     userName: joi_1.default.string()
@@ -87,4 +87,8 @@ exports.createRoleValidation = joi_1.default.object({
         "string.max": "roleName must be at most 50 characters long.",
         "any.required": "roleName is required.",
     }),
+});
+exports.assignRoleToUserValidation = joi_1.default.object({
+    userId: joi_1.default.string().required().messages({ "any.required": "UserId is required.", }),
+    roleId: joi_1.default.string().required().messages({ "any.required": "RoleId is required.", }),
 });

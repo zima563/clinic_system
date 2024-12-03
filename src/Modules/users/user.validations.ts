@@ -89,3 +89,8 @@ export const createRoleValidation = Joi.object({
     "any.required": "roleName is required.",
   }),
 })
+
+export const assignRoleToUserValidation = Joi.object({
+  userId: Joi.string().required().messages({"any.required": "UserId is required.",}),
+  roleId: Joi.string().required().messages({"any.required": "RoleId is required.",}),
+})
