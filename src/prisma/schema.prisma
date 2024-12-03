@@ -1,0 +1,233 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "debian-openssl-1.1.x"]
+}
+
+model Permission {
+  id   Int    @id @default(autoincrement())
+  name String
+
+  rolePermissions RolePermission[]
+  userPermissions UserPermission[]
+}
+
+model Role {
+  id   Int    @id @default(autoincrement())
+  name String
+
+  rolePermissions RolePermission[]
+  userRoles       UserRole[]
+}
+
+model RolePermission {
+  id           Int @id @default(autoincrement())
+  permissionId Int
+  roleId       Int
+
+  permission Permission @relation(fields: [permissionId], references: [id])
+  role       Role       @relation(fields: [roleId], references: [id])
+}
+
+model UserPermission {
+  id           Int @id @default(autoincrement())
+  permissionId Int
+  userId       Int
+
+  permission Permission @relation(fields: [permissionId], references: [id])
+  user       User       @relation(fields: [userId], references: [id])
+}
+
+model UserRole {
+  id     Int @id @default(autoincrement())
+  roleId Int
+  userId Int
+
+  role Role @relation(fields: [roleId], references: [id])
+  user User @relation(fields: [userId], references: [id])
+}
+
+model User {
+  id        Int      @id @default(autoincrement())
+  userName  String
+  email     String   @unique
+  phone     String
+  password  String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  userRoles       UserRole[]
+  userPermissions UserPermission[]
+}
+
+model Service {
+  id        Int      @id @default(autoincrement())
+  title     String
+  desc      String
+  status    Boolean
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  schedules Schedule[]
+}
+
+model Schedule {
+  id         Int      @id @default(autoincrement())
+  doctorId   Int
+  servicesId Int
+  price      Decimal  @db.Decimal(18, 2)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  doctor   Doctor         @relation(fields: [doctorId], references: [id])
+  service  Service        @relation(fields: [servicesId], references: [id])
+  dates    ScheduleDate[]
+  visits   VisitDetail[]
+  patients Appointment[]
+}
+
+model Date {
+  id   Int      @id @default(autoincrement())
+  date DateTime
+
+  scheduleDates ScheduleDate[]
+}
+
+model ScheduleDate {
+  id         Int      @id @default(autoincrement())
+  scheduleId Int
+  dateId     Int
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  schedule Schedule @relation(fields: [scheduleId], references: [id])
+  date     Date     @relation(fields: [dateId], references: [id])
+}
+
+model Specialty {
+  id        Int      @id @default(autoincrement())
+  title     String
+  icon      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  doctors Doctor[]
+}
+
+model Invoice {
+  id        Int      @id @default(autoincrement())
+  rf        String   @unique
+  total     Decimal  @db.Decimal(18, 2)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  details InvoiceDetail[]
+  patient Patient?
+}
+
+model InvoiceDetail {
+  id          Int      @id @default(autoincrement())
+  invoiceId   Int
+  description String
+  amount      Decimal  @db.Decimal(18, 2)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  invoice      Invoice        @relation(fields: [invoiceId], references: [id])
+  VisitInvoice VisitInvoice[]
+}
+
+model Doctor {
+  id          Int      @id @default(autoincrement())
+  name        String
+  phone       String
+  image       String
+  isActive    Boolean
+  specialtyId Int
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  specialty Specialty  @relation(fields: [specialtyId], references: [id])
+  schedules Schedule[]
+}
+
+model Patient {
+  id             Int      @id @default(autoincrement())
+  name           String
+  phone          String
+  birthdate      DateTime
+  gender         Gender
+  medicalHistory String
+  info           String
+  invoiceId      Int?     @unique
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  invoices     Invoice?      @relation(fields: [invoiceId], references: [id])
+  appointments Appointment[]
+  VisitDetail  VisitDetail[]
+}
+
+model Appointment {
+  id         Int               @id @default(autoincrement())
+  patientId  Int
+  status     AppointmentStatus
+  scheduleId Int
+
+  patient  Patient  @relation(fields: [patientId], references: [id])
+  schedule Schedule @relation(fields: [scheduleId], references: [id])
+}
+
+model Visit {
+  id        Int      @id @default(autoincrement())
+  rf        String   @unique
+  total     Decimal  @db.Decimal(18, 2)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  details      VisitDetail[]
+  VisitInvoice VisitInvoice[]
+}
+
+model VisitDetail {
+  id         Int     @id @default(autoincrement())
+  visitId    Int
+  patientId  Int
+  status     Boolean
+  price      Decimal @db.Decimal(18, 2)
+  scheduleId Int
+
+  visit    Visit    @relation(fields: [visitId], references: [id])
+  patient  Patient  @relation(fields: [patientId], references: [id])
+  schedule Schedule @relation(fields: [scheduleId], references: [id])
+}
+
+model VisitInvoice {
+  visitId         Int
+  invoiceDetailId Int
+
+  visit         Visit         @relation(fields: [visitId], references: [id])
+  invoiceDetail InvoiceDetail @relation(fields: [invoiceDetailId], references: [id])
+
+  @@id([visitId, invoiceDetailId])
+}
+
+enum Gender {
+  male
+  female
+}
+
+enum AppointmentStatus {
+  pending
+  confirmed
+  canceled
+}
