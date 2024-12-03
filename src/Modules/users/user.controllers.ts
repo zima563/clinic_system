@@ -4,7 +4,7 @@ import jwt from "jsonwebtoken"
 import { NextFunction, Response } from "express";
 import { Body, Get, JsonController, Param, Params, Patch, Post, Put, QueryParam, QueryParams, Res, UseBefore } from "routing-controllers";
 import { createValidationMiddleware } from "../../middlewares/validation";
-import { addUser, loginValidation, UpdateUser } from "./user.validations";
+import { addUser, createRoleValidation, loginValidation, UpdateUser } from "./user.validations";
 import { CheckEmailMiddleware } from "../../middlewares/emailExists";
 import ApiFeatures from "../../utils/ApiFeatures";
 import ApiError from "../../utils/ApiError";
@@ -123,6 +123,13 @@ export class userControllers {
             let token = jwt.sign({user},process.env.JWT_KEY!);
           return res.status(200).json(token)
         }
+    }
+
+    @Post("/role")
+    @UseBefore(createValidationMiddleware(createRoleValidation))
+    async createRole(@Body() body:any, @Res() res: Response){
+        let role = await prisma.role.create({data:body});
+        res.json(role);
     }
 }
 

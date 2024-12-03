@@ -143,6 +143,12 @@ let userControllers = class userControllers {
             }
         });
     }
+    createRole(body, res) {
+        return __awaiter(this, void 0, void 0, function* () {
+            let role = yield prisma.role.create({ data: body });
+            res.json(role);
+        });
+    }
 };
 exports.userControllers = userControllers;
 __decorate([
@@ -208,6 +214,15 @@ __decorate([
     __metadata("design:paramtypes", [Object, Object]),
     __metadata("design:returntype", Promise)
 ], userControllers.prototype, "login", null);
+__decorate([
+    (0, routing_controllers_1.Post)("/role"),
+    (0, routing_controllers_1.UseBefore)((0, validation_1.createValidationMiddleware)(user_validations_1.createRoleValidation)),
+    __param(0, (0, routing_controllers_1.Body)()),
+    __param(1, (0, routing_controllers_1.Res)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, Object]),
+    __metadata("design:returntype", Promise)
+], userControllers.prototype, "createRole", null);
 exports.userControllers = userControllers = __decorate([
     (0, routing_controllers_1.JsonController)("/api/users")
 ], userControllers);
