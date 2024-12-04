@@ -1,4 +1,4 @@
-import { Body, Delete, Get, JsonController, Param, Post, Put, QueryParams, Res, UseBefore } from "routing-controllers";
+import { Body, Delete, Get, JsonController, Param, Patch, Post, Put, QueryParams, Res, UseBefore } from "routing-controllers";
 import {Response} from "express"
 import { createValidationMiddleware } from "../../middlewares/validation";
 import { addServiceValidation, updateServiceValidation } from "./services.validation";
@@ -73,6 +73,18 @@ export class serviceController {
         if(!service) {
             throw new ApiError("service not found",404)
         }
+        return res.status(200).json(service);
+    }
+
+    @Patch("/:id")
+    async softService(@Param("id") id:number,@Res() res:Response){
+        if(!await prisma.service.findUnique({where:{id}})){
+            throw new ApiError("service not found",404);
+        }
+        let service = await prisma.service.update({
+            where: {id},
+            data: {status:false}
+        })
         return res.status(200).json(service);
     }
 }
