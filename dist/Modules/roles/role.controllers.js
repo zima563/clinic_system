@@ -24,16 +24,19 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.userControllers = void 0;
+exports.roleControllers = void 0;
 const client_1 = require("@prisma/client");
 const routing_controllers_1 = require("routing-controllers");
 const validation_1 = require("../../middlewares/validation");
 const ApiError_1 = __importDefault(require("../../utils/ApiError"));
 const role_validation_1 = require("./role.validation");
 const prisma = new client_1.PrismaClient();
-let userControllers = class userControllers {
+let roleControllers = class roleControllers {
     createRole(body, res) {
         return __awaiter(this, void 0, void 0, function* () {
+            if (yield prisma.role.findFirst({ where: { name: body.name } })) {
+                throw new ApiError_1.default("this role name already exist", 409);
+            }
             let role = yield prisma.role.create({ data: body });
             res.status(200).json(role);
         });
@@ -64,17 +67,32 @@ let userControllers = class userControllers {
             res.status(200).json(all);
         });
     }
+    updateRole(id, body, res) {
+        return __awaiter(this, void 0, void 0, function* () {
+            if (!(yield prisma.role.findUnique({ where: { id } }))) {
+                throw new ApiError_1.default("role not found");
+            }
+            if (yield prisma.role.findFirst({ where: { name: body.name } })) {
+                throw new ApiError_1.default("this role name already exist", 409);
+            }
+            yield prisma.role.update({
+                where: { id },
+                data: body
+            });
+            return res.status(200).json({ message: "role updated successfully" });
+        });
+    }
 };
-exports.userControllers = userControllers;
+exports.roleControllers = roleControllers;
 __decorate([
-    (0, routing_controllers_1.Post)("/role"),
+    (0, routing_controllers_1.Post)("/"),
     (0, routing_controllers_1.UseBefore)((0, validation_1.createValidationMiddleware)(role_validation_1.createRoleValidation)),
     __param(0, (0, routing_controllers_1.Body)()),
     __param(1, (0, routing_controllers_1.Res)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [Object, Object]),
     __metadata("design:returntype", Promise)
-], userControllers.prototype, "createRole", null);
+], roleControllers.prototype, "createRole", null);
 __decorate([
     (0, routing_controllers_1.Post)("/userRole/:userId"),
     (0, routing_controllers_1.UseBefore)((0, validation_1.createValidationMiddleware)(role_validation_1.assignRoleToUserValidation)),
@@ -84,7 +102,7 @@ __decorate([
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [Number, Object, Object]),
     __metadata("design:returntype", Promise)
-], userControllers.prototype, "assignRoleToUser", null);
+], roleControllers.prototype, "assignRoleToUser", null);
 __decorate([
     (0, routing_controllers_1.Get)("/userRole/all"),
     __param(0, (0, routing_controllers_1.QueryParams)()),
@@ -92,7 +110,17 @@ __decorate([
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [Object, Object]),
     __metadata("design:returntype", Promise)
-], userControllers.prototype, "getAllRoleUsers", null);
-exports.userControllers = userControllers = __decorate([
-    (0, routing_controllers_1.JsonController)("/api/users")
-], userControllers);
+], roleControllers.prototype, "getAllRoleUsers", null);
+__decorate([
+    (0, routing_controllers_1.Put)("/:id"),
+    (0, routing_controllers_1.UseBefore)((0, validation_1.createValidationMiddleware)(role_validation_1.updateRoleValidation)),
+    __param(0, (0, routing_controllers_1.Param)("id")),
+    __param(1, (0, routing_controllers_1.Body)()),
+    __param(2, (0, routing_controllers_1.Res)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Number, Object, Object]),
+    __metadata("design:returntype", Promise)
+], roleControllers.prototype, "updateRole", null);
+exports.roleControllers = roleControllers = __decorate([
+    (0, routing_controllers_1.JsonController)("/api/roles")
+], roleControllers);

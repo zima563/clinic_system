@@ -13,13 +13,14 @@ dotenv_1.default.config();
 const express_1 = __importDefault(require("express"));
 const validation_1 = require("./middlewares/validation");
 const user_controllers_1 = require("./Modules/users/user.controllers");
+const role_controllers_1 = require("./Modules/roles/role.controllers");
 const app = (0, express_1.default)();
 // Add body parser middleware
 app.use(express_1.default.json()); // Parses application/json request bodies
 app.use(express_1.default.urlencoded({ extended: true })); // Parses application/x-www-form-urlencoded bodies
 // Set up routing-controllers
 (0, routing_controllers_1.useExpressServer)(app, {
-    controllers: [user_controllers_1.userControllers], // Adjust path to your controllers
+    controllers: [user_controllers_1.userControllers, role_controllers_1.roleControllers], // Adjust path to your controllers
     middlewares: [validation_1.createValidationMiddleware, ErrorHandler_1.ErrorHandler],
     defaultErrorHandler: false
 });

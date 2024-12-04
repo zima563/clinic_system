@@ -1,18 +1,21 @@
 import { PrismaClient } from "@prisma/client";
 import { Response } from "express";
-import { Body, Get, JsonController, Param, Post, QueryParams, Res, UseBefore } from "routing-controllers";
+import { Body, Get, JsonController, Param, Post, Put, QueryParams, Res, UseBefore } from "routing-controllers";
 import { createValidationMiddleware } from "../../middlewares/validation";
 import ApiFeatures from "../../utils/ApiFeatures";
 import ApiError from "../../utils/ApiError";
-import { assignRoleToUserValidation, createRoleValidation } from "./role.validation";
+import { assignRoleToUserValidation, createRoleValidation, updateRoleValidation } from "./role.validation";
 
 const prisma = new PrismaClient();
 
-@JsonController("/api/users")
-export class userControllers {
-@Post("/role")
+@JsonController("/api/roles")
+export class roleControllers {
+@Post("/")
     @UseBefore(createValidationMiddleware(createRoleValidation))
     async createRole(@Body() body:any, @Res() res: Response){
+        if(await prisma.role.findFirst({where:{name:body.name}})){
+            throw new ApiError("this role name already exist",409)
+        }
         let role = await prisma.role.create({data:body});
         res.status(200).json(role);
     }
@@ -42,4 +45,20 @@ export class userControllers {
         })
         res.status(200).json(all)
     }
-}
+
+    @Put("/:id")
+    @UseBefore(createValidationMiddleware(updateRoleValidation))
+    async updateRole(@Param("id") id:number,@Body() body:any ,@Res() res: Response){
+        if(!await prisma.role.findUnique({where:{id}})){
+            throw new ApiError("role not found");
+        }
+        if(await prisma.role.findFirst({where:{name:body.name}})){
+            throw new ApiError("this role name already exist",409)
+        }
+        await prisma.role.update({
+            where: {id},
+            data: body
+        });
+        return res.status(200).json({message: "role updated successfully"});
+    }
+}   

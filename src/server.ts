@@ -9,6 +9,7 @@ import express from "express"
 import { createValidationMiddleware } from "./middlewares/validation";
 import { userControllers } from "./Modules/users/user.controllers";
 import { CheckEmailMiddleware } from "./middlewares/emailExists";
+import { roleControllers } from "./Modules/roles/role.controllers";
 
 
 const app = express();
@@ -19,7 +20,7 @@ app.use(express.urlencoded({ extended: true })); // Parses application/x-www-for
 
 // Set up routing-controllers
 useExpressServer(app, {
-  controllers: [userControllers], // Adjust path to your controllers
+  controllers: [userControllers,roleControllers], // Adjust path to your controllers
   middlewares: [createValidationMiddleware,ErrorHandler],
   defaultErrorHandler: false
 });
