@@ -28,6 +28,7 @@ exports.roleControllers = void 0;
 const client_1 = require("@prisma/client");
 const routing_controllers_1 = require("routing-controllers");
 const validation_1 = require("../../middlewares/validation");
+const ApiFeatures_1 = __importDefault(require("../../utils/ApiFeatures"));
 const ApiError_1 = __importDefault(require("../../utils/ApiError"));
 const role_validation_1 = require("./role.validation");
 const prisma = new client_1.PrismaClient();
@@ -39,6 +40,32 @@ let roleControllers = class roleControllers {
             }
             let role = yield prisma.role.create({ data: body });
             res.status(200).json(role);
+        });
+    }
+    // GET /all does not use CheckEmailMiddleware
+    allRoles(query, res) {
+        return __awaiter(this, void 0, void 0, function* () {
+            try {
+                const apiFeatures = new ApiFeatures_1.default(prisma.role, query);
+                yield apiFeatures
+                    .filter()
+                    .search("role") // Specify the model name, 'user' in this case
+                    .paginateWithCount(yield prisma.role.count()); // Get the total count for pagination
+                // Execute the query and get the result and pagination
+                const { result, pagination } = yield apiFeatures.exec("role");
+                // Return the result along with pagination information
+                return res.status(200).json({
+                    data: result,
+                    pagination: pagination, // Use the pagination here
+                });
+            }
+            catch (error) {
+                console.error("Error fetching users:", error);
+                // Ensure no further responses are sent
+                if (!res.headersSent) {
+                    return res.status(500).json({ message: "Internal Server Error" });
+                }
+            }
         });
     }
     assignRoleToUser(userId, body, res) {
@@ -104,6 +131,14 @@ __decorate([
     __metadata("design:paramtypes", [Object, Object]),
     __metadata("design:returntype", Promise)
 ], roleControllers.prototype, "createRole", null);
+__decorate([
+    (0, routing_controllers_1.Get)("/all"),
+    __param(0, (0, routing_controllers_1.QueryParams)()),
+    __param(1, (0, routing_controllers_1.Res)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, Object]),
+    __metadata("design:returntype", Promise)
+], roleControllers.prototype, "allRoles", null);
 __decorate([
     (0, routing_controllers_1.Post)("/userRole/:userId"),
     (0, routing_controllers_1.UseBefore)((0, validation_1.createValidationMiddleware)(role_validation_1.assignRoleToUserValidation)),

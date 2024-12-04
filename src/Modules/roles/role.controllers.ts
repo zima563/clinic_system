@@ -20,6 +20,35 @@ export class roleControllers {
         res.status(200).json(role);
     }
 
+
+    // GET /all does not use CheckEmailMiddleware
+    @Get("/all")
+    async allRoles(@QueryParams() query: any, @Res() res: Response) {
+        try{
+            const apiFeatures = new ApiFeatures(prisma.role, query);
+
+            await apiFeatures
+                .filter()
+                .search("role")  // Specify the model name, 'user' in this case
+                .paginateWithCount(await prisma.role.count())  // Get the total count for pagination
+
+            // Execute the query and get the result and pagination
+            const { result, pagination } = await apiFeatures.exec("role");
+
+            // Return the result along with pagination information
+            return res.status(200).json({
+                data: result,
+                pagination: pagination,  // Use the pagination here
+            });
+        } catch (error) {
+            console.error("Error fetching users:", error);
+            // Ensure no further responses are sent
+            if (!res.headersSent) {
+                return res.status(500).json({ message: "Internal Server Error" });
+            }
+        }
+    }
+
     @Post("/userRole/:userId")
     @UseBefore(createValidationMiddleware(assignRoleToUserValidation))
     async assignRoleToUser(@Param("userId") userId: number, @Body() body: any, @Res() res:Response){
