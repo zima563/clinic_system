@@ -30,6 +30,7 @@ const validation_1 = require("../../middlewares/validation");
 const services_validation_1 = require("./services.validation");
 const client_1 = require("@prisma/client");
 const ApiError_1 = __importDefault(require("../../utils/ApiError"));
+const ApiFeatures_1 = __importDefault(require("../../utils/ApiFeatures"));
 const prisma = new client_1.PrismaClient();
 let serviceController = class serviceController {
     addService(body, res) {
@@ -41,6 +42,33 @@ let serviceController = class serviceController {
                 data: body
             });
             return res.status(200).json(service);
+        });
+    }
+    allServices(query, res) {
+        return __awaiter(this, void 0, void 0, function* () {
+            try {
+                const baseFilter = {
+                    isDeleted: false,
+                };
+                const apiFeatures = new ApiFeatures_1.default(prisma.service, query);
+                yield apiFeatures
+                    .filter(baseFilter)
+                    .sort()
+                    .limitedFields()
+                    .search("service")
+                    .paginateWithCount(yield prisma.user.count({ where: baseFilter }));
+                const { result, pagination } = yield apiFeatures.exec("service");
+                return res.status(200).json({
+                    data: result,
+                    pagination: pagination,
+                });
+            }
+            catch (error) {
+                console.error("Error fetching services:", error);
+                if (!res.headersSent) {
+                    return res.status(500).json({ message: "Internal Server Error" });
+                }
+            }
         });
     }
     updateService(id, body, res) {
@@ -66,6 +94,14 @@ __decorate([
     __metadata("design:paramtypes", [Object, Object]),
     __metadata("design:returntype", Promise)
 ], serviceController.prototype, "addService", null);
+__decorate([
+    (0, routing_controllers_1.Get)("/all"),
+    __param(0, (0, routing_controllers_1.QueryParams)()),
+    __param(1, (0, routing_controllers_1.Res)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, Object]),
+    __metadata("design:returntype", Promise)
+], serviceController.prototype, "allServices", null);
 __decorate([
     (0, routing_controllers_1.Put)("/:id"),
     (0, routing_controllers_1.UseBefore)((0, validation_1.createValidationMiddleware)(services_validation_1.updateServiceValidation)),

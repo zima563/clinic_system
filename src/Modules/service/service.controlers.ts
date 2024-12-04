@@ -1,9 +1,10 @@
-import { Body, JsonController, Param, Post, Put, Res, UseBefore } from "routing-controllers";
+import { Body, Delete, Get, JsonController, Param, Post, Put, QueryParams, Res, UseBefore } from "routing-controllers";
 import {Response} from "express"
 import { createValidationMiddleware } from "../../middlewares/validation";
 import { addServiceValidation, updateServiceValidation } from "./services.validation";
 import { PrismaClient } from "@prisma/client";
 import ApiError from "../../utils/ApiError";
+import ApiFeatures from "../../utils/ApiFeatures";
 const prisma = new PrismaClient();
 
 @JsonController("/api/services")
@@ -20,7 +21,36 @@ export class serviceController {
         })
         return res.status(200).json(service);
     }
+    
+    @Get("/all")
+    async allServices(@QueryParams() query: any, @Res() res: Response) {
+        try {
+        const baseFilter = {
+            isDeleted: false, 
+        };
+            const apiFeatures = new ApiFeatures(prisma.service, query);
 
+            await apiFeatures
+                .filter(baseFilter)
+                .sort()
+                .limitedFields()
+                .search("service")  
+                .paginateWithCount(await prisma.user.count({where: baseFilter}))  
+
+            const { result, pagination } = await apiFeatures.exec("service");
+
+            return res.status(200).json({
+                data: result,
+                pagination: pagination,  
+            });
+        } catch (error) {
+            console.error("Error fetching services:", error);
+            if (!res.headersSent) {
+                return res.status(500).json({ message: "Internal Server Error" });
+            }
+        }
+    }
+    
     @Put("/:id")
     @UseBefore(createValidationMiddleware(updateServiceValidation))
     async updateService(@Param("id") id:number,@Body() body:any,@Res() res:Response){
