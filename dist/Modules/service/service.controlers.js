@@ -43,6 +43,18 @@ let serviceController = class serviceController {
             return res.status(200).json(service);
         });
     }
+    updateService(id, body, res) {
+        return __awaiter(this, void 0, void 0, function* () {
+            if (yield prisma.service.findFirst({ where: { title: body.title } })) {
+                throw new ApiError_1.default("service title already exists", 409);
+            }
+            let service = yield prisma.service.update({
+                where: { id },
+                data: body
+            });
+            return res.status(200).json(service);
+        });
+    }
 };
 exports.serviceController = serviceController;
 __decorate([
@@ -54,6 +66,16 @@ __decorate([
     __metadata("design:paramtypes", [Object, Object]),
     __metadata("design:returntype", Promise)
 ], serviceController.prototype, "addService", null);
+__decorate([
+    (0, routing_controllers_1.Put)("/:id"),
+    (0, routing_controllers_1.UseBefore)((0, validation_1.createValidationMiddleware)(services_validation_1.updateServiceValidation)),
+    __param(0, (0, routing_controllers_1.Param)("id")),
+    __param(1, (0, routing_controllers_1.Body)()),
+    __param(2, (0, routing_controllers_1.Res)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Number, Object, Object]),
+    __metadata("design:returntype", Promise)
+], serviceController.prototype, "updateService", null);
 exports.serviceController = serviceController = __decorate([
     (0, routing_controllers_1.JsonController)("/api/services")
 ], serviceController);
