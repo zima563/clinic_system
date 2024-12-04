@@ -1,6 +1,6 @@
 import { PrismaClient } from "@prisma/client";
 import { Response } from "express";
-import { Body, Get, JsonController, Param, Post, Put, QueryParams, Res, UseBefore } from "routing-controllers";
+import { Body, Delete, Get, JsonController, Param, Post, Put, QueryParams, Res, UseBefore } from "routing-controllers";
 import { createValidationMiddleware } from "../../middlewares/validation";
 import ApiFeatures from "../../utils/ApiFeatures";
 import ApiError from "../../utils/ApiError";
@@ -60,5 +60,16 @@ export class roleControllers {
             data: body
         });
         return res.status(200).json({message: "role updated successfully"});
+    }
+
+    @Delete("/:id")
+    async deleteRole(@Param("id") id:number, @Res() res: Response){
+        if(!await prisma.role.findUnique({where:{id}})){
+            throw new ApiError("role not found");
+        }
+        await prisma.role.delete({
+            where: {id}
+        });
+        return res.status(200).json({message: "role deleted successfully"});
     }
 }   

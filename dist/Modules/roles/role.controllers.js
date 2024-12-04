@@ -82,6 +82,17 @@ let roleControllers = class roleControllers {
             return res.status(200).json({ message: "role updated successfully" });
         });
     }
+    deleteRole(id, res) {
+        return __awaiter(this, void 0, void 0, function* () {
+            if (!(yield prisma.role.findUnique({ where: { id } }))) {
+                throw new ApiError_1.default("role not found");
+            }
+            yield prisma.role.delete({
+                where: { id }
+            });
+            return res.status(200).json({ message: "role deleted successfully" });
+        });
+    }
 };
 exports.roleControllers = roleControllers;
 __decorate([
@@ -121,6 +132,14 @@ __decorate([
     __metadata("design:paramtypes", [Number, Object, Object]),
     __metadata("design:returntype", Promise)
 ], roleControllers.prototype, "updateRole", null);
+__decorate([
+    (0, routing_controllers_1.Delete)("/:id"),
+    __param(0, (0, routing_controllers_1.Param)("id")),
+    __param(1, (0, routing_controllers_1.Res)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Number, Object]),
+    __metadata("design:returntype", Promise)
+], roleControllers.prototype, "deleteRole", null);
 exports.roleControllers = roleControllers = __decorate([
     (0, routing_controllers_1.JsonController)("/api/roles")
 ], roleControllers);
