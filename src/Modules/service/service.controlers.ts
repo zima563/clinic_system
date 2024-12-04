@@ -63,4 +63,16 @@ export class serviceController {
         })
         return res.status(200).json(service);
     }
+
+    @Get("/:id")
+    @UseBefore(createValidationMiddleware(updateServiceValidation))
+    async getService(@Param("id") id:number,@Res() res:Response){
+        let service = await prisma.service.findUnique({
+            where: {id}
+        })
+        if(!service) {
+            throw new ApiError("service not found",404)
+        }
+        return res.status(200).json(service);
+    }
 }

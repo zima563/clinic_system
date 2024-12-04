@@ -83,6 +83,17 @@ let serviceController = class serviceController {
             return res.status(200).json(service);
         });
     }
+    getService(id, res) {
+        return __awaiter(this, void 0, void 0, function* () {
+            let service = yield prisma.service.findUnique({
+                where: { id }
+            });
+            if (!service) {
+                throw new ApiError_1.default("service not found", 404);
+            }
+            return res.status(200).json(service);
+        });
+    }
 };
 exports.serviceController = serviceController;
 __decorate([
@@ -112,6 +123,15 @@ __decorate([
     __metadata("design:paramtypes", [Number, Object, Object]),
     __metadata("design:returntype", Promise)
 ], serviceController.prototype, "updateService", null);
+__decorate([
+    (0, routing_controllers_1.Get)("/:id"),
+    (0, routing_controllers_1.UseBefore)((0, validation_1.createValidationMiddleware)(services_validation_1.updateServiceValidation)),
+    __param(0, (0, routing_controllers_1.Param)("id")),
+    __param(1, (0, routing_controllers_1.Res)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Number, Object]),
+    __metadata("design:returntype", Promise)
+], serviceController.prototype, "getService", null);
 exports.serviceController = serviceController = __decorate([
     (0, routing_controllers_1.JsonController)("/api/services")
 ], serviceController);
