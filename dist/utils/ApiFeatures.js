@@ -15,6 +15,9 @@ class ApiFeatures {
         this.searchQuery = searchQuery;
         this.prismaQuery = { where: {} };
     }
+    get query() {
+        return this.prismaQuery;
+    }
     filter(baseFilter = {}) {
         let filterObj = Object.assign(Object.assign({}, baseFilter), this.searchQuery);
         let excludedFields = ["page", "sort", "limit", "fields", "keyword"];
@@ -29,6 +32,16 @@ class ApiFeatures {
         // Add `categoryId` to the query if it's provided in the search query
         if (filterObj.categoryId) {
             this.prismaQuery.where.categoryId = parseInt(filterObj.categoryId, 10);
+        }
+        // Add `createdAt` filter for a specific day
+        if (this.searchQuery.day) {
+            const date = new Date(this.searchQuery.day); // Format: YYYY-MM-DD
+            const startOfDay = new Date(date.setUTCHours(0, 0, 0, 0));
+            const endOfDay = new Date(date.setUTCHours(23, 59, 59, 999));
+            this.prismaQuery.where.createdAt = {
+                gte: startOfDay,
+                lte: endOfDay,
+            };
         }
         // Merge remaining filters
         this.prismaQuery.where = Object.assign(Object.assign({}, this.prismaQuery.where), filterObj);

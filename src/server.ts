@@ -13,6 +13,7 @@ import { roleControllers } from "./Modules/roles/role.controllers";
 import { serviceController } from "./Modules/service/service.controlers";
 import { specialtyControllers } from "./Modules/Specialist/specialist.controllers";
 import { uploadSingleFile } from "./middlewares/uploadFile";
+import { invoiceControllers } from "./Modules/invoice/invoice.controllers";
 
 const app = express();
 
@@ -35,6 +36,7 @@ useExpressServer(app, {
     roleControllers,
     serviceController,
     specialtyControllers,
+    invoiceControllers,
   ], // Adjust path to your controllers
   middlewares: [createValidationMiddleware, ErrorHandler],
   defaultErrorHandler: false,
