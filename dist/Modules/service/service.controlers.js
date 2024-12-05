@@ -39,7 +39,7 @@ let serviceController = class serviceController {
                 throw new ApiError_1.default("service title already exists", 409);
             }
             let service = yield prisma.service.create({
-                data: body
+                data: body,
             });
             return res.status(200).json(service);
         });
@@ -55,8 +55,8 @@ let serviceController = class serviceController {
                     .filter(baseFilter)
                     .sort()
                     .limitedFields()
-                    .search("service")
-                    .paginateWithCount(yield prisma.user.count({ where: baseFilter }));
+                    .search("service");
+                yield apiFeatures.paginateWithCount();
                 const { result, pagination } = yield apiFeatures.exec("service");
                 return res.status(200).json({
                     data: result,
@@ -78,7 +78,7 @@ let serviceController = class serviceController {
             }
             let service = yield prisma.service.update({
                 where: { id },
-                data: body
+                data: body,
             });
             return res.status(200).json(service);
         });
@@ -86,7 +86,7 @@ let serviceController = class serviceController {
     getService(id, res) {
         return __awaiter(this, void 0, void 0, function* () {
             let service = yield prisma.service.findUnique({
-                where: { id }
+                where: { id },
             });
             if (!service) {
                 throw new ApiError_1.default("service not found", 404);
@@ -101,7 +101,7 @@ let serviceController = class serviceController {
             }
             let service = yield prisma.service.update({
                 where: { id },
-                data: { status: false }
+                data: { status: false },
             });
             return res.status(200).json(service);
         });

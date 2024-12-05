@@ -1,4 +1,4 @@
-import { PrismaClient, User } from '@prisma/client';
+import { PrismaClient, User } from "@prisma/client";
 
 class ApiFeatures {
   private prismaModel: any;
@@ -13,7 +13,7 @@ class ApiFeatures {
   }
 
   filter(baseFilter = {}) {
-    let filterObj = { ...baseFilter,...this.searchQuery };
+    let filterObj = { ...baseFilter, ...this.searchQuery };
     let excludedFields = ["page", "sort", "limit", "fields", "keyword"];
     excludedFields.forEach((val) => {
       delete filterObj[val];
@@ -21,7 +21,8 @@ class ApiFeatures {
 
     // Add `parentId` to the query if it's provided in the search query
     if (filterObj.parentId) {
-      this.prismaQuery.where.parentId = filterObj.parentId === 'null' ? null : parseInt(filterObj.parentId, 10);
+      this.prismaQuery.where.parentId =
+        filterObj.parentId === "null" ? null : parseInt(filterObj.parentId, 10);
     }
 
     // Add `categoryId` to the query if it's provided in the search query
@@ -37,18 +38,20 @@ class ApiFeatures {
   sort() {
     const sortBy = this.searchQuery.sort
       ? this.searchQuery.sort.split(",").reduce((acc: any, field: string) => {
-        const [key, order] = field.split(":");
-        acc[key] = order === "desc" ? "desc" : "asc";
-        return acc;
-      }, {})
-      : { createdAt: 'asc' };
+          const [key, order] = field.split(":");
+          acc[key] = order === "desc" ? "desc" : "asc";
+          return acc;
+        }, {})
+      : { createdAt: "asc" };
     this.prismaQuery.orderBy = sortBy;
     return this;
   }
 
   limitedFields() {
     if (this.searchQuery.fields) {
-      const fields = this.searchQuery.fields.split(",").map((field: string) => field.trim());
+      const fields = this.searchQuery.fields
+        .split(",")
+        .map((field: string) => field.trim());
       this.prismaQuery.select = fields.reduce((acc: any, field: string) => {
         acc[field] = true;
         return acc;
@@ -65,26 +68,28 @@ class ApiFeatures {
       if (modelName === "product") {
         this.prismaQuery.where = {
           OR: [
-            { title: { contains: keyword, mode: 'insensitive' } },
-            { description: { contains: keyword, mode: 'insensitive' } },
+            { title: { contains: keyword, mode: "insensitive" } },
+            { description: { contains: keyword, mode: "insensitive" } },
           ],
         };
       } else {
         this.prismaQuery.where = {
           ...this.prismaQuery.where,
-          name: { contains: keyword, mode: 'insensitive' },
+          name: { contains: keyword, mode: "insensitive" },
         };
       }
     }
     return this;
   }
 
-  async paginateWithCount(countDocuments: number) {
+  async paginateWithCount() {
     const page = this.searchQuery.page * 1 || 1;
     const limit = this.searchQuery.limit * 1 || 50;
     const skip = (page - 1) * limit;
     const endIndex = page * limit;
-
+    const countDocuments = await this.prismaModel.count({
+      where: this.prismaQuery.where,
+    });
     this.paginationResult = {
       currentPage: page,
       limit,

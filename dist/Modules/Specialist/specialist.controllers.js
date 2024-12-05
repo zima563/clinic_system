@@ -34,6 +34,7 @@ const uuid_1 = require("uuid");
 const client_1 = require("@prisma/client");
 const specialist_validation_1 = require("./specialist.validation");
 const ApiError_1 = __importDefault(require("../../utils/ApiError"));
+const ApiFeatures_1 = __importDefault(require("../../utils/ApiFeatures"));
 const prisma = new client_1.PrismaClient();
 let specialtyControllers = class specialtyControllers {
     createSpecialty(req, body, res) {
@@ -81,6 +82,21 @@ let specialtyControllers = class specialtyControllers {
             return res.status(200).json({ message: "specialty updated successfully" });
         });
     }
+    allSpecialtys(query, res) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const apiFeatures = new ApiFeatures_1.default(prisma.specialty, query);
+            yield apiFeatures.filter().sort().limitedFields().search("specialty");
+            // Get the count of documents and apply pagination
+            yield apiFeatures.paginateWithCount();
+            // Execute the query and get the results along with pagination info
+            const { result, pagination } = yield apiFeatures.exec("specialty");
+            return res.status(200).json({
+                data: result,
+                pagination: pagination,
+                count: result.length,
+            });
+        });
+    }
 };
 exports.specialtyControllers = specialtyControllers;
 __decorate([
@@ -104,6 +120,14 @@ __decorate([
     __metadata("design:paramtypes", [Object, Object, Number, Object]),
     __metadata("design:returntype", Promise)
 ], specialtyControllers.prototype, "updateSpecialty", null);
+__decorate([
+    (0, routing_controllers_1.Get)("/all"),
+    __param(0, (0, routing_controllers_1.QueryParams)()),
+    __param(1, (0, routing_controllers_1.Res)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, Object]),
+    __metadata("design:returntype", Promise)
+], specialtyControllers.prototype, "allSpecialtys", null);
 exports.specialtyControllers = specialtyControllers = __decorate([
     (0, routing_controllers_1.JsonController)("/api/specialist")
 ], specialtyControllers);

@@ -59,8 +59,8 @@ let userControllers = class userControllers {
                     .filter(baseFilter)
                     .sort()
                     .limitedFields()
-                    .search("user") // Specify the model name, 'user' in this case
-                    .paginateWithCount(yield prisma.user.count({ where: baseFilter })); // Get the total count for pagination
+                    .search("user"); // Specify the model name, 'user' in this case
+                yield apiFeatures.paginateWithCount();
                 // Execute the query and get the result and pagination
                 const { result, pagination } = yield apiFeatures.exec("user");
                 // Return the result along with pagination information
@@ -81,7 +81,7 @@ let userControllers = class userControllers {
     getOneUser(id, res, next) {
         return __awaiter(this, void 0, void 0, function* () {
             let user = yield prisma.user.findUnique({
-                where: { id }
+                where: { id },
             });
             if (!user)
                 throw new ApiError_1.default("user not found", 404);
@@ -95,7 +95,7 @@ let userControllers = class userControllers {
                 throw new ApiError_1.default("user not found", 404);
             yield prisma.user.update({
                 where: { id },
-                data: body
+                data: body,
             });
             return res.status(201).json({ message: "user updated successfully", user });
         });
@@ -107,7 +107,7 @@ let userControllers = class userControllers {
                 throw new ApiError_1.default("user not found", 404);
             yield prisma.user.update({
                 where: { id },
-                data: { isActive: false }
+                data: { isActive: false },
             });
             return res.status(201).json({ message: "user Deactivated successfully" });
         });
@@ -119,7 +119,7 @@ let userControllers = class userControllers {
                 throw new ApiError_1.default("user not found", 404);
             yield prisma.user.update({
                 where: { id },
-                data: { isDeleted: true }
+                data: { isDeleted: true },
             });
             return res.status(201).json({ message: "user Deleted successfully" });
         });
@@ -128,10 +128,7 @@ let userControllers = class userControllers {
         return __awaiter(this, void 0, void 0, function* () {
             let user = yield prisma.user.findFirst({
                 where: {
-                    OR: [
-                        { phone: body.emailOrPhone },
-                        { email: body.emailOrPhone },
-                    ],
+                    OR: [{ phone: body.emailOrPhone }, { email: body.emailOrPhone }],
                 },
             });
             if (!(user && bcrypt_1.default.compareSync(body.password, user.password))) {

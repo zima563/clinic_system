@@ -47,10 +47,8 @@ let roleControllers = class roleControllers {
         return __awaiter(this, void 0, void 0, function* () {
             try {
                 const apiFeatures = new ApiFeatures_1.default(prisma.role, query);
-                yield apiFeatures
-                    .filter()
-                    .search("role") // Specify the model name, 'user' in this case
-                    .paginateWithCount(yield prisma.role.count()); // Get the total count for pagination
+                yield apiFeatures.filter().search("role"); // Specify the model name, 'user' in this case
+                yield apiFeatures.paginateWithCount(); // Get the total count for pagination
                 // Execute the query and get the result and pagination
                 const { result, pagination } = yield apiFeatures.exec("role");
                 // Return the result along with pagination information
@@ -73,13 +71,17 @@ let roleControllers = class roleControllers {
             if (!(yield prisma.user.findUnique({ where: { id: userId } }))) {
                 throw new ApiError_1.default("user not found", 404);
             }
-            else if (!(yield prisma.role.findUnique({ where: { id: parseInt(body.roleId, 10) } }))) {
+            else if (!(yield prisma.role.findUnique({
+                where: { id: parseInt(body.roleId, 10) },
+            }))) {
                 throw new ApiError_1.default("role not found", 404);
             }
-            yield prisma.userRole.create({ data: {
+            yield prisma.userRole.create({
+                data: {
                     userId,
-                    roleId: parseInt(body.roleId, 10)
-                } });
+                    roleId: parseInt(body.roleId, 10),
+                },
+            });
             res.json({ message: "assigning role to user successfully" });
         });
     }
@@ -88,8 +90,8 @@ let roleControllers = class roleControllers {
             let all = yield prisma.userRole.findMany({
                 include: {
                     user: true,
-                    role: true
-                }
+                    role: true,
+                },
             });
             res.status(200).json(all);
         });
@@ -104,7 +106,7 @@ let roleControllers = class roleControllers {
             }
             yield prisma.role.update({
                 where: { id },
-                data: body
+                data: body,
             });
             return res.status(200).json({ message: "role updated successfully" });
         });
@@ -115,7 +117,7 @@ let roleControllers = class roleControllers {
                 throw new ApiError_1.default("role not found");
             }
             yield prisma.role.delete({
-                where: { id }
+                where: { id },
             });
             return res.status(200).json({ message: "role deleted successfully" });
         });

@@ -1,9 +1,11 @@
 import {
   Body,
+  Get,
   JsonController,
   Param,
   Post,
   Put,
+  QueryParams,
   Req,
   Res,
   UploadedFile,
@@ -23,6 +25,7 @@ import {
   updateSpecialtySchema,
 } from "./specialist.validation";
 import ApiError from "../../utils/ApiError";
+import ApiFeatures from "../../utils/ApiFeatures";
 
 const prisma = new PrismaClient();
 
@@ -91,5 +94,24 @@ export class specialtyControllers {
       data: body,
     });
     return res.status(200).json({ message: "specialty updated successfully" });
+  }
+
+  @Get("/all")
+  async allSpecialtys(@QueryParams() query: any, @Res() res: Response) {
+    const apiFeatures = new ApiFeatures(prisma.specialty, query);
+
+    await apiFeatures.filter().sort().limitedFields().search("specialty");
+
+    // Get the count of documents and apply pagination
+    await apiFeatures.paginateWithCount();
+
+    // Execute the query and get the results along with pagination info
+    const { result, pagination } = await apiFeatures.exec("specialty");
+
+    return res.status(200).json({
+      data: result,
+      pagination: pagination,
+      count: result.length,
+    });
   }
 }

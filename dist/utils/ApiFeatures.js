@@ -23,7 +23,8 @@ class ApiFeatures {
         });
         // Add `parentId` to the query if it's provided in the search query
         if (filterObj.parentId) {
-            this.prismaQuery.where.parentId = filterObj.parentId === 'null' ? null : parseInt(filterObj.parentId, 10);
+            this.prismaQuery.where.parentId =
+                filterObj.parentId === "null" ? null : parseInt(filterObj.parentId, 10);
         }
         // Add `categoryId` to the query if it's provided in the search query
         if (filterObj.categoryId) {
@@ -40,13 +41,15 @@ class ApiFeatures {
                 acc[key] = order === "desc" ? "desc" : "asc";
                 return acc;
             }, {})
-            : { createdAt: 'asc' };
+            : { createdAt: "asc" };
         this.prismaQuery.orderBy = sortBy;
         return this;
     }
     limitedFields() {
         if (this.searchQuery.fields) {
-            const fields = this.searchQuery.fields.split(",").map((field) => field.trim());
+            const fields = this.searchQuery.fields
+                .split(",")
+                .map((field) => field.trim());
             this.prismaQuery.select = fields.reduce((acc, field) => {
                 acc[field] = true;
                 return acc;
@@ -63,23 +66,26 @@ class ApiFeatures {
             if (modelName === "product") {
                 this.prismaQuery.where = {
                     OR: [
-                        { title: { contains: keyword, mode: 'insensitive' } },
-                        { description: { contains: keyword, mode: 'insensitive' } },
+                        { title: { contains: keyword, mode: "insensitive" } },
+                        { description: { contains: keyword, mode: "insensitive" } },
                     ],
                 };
             }
             else {
-                this.prismaQuery.where = Object.assign(Object.assign({}, this.prismaQuery.where), { name: { contains: keyword, mode: 'insensitive' } });
+                this.prismaQuery.where = Object.assign(Object.assign({}, this.prismaQuery.where), { name: { contains: keyword, mode: "insensitive" } });
             }
         }
         return this;
     }
-    paginateWithCount(countDocuments) {
+    paginateWithCount() {
         return __awaiter(this, void 0, void 0, function* () {
             const page = this.searchQuery.page * 1 || 1;
             const limit = this.searchQuery.limit * 1 || 50;
             const skip = (page - 1) * limit;
             const endIndex = page * limit;
+            const countDocuments = yield this.prismaModel.count({
+                where: this.prismaQuery.where,
+            });
             this.paginationResult = {
                 currentPage: page,
                 limit,
