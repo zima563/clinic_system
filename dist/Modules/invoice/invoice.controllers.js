@@ -28,14 +28,26 @@ exports.invoiceControllers = void 0;
 const client_1 = require("@prisma/client");
 const routing_controllers_1 = require("routing-controllers");
 const ApiFeatures_1 = __importDefault(require("../../utils/ApiFeatures"));
+const validation_1 = require("../../middlewares/validation");
+const invoive_validation_1 = __importDefault(require("./invoive.validation"));
 const prisma = new client_1.PrismaClient();
 let invoiceControllers = class invoiceControllers {
     createInvoice(req, body, res) {
         return __awaiter(this, void 0, void 0, function* () {
-            yield prisma.invoice.create({
-                data: body,
+            let invoice = yield prisma.invoice.create({
+                data: {
+                    total: body.amount,
+                },
             });
-            return res.status(200).json({ message: "invoice created successfully" });
+            let invoiceDetails = yield prisma.invoiceDetail.create({
+                data: Object.assign({ invoiceId: invoice.id }, body),
+                include: {
+                    invoice: true,
+                },
+            });
+            return res
+                .status(200)
+                .json({ message: "invoice created successfully", invoiceDetails });
         });
     }
     listInvoice(req, res) {
@@ -63,6 +75,7 @@ let invoiceControllers = class invoiceControllers {
 exports.invoiceControllers = invoiceControllers;
 __decorate([
     (0, routing_controllers_1.Post)("/"),
+    (0, routing_controllers_1.UseBefore)((0, validation_1.createValidationMiddleware)(invoive_validation_1.default)),
     __param(0, (0, routing_controllers_1.Req)()),
     __param(1, (0, routing_controllers_1.Body)()),
     __param(2, (0, routing_controllers_1.Res)()),
