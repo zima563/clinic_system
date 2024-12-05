@@ -29,7 +29,9 @@ const client_1 = require("@prisma/client");
 const routing_controllers_1 = require("routing-controllers");
 const ApiFeatures_1 = __importDefault(require("../../utils/ApiFeatures"));
 const validation_1 = require("../../middlewares/validation");
-const invoive_validation_1 = __importDefault(require("./invoive.validation"));
+const invoive_validation_1 = require("./invoive.validation");
+const ApiError_1 = __importDefault(require("../../utils/ApiError"));
+const library_1 = require("@prisma/client/runtime/library");
 const prisma = new client_1.PrismaClient();
 let invoiceControllers = class invoiceControllers {
     createInvoice(req, body, res) {
@@ -64,18 +66,52 @@ let invoiceControllers = class invoiceControllers {
                 where: apiFeatures.query.where, // Use the same filtering logic
             });
             return res.status(200).json({
-                success: true,
                 data: result,
                 pagination,
                 total: totalSum._sum.total || 0,
             });
         });
     }
+    updateInvoiceDetail(id, body, res) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const invoiceDetail = yield prisma.invoiceDetail.findUnique({
+                where: { id },
+            });
+            if (!invoiceDetail) {
+                throw new ApiError_1.default("invoiceDetail not found");
+            }
+            if (body.amount) {
+                const invoice = yield prisma.invoice.findUnique({
+                    where: { id: invoiceDetail.invoiceId },
+                });
+                if (!((invoice === null || invoice === void 0 ? void 0 : invoice.total) instanceof library_1.Decimal) ||
+                    !(invoiceDetail.amount instanceof library_1.Decimal)) {
+                    throw new ApiError_1.default("Invalid data for amount calculation");
+                }
+                // Convert values to Decimal if necessary
+                const invoiceTotal = new library_1.Decimal((invoice === null || invoice === void 0 ? void 0 : invoice.total) || 0);
+                const invoiceDetailAmount = new library_1.Decimal(invoiceDetail.amount || 0);
+                const bodyAmount = new library_1.Decimal(body.amount || 0);
+                const finalTotal = invoiceTotal
+                    .minus(invoiceDetailAmount)
+                    .plus(bodyAmount);
+                yield prisma.invoice.update({
+                    where: { id: invoiceDetail.invoiceId },
+                    data: { total: finalTotal },
+                });
+            }
+            yield prisma.invoiceDetail.update({
+                where: { id },
+                data: body,
+            });
+            return res.json({ message: "invoiceDetail updated Successfully" });
+        });
+    }
 };
 exports.invoiceControllers = invoiceControllers;
 __decorate([
     (0, routing_controllers_1.Post)("/"),
-    (0, routing_controllers_1.UseBefore)((0, validation_1.createValidationMiddleware)(invoive_validation_1.default)),
+    (0, routing_controllers_1.UseBefore)((0, validation_1.createValidationMiddleware)(invoive_validation_1.addInvoiceDetailValidation)),
     __param(0, (0, routing_controllers_1.Req)()),
     __param(1, (0, routing_controllers_1.Body)()),
     __param(2, (0, routing_controllers_1.Res)()),
@@ -91,6 +127,16 @@ __decorate([
     __metadata("design:paramtypes", [Object, Object]),
     __metadata("design:returntype", Promise)
 ], invoiceControllers.prototype, "listInvoice", null);
+__decorate([
+    (0, routing_controllers_1.Put)("/:id"),
+    (0, routing_controllers_1.UseBefore)((0, validation_1.createValidationMiddleware)(invoive_validation_1.updateInvoiceDetailValidation)),
+    __param(0, (0, routing_controllers_1.Param)("id")),
+    __param(1, (0, routing_controllers_1.Body)()),
+    __param(2, (0, routing_controllers_1.Res)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Number, Object, Object]),
+    __metadata("design:returntype", Promise)
+], invoiceControllers.prototype, "updateInvoiceDetail", null);
 exports.invoiceControllers = invoiceControllers = __decorate([
     (0, routing_controllers_1.JsonController)("/api/invoice")
 ], invoiceControllers);

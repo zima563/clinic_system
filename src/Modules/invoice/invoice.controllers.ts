@@ -1,16 +1,24 @@
 import { PrismaClient } from "@prisma/client";
+
 import {
   Body,
   Get,
   JsonController,
+  Param,
   Post,
+  Put,
   Req,
   Res,
   UseBefore,
 } from "routing-controllers";
 import ApiFeatures from "../../utils/ApiFeatures";
 import { createValidationMiddleware } from "../../middlewares/validation";
-import addInvoiceDetailValidation from "./invoive.validation";
+import {
+  addInvoiceDetailValidation,
+  updateInvoiceDetailValidation,
+} from "./invoive.validation";
+import ApiError from "../../utils/ApiError";
+import { Decimal } from "@prisma/client/runtime/library";
 const prisma = new PrismaClient();
 
 @JsonController("/api/invoice")
@@ -57,10 +65,58 @@ export class invoiceControllers {
     });
 
     return res.status(200).json({
-      success: true,
       data: result,
       pagination,
       total: totalSum._sum.total || 0,
     });
+  }
+
+  @Put("/:id")
+  @UseBefore(createValidationMiddleware(updateInvoiceDetailValidation))
+  async updateInvoiceDetail(
+    @Param("id") id: number,
+    @Body() body: any,
+    @Res() res: any
+  ) {
+    const invoiceDetail = await prisma.invoiceDetail.findUnique({
+      where: { id },
+    });
+
+    if (!invoiceDetail) {
+      throw new ApiError("invoiceDetail not found");
+    }
+
+    if (body.amount) {
+      const invoice = await prisma.invoice.findUnique({
+        where: { id: invoiceDetail.invoiceId },
+      });
+
+      if (
+        !(invoice?.total instanceof Decimal) ||
+        !(invoiceDetail.amount instanceof Decimal)
+      ) {
+        throw new ApiError("Invalid data for amount calculation");
+      }
+
+      // Convert values to Decimal if necessary
+      const invoiceTotal = new Decimal(invoice?.total || 0);
+      const invoiceDetailAmount = new Decimal(invoiceDetail.amount || 0);
+      const bodyAmount = new Decimal(body.amount || 0);
+      const finalTotal = invoiceTotal
+        .minus(invoiceDetailAmount)
+        .plus(bodyAmount);
+
+      await prisma.invoice.update({
+        where: { id: invoiceDetail.invoiceId },
+        data: { total: finalTotal },
+      });
+    }
+
+    await prisma.invoiceDetail.update({
+      where: { id },
+      data: body,
+    });
+
+    return res.json({ message: "invoiceDetail updated Successfully" });
   }
 }
