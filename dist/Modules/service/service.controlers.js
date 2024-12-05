@@ -94,7 +94,7 @@ let serviceController = class serviceController {
             return res.status(200).json(service);
         });
     }
-    softService(id, res) {
+    deactiveService(id, res) {
         return __awaiter(this, void 0, void 0, function* () {
             if (!(yield prisma.service.findUnique({ where: { id } }))) {
                 throw new ApiError_1.default("service not found", 404);
@@ -151,7 +151,7 @@ __decorate([
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [Number, Object]),
     __metadata("design:returntype", Promise)
-], serviceController.prototype, "softService", null);
+], serviceController.prototype, "deactiveService", null);
 exports.serviceController = serviceController = __decorate([
     (0, routing_controllers_1.JsonController)("/api/services")
 ], serviceController);

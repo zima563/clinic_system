@@ -11,8 +11,6 @@ const routing_controllers_1 = require("routing-controllers");
 let ErrorHandler = class ErrorHandler {
     error(error, request, response, next) {
         const statusCode = error.httpCode || 500;
-        // Log the error for debugging purposes
-        console.error("Error stack:", error.stack);
         // Send JSON response
         return response.status(statusCode).json({
             status: "error",

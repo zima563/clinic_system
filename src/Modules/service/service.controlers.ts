@@ -77,7 +77,7 @@ export class serviceController {
     }
 
     @Patch("/:id")
-    async softService(@Param("id") id:number,@Res() res:Response){
+    async deactiveService(@Param("id") id:number,@Res() res:Response){
         if(!await prisma.service.findUnique({where:{id}})){
             throw new ApiError("service not found",404);
         }

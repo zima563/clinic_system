@@ -18,7 +18,7 @@ function createValidationMiddleware(schema) {
             // Combine request data (body, params, query)
             let filter = {};
             if (request.file) {
-                filter = Object.assign(Object.assign(Object.assign({ image: request.file }, request.params), request.body), request.query);
+                filter = Object.assign(Object.assign(Object.assign({ icon: request.file }, request.params), request.body), request.query);
             }
             else if (request.files) {
                 filter = Object.assign(Object.assign(Object.assign(Object.assign({}, request.files), request.params), request.body), request.query);

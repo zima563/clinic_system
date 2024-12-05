@@ -1,18 +1,13 @@
-import { Middleware, ExpressErrorMiddlewareInterface } from "routing-controllers";
+import {
+  Middleware,
+  ExpressErrorMiddlewareInterface,
+} from "routing-controllers";
 import { Request, Response, NextFunction } from "express";
 
 @Middleware({ type: "after" }) // This runs after all other middlewares and controllers
 export class ErrorHandler implements ExpressErrorMiddlewareInterface {
-  error(
-    error: any,
-    request: Request,
-    response: Response,
-    next: NextFunction
-  ){
+  error(error: any, request: Request, response: Response, next: NextFunction) {
     const statusCode = error.httpCode || 500;
-
-    // Log the error for debugging purposes
-    console.error("Error stack:", error.stack);
 
     // Send JSON response
     return response.status(statusCode).json({
