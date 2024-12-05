@@ -63,7 +63,22 @@ let specialtyControllers = class specialtyControllers {
                     icon: iconFilename !== null && iconFilename !== void 0 ? iconFilename : "",
                 },
             });
-            return res.json(specialty);
+            return res.status(200).json(specialty);
+        });
+    }
+    updateSpecialty(req, body, id, res) {
+        return __awaiter(this, void 0, void 0, function* () {
+            if (!(yield prisma.specialty.findUnique({ where: { id } }))) {
+                throw new ApiError_1.default("specialty not found", 404);
+            }
+            if (yield prisma.specialty.findUnique({ where: { title: body === null || body === void 0 ? void 0 : body.title } })) {
+                throw new ApiError_1.default("specialty title already exist", 409);
+            }
+            yield prisma.specialty.update({
+                where: { id },
+                data: body,
+            });
+            return res.status(200).json({ message: "specialty updated successfully" });
         });
     }
 };
@@ -78,6 +93,17 @@ __decorate([
     __metadata("design:paramtypes", [Object, Object, Object]),
     __metadata("design:returntype", Promise)
 ], specialtyControllers.prototype, "createSpecialty", null);
+__decorate([
+    (0, routing_controllers_1.Put)("/:id"),
+    (0, routing_controllers_1.UseBefore)(uploadFile_1.uploadSingleFile, (0, validation_1.createValidationMiddleware)(specialist_validation_1.updateSpecialtySchema)),
+    __param(0, (0, routing_controllers_1.Req)()),
+    __param(1, (0, routing_controllers_1.Body)()),
+    __param(2, (0, routing_controllers_1.Param)("id")),
+    __param(3, (0, routing_controllers_1.Res)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, Object, Number, Object]),
+    __metadata("design:returntype", Promise)
+], specialtyControllers.prototype, "updateSpecialty", null);
 exports.specialtyControllers = specialtyControllers = __decorate([
     (0, routing_controllers_1.JsonController)("/api/specialist")
 ], specialtyControllers);

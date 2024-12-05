@@ -1,7 +1,9 @@
 import {
   Body,
   JsonController,
+  Param,
   Post,
+  Put,
   Req,
   Res,
   UploadedFile,
@@ -16,7 +18,10 @@ import path from "path";
 import { v4 as uuidv4 } from "uuid";
 import { PrismaClient } from "@prisma/client";
 import fs from "fs";
-import { specialtySchema } from "./specialist.validation";
+import {
+  specialtySchema,
+  updateSpecialtySchema,
+} from "./specialist.validation";
 import ApiError from "../../utils/ApiError";
 
 const prisma = new PrismaClient();
@@ -61,6 +66,30 @@ export class specialtyControllers {
       },
     });
 
-    return res.json(specialty);
+    return res.status(200).json(specialty);
+  }
+
+  @Put("/:id")
+  @UseBefore(
+    uploadSingleFile,
+    createValidationMiddleware(updateSpecialtySchema)
+  )
+  async updateSpecialty(
+    @Req() req: any,
+    @Body() body: any,
+    @Param("id") id: number,
+    @Res() res: any
+  ) {
+    if (!(await prisma.specialty.findUnique({ where: { id } }))) {
+      throw new ApiError("specialty not found", 404);
+    }
+    if (await prisma.specialty.findUnique({ where: { title: body?.title } })) {
+      throw new ApiError("specialty title already exist", 409);
+    }
+    await prisma.specialty.update({
+      where: { id },
+      data: body,
+    });
+    return res.status(200).json({ message: "specialty updated successfully" });
   }
 }

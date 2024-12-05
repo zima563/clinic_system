@@ -17,3 +17,21 @@ export const specialtySchema = Joi.object({
     buffer: Joi.any(),
   }).required(),
 });
+
+export const updateSpecialtySchema = Joi.object({
+  id: Joi.string().required(),
+  title: Joi.string().messages({
+    "string.base": "Title must be a string",
+  }),
+
+  icon: Joi.object({
+    fieldname: Joi.string().required(),
+    originalname: Joi.string().required(),
+    encoding: Joi.string().required(),
+    mimetype: Joi.string()
+      .valid("image/png", "image/jpg", "image/jpeg")
+      .required(),
+    size: Joi.number().required(),
+    buffer: Joi.any(),
+  }),
+});
