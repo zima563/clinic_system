@@ -97,6 +97,15 @@ let specialtyControllers = class specialtyControllers {
             });
         });
     }
+    getOneSpecialty(id, res) {
+        return __awaiter(this, void 0, void 0, function* () {
+            let specialty = yield prisma.specialty.findUnique({ where: { id } });
+            if (!specialty) {
+                throw new ApiError_1.default("specialty not found");
+            }
+            return res.status(200).json(specialty);
+        });
+    }
 };
 exports.specialtyControllers = specialtyControllers;
 __decorate([
@@ -128,6 +137,14 @@ __decorate([
     __metadata("design:paramtypes", [Object, Object]),
     __metadata("design:returntype", Promise)
 ], specialtyControllers.prototype, "allSpecialtys", null);
+__decorate([
+    (0, routing_controllers_1.Get)("/:id"),
+    __param(0, (0, routing_controllers_1.Param)("id")),
+    __param(1, (0, routing_controllers_1.Res)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Number, Object]),
+    __metadata("design:returntype", Promise)
+], specialtyControllers.prototype, "getOneSpecialty", null);
 exports.specialtyControllers = specialtyControllers = __decorate([
     (0, routing_controllers_1.JsonController)("/api/specialist")
 ], specialtyControllers);

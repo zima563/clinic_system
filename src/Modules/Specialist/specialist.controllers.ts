@@ -114,4 +114,13 @@ export class specialtyControllers {
       count: result.length,
     });
   }
+
+  @Get("/:id")
+  async getOneSpecialty(@Param("id") id: number, @Res() res: Response) {
+    let specialty = await prisma.specialty.findUnique({ where: { id } });
+    if (!specialty) {
+      throw new ApiError("specialty not found");
+    }
+    return res.status(200).json(specialty);
+  }
 }
