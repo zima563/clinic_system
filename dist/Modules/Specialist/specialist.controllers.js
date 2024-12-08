@@ -25,6 +25,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.specialtyControllers = void 0;
+const fs_1 = __importDefault(require("fs"));
 const routing_controllers_1 = require("routing-controllers");
 const uploadFile_1 = __importDefault(require("../../middlewares/uploadFile")); // Correct import
 const validation_1 = require("../../middlewares/validation"); // Correct import
@@ -69,15 +70,38 @@ let specialtyControllers = class specialtyControllers {
     }
     updateSpecialty(req, body, id, res) {
         return __awaiter(this, void 0, void 0, function* () {
-            if (!(yield prisma.specialty.findUnique({ where: { id } }))) {
+            let specialty = yield prisma.specialty.findUnique({ where: { id } });
+            if (!specialty) {
                 throw new ApiError_1.default("specialty not found", 404);
             }
             if (yield prisma.specialty.findUnique({ where: { title: body === null || body === void 0 ? void 0 : body.title } })) {
                 throw new ApiError_1.default("specialty title already exist", 409);
             }
+            let fileName = specialty.icon;
+            // Process image if provided
+            if (req.file) {
+                const cleanedFilename = req.file.originalname
+                    .replace(/\s+/g, "_")
+                    .replace(/[^a-zA-Z0-9_.]/g, "");
+                const newFilename = `img-${(0, uuid_1.v4)()}-${encodeURIComponent(cleanedFilename)}`;
+                const imgPath = path_1.default.join("uploads", newFilename);
+                // Resize and save the image
+                yield (0, sharp_1.default)(req.file.buffer)
+                    .resize(100, 100)
+                    .png({ quality: 80 })
+                    .toFile(imgPath);
+                // Delete old image if it exists
+                if (specialty.icon) {
+                    const oldImagePath = path_1.default.join("uploads", specialty.icon);
+                    if (fs_1.default.existsSync(oldImagePath)) {
+                        fs_1.default.unlinkSync(oldImagePath);
+                    }
+                }
+                fileName = newFilename;
+            }
             yield prisma.specialty.update({
                 where: { id },
-                data: body,
+                data: Object.assign({ icon: fileName !== null && fileName !== void 0 ? fileName : "" }, body),
             });
             return res.status(200).json({ message: "specialty updated successfully" });
         });
