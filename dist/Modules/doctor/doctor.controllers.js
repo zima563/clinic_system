@@ -25,11 +25,13 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.doctorControllers = void 0;
+const fs_1 = __importDefault(require("fs"));
 const routing_controllers_1 = require("routing-controllers");
 const validation_1 = require("../../middlewares/validation");
 const doctor_validation_1 = require("./doctor.validation");
 const uploadFile_1 = __importDefault(require("../../middlewares/uploadFile"));
 const client_1 = require("@prisma/client");
+const ApiError_1 = __importDefault(require("../../utils/ApiError"));
 const uuid_1 = require("uuid");
 const sharp_1 = __importDefault(require("sharp"));
 const path_1 = __importDefault(require("path"));
@@ -56,6 +58,50 @@ let doctorControllers = class doctorControllers {
             return res.status(200).json(doctor);
         });
     }
+    updateDoctor(req, body, id, res) {
+        return __awaiter(this, void 0, void 0, function* () {
+            // Check if the doctor exists
+            const doctor = yield prisma.doctor.findUnique({
+                where: { id },
+            });
+            if (!doctor) {
+                throw new ApiError_1.default("Doctor not found", 404);
+            }
+            // Initialize fileName to preserve existing image if no new image is uploaded
+            let fileName = doctor.image;
+            // Process image if provided
+            if (req.file) {
+                const cleanedFilename = req.file.originalname
+                    .replace(/\s+/g, "_")
+                    .replace(/[^a-zA-Z0-9_.]/g, "");
+                const newFilename = `img-${(0, uuid_1.v4)()}-${encodeURIComponent(cleanedFilename)}`;
+                const imgPath = path_1.default.join("uploads", newFilename);
+                // Resize and save the image
+                yield (0, sharp_1.default)(req.file.buffer)
+                    .resize(100, 100)
+                    .png({ quality: 80 })
+                    .toFile(imgPath);
+                // Delete old image if it exists
+                if (doctor.image) {
+                    const oldImagePath = path_1.default.join("uploads", doctor.image);
+                    if (fs_1.default.existsSync(oldImagePath)) {
+                        fs_1.default.unlinkSync(oldImagePath);
+                    }
+                }
+                fileName = newFilename;
+            }
+            // Update the doctor record
+            const updatedDoctor = yield prisma.doctor.update({
+                where: { id },
+                data: Object.assign({ image: fileName }, body),
+            });
+            // Return success response
+            return res.status(200).json({
+                message: "Doctor updated successfully",
+                data: updatedDoctor,
+            });
+        });
+    }
 };
 exports.doctorControllers = doctorControllers;
 __decorate([
@@ -68,6 +114,18 @@ __decorate([
     __metadata("design:paramtypes", [Object, Object, Object]),
     __metadata("design:returntype", Promise)
 ], doctorControllers.prototype, "addDoctor", null);
+__decorate([
+    (0, routing_controllers_1.Put)("/:id"),
+    (0, routing_controllers_1.UseBefore)((0, uploadFile_1.default)("icon"), // Ensure this middleware works as expected
+    (0, validation_1.createValidationMiddleware)(doctor_validation_1.UpdateDoctorValidationSchema)),
+    __param(0, (0, routing_controllers_1.Req)()),
+    __param(1, (0, routing_controllers_1.Body)()),
+    __param(2, (0, routing_controllers_1.Param)("id")),
+    __param(3, (0, routing_controllers_1.Res)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, Object, Number, Object]),
+    __metadata("design:returntype", Promise)
+], doctorControllers.prototype, "updateDoctor", null);
 exports.doctorControllers = doctorControllers = __decorate([
     (0, routing_controllers_1.JsonController)("/api/doctors")
 ], doctorControllers);
