@@ -144,4 +144,23 @@ export class invoiceControllers {
     }
     return res.status(200).json(Invoice);
   }
+
+  @Get("/list/:id")
+  async List_Invoice_Details(
+    @Req() req: any,
+    @Param("id") id: number,
+    @Res() res: Response
+  ) {
+    let Invoice = await prisma.invoiceDetail.findMany({
+      where: { invoiceId: id },
+    });
+    // Calculate the total amount using reduce
+    const total = Invoice.reduce((acc: Decimal, Invoice) => {
+      return acc.plus(Invoice.amount);
+    }, new Decimal(0));
+    return res.status(200).json({
+      Invoice,
+      total,
+    });
+  }
 }

@@ -123,6 +123,21 @@ let invoiceControllers = class invoiceControllers {
             return res.status(200).json(Invoice);
         });
     }
+    List_Invoice_Details(req, id, res) {
+        return __awaiter(this, void 0, void 0, function* () {
+            let Invoice = yield prisma.invoiceDetail.findMany({
+                where: { invoiceId: id },
+            });
+            // Calculate the total amount using reduce
+            const total = Invoice.reduce((acc, Invoice) => {
+                return acc.plus(Invoice.amount);
+            }, new library_1.Decimal(0));
+            return res.status(200).json({
+                Invoice,
+                total,
+            });
+        });
+    }
 };
 exports.invoiceControllers = invoiceControllers;
 __decorate([
@@ -162,6 +177,15 @@ __decorate([
     __metadata("design:paramtypes", [Object, Number, Object]),
     __metadata("design:returntype", Promise)
 ], invoiceControllers.prototype, "Show_Invoice_Details", null);
+__decorate([
+    (0, routing_controllers_1.Get)("/list/:id"),
+    __param(0, (0, routing_controllers_1.Req)()),
+    __param(1, (0, routing_controllers_1.Param)("id")),
+    __param(2, (0, routing_controllers_1.Res)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, Number, Object]),
+    __metadata("design:returntype", Promise)
+], invoiceControllers.prototype, "List_Invoice_Details", null);
 exports.invoiceControllers = invoiceControllers = __decorate([
     (0, routing_controllers_1.JsonController)("/api/invoice")
 ], invoiceControllers);
