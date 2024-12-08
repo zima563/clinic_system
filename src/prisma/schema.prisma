@@ -166,7 +166,7 @@ model Doctor {
 model Patient {
   id             Int      @id @default(autoincrement())
   name           String
-  phone          String
+  phone          String   @unique
   birthdate      DateTime
   gender         Gender
   medicalHistory String
