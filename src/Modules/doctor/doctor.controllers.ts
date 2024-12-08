@@ -1,10 +1,12 @@
 import fs from "fs";
 import {
   Body,
+  Get,
   JsonController,
   Param,
   Post,
   Put,
+  QueryParams,
   Req,
   Res,
   UseBefore,
@@ -15,12 +17,13 @@ import {
   UpdateDoctorValidationSchema,
 } from "./doctor.validation";
 import createUploadMiddleware from "../../middlewares/uploadFile";
-import { Request, Response } from "express";
+import { query, Request, Response } from "express";
 import { PrismaClient } from "@prisma/client";
 import ApiError from "../../utils/ApiError";
 import { v4 as uuidv4 } from "uuid";
 import sharp from "sharp";
 import path from "path";
+import ApiFeatures from "../../utils/ApiFeatures";
 
 const prisma = new PrismaClient();
 
@@ -124,6 +127,32 @@ export class doctorControllers {
     return res.status(200).json({
       message: "Doctor updated successfully",
       data: updatedDoctor,
+    });
+  }
+
+  @Get("/")
+  async listDoctors(
+    @Req() req: any,
+    @QueryParams() query: any,
+    @Body() body: any,
+    @Res() res: any
+  ) {
+    // Initialize ApiFeatures with the Prisma model and the search query
+    const apiFeatures = new ApiFeatures(prisma.doctor, query);
+
+    // Apply filters, sorting, field selection, search, and pagination
+    await apiFeatures.filter().sort().limitedFields().search("user"); // Specify the model name, 'user' in this case
+
+    await apiFeatures.paginateWithCount();
+
+    // Execute the query and get the result and pagination
+    const { result, pagination } = await apiFeatures.exec("doctor");
+
+    // Return the result along with pagination information
+    return res.status(200).json({
+      data: result,
+      pagination: pagination, // Use the pagination here
+      count: result.length,
     });
   }
 }

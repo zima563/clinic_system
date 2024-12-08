@@ -35,6 +35,7 @@ const ApiError_1 = __importDefault(require("../../utils/ApiError"));
 const uuid_1 = require("uuid");
 const sharp_1 = __importDefault(require("sharp"));
 const path_1 = __importDefault(require("path"));
+const ApiFeatures_1 = __importDefault(require("../../utils/ApiFeatures"));
 const prisma = new client_1.PrismaClient();
 let doctorControllers = class doctorControllers {
     addDoctor(req, body, res) {
@@ -102,6 +103,23 @@ let doctorControllers = class doctorControllers {
             });
         });
     }
+    listDoctors(req, query, body, res) {
+        return __awaiter(this, void 0, void 0, function* () {
+            // Initialize ApiFeatures with the Prisma model and the search query
+            const apiFeatures = new ApiFeatures_1.default(prisma.doctor, query);
+            // Apply filters, sorting, field selection, search, and pagination
+            yield apiFeatures.filter().sort().limitedFields().search("user"); // Specify the model name, 'user' in this case
+            yield apiFeatures.paginateWithCount();
+            // Execute the query and get the result and pagination
+            const { result, pagination } = yield apiFeatures.exec("doctor");
+            // Return the result along with pagination information
+            return res.status(200).json({
+                data: result,
+                pagination: pagination, // Use the pagination here
+                count: result.length,
+            });
+        });
+    }
 };
 exports.doctorControllers = doctorControllers;
 __decorate([
@@ -126,6 +144,16 @@ __decorate([
     __metadata("design:paramtypes", [Object, Object, Number, Object]),
     __metadata("design:returntype", Promise)
 ], doctorControllers.prototype, "updateDoctor", null);
+__decorate([
+    (0, routing_controllers_1.Get)("/"),
+    __param(0, (0, routing_controllers_1.Req)()),
+    __param(1, (0, routing_controllers_1.QueryParams)()),
+    __param(2, (0, routing_controllers_1.Body)()),
+    __param(3, (0, routing_controllers_1.Res)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, Object, Object, Object]),
+    __metadata("design:returntype", Promise)
+], doctorControllers.prototype, "listDoctors", null);
 exports.doctorControllers = doctorControllers = __decorate([
     (0, routing_controllers_1.JsonController)("/api/doctors")
 ], doctorControllers);
