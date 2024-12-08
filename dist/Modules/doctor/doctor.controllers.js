@@ -120,6 +120,17 @@ let doctorControllers = class doctorControllers {
             });
         });
     }
+    showDoctorDetails(req, id, res) {
+        return __awaiter(this, void 0, void 0, function* () {
+            let doctor = yield prisma.doctor.findUnique({
+                where: { id },
+            });
+            if (!doctor) {
+                throw new ApiError_1.default("doctor not found", 404);
+            }
+            return res.status(200).json(doctor);
+        });
+    }
 };
 exports.doctorControllers = doctorControllers;
 __decorate([
@@ -154,6 +165,15 @@ __decorate([
     __metadata("design:paramtypes", [Object, Object, Object, Object]),
     __metadata("design:returntype", Promise)
 ], doctorControllers.prototype, "listDoctors", null);
+__decorate([
+    (0, routing_controllers_1.Get)("/:id"),
+    __param(0, (0, routing_controllers_1.Req)()),
+    __param(1, (0, routing_controllers_1.Param)("id")),
+    __param(2, (0, routing_controllers_1.Res)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, Number, Object]),
+    __metadata("design:returntype", Promise)
+], doctorControllers.prototype, "showDoctorDetails", null);
 exports.doctorControllers = doctorControllers = __decorate([
     (0, routing_controllers_1.JsonController)("/api/doctors")
 ], doctorControllers);

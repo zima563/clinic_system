@@ -155,4 +155,19 @@ export class doctorControllers {
       count: result.length,
     });
   }
+
+  @Get("/:id")
+  async showDoctorDetails(
+    @Req() req: Request,
+    @Param("id") id: number,
+    @Res() res: Response
+  ) {
+    let doctor = await prisma.doctor.findUnique({
+      where: { id },
+    });
+    if (!doctor) {
+      throw new ApiError("doctor not found", 404);
+    }
+    return res.status(200).json(doctor);
+  }
 }
