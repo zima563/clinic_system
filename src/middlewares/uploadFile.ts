@@ -5,9 +5,11 @@ import { RequestHandler } from "express";
 const storage = multer.memoryStorage();
 
 // Set the file size limit to avoid large file uploads causing issues
-const upload = multer({
-  storage,
-  limits: { fileSize: 10 * 1024 * 1024 }, // Max size 10MB
-}).single("icon"); // "icon" is the fieldname in your form-data
+const createUploadMiddleware = (fieldName: string): RequestHandler => {
+  return multer({
+    storage,
+    limits: { fileSize: 10 * 1024 * 1024 }, // Max size 10MB
+  }).single(fieldName);
+};
 
-export const uploadSingleFile: RequestHandler = upload;
+export default createUploadMiddleware;

@@ -26,7 +26,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.specialtyControllers = void 0;
 const routing_controllers_1 = require("routing-controllers");
-const uploadFile_1 = require("../../middlewares/uploadFile"); // Correct import
+const uploadFile_1 = __importDefault(require("../../middlewares/uploadFile")); // Correct import
 const validation_1 = require("../../middlewares/validation"); // Correct import
 const sharp_1 = __importDefault(require("sharp"));
 const path_1 = __importDefault(require("path"));
@@ -110,7 +110,7 @@ let specialtyControllers = class specialtyControllers {
 exports.specialtyControllers = specialtyControllers;
 __decorate([
     (0, routing_controllers_1.Post)("/"),
-    (0, routing_controllers_1.UseBefore)(uploadFile_1.uploadSingleFile, (0, validation_1.createValidationMiddleware)(specialist_validation_1.specialtySchema)),
+    (0, routing_controllers_1.UseBefore)((0, uploadFile_1.default)("icon"), (0, validation_1.createValidationMiddleware)(specialist_validation_1.specialtySchema)),
     __param(0, (0, routing_controllers_1.Req)()),
     __param(1, (0, routing_controllers_1.Body)()),
     __param(2, (0, routing_controllers_1.Res)()),
@@ -120,7 +120,7 @@ __decorate([
 ], specialtyControllers.prototype, "createSpecialty", null);
 __decorate([
     (0, routing_controllers_1.Put)("/:id"),
-    (0, routing_controllers_1.UseBefore)(uploadFile_1.uploadSingleFile, (0, validation_1.createValidationMiddleware)(specialist_validation_1.updateSpecialtySchema)),
+    (0, routing_controllers_1.UseBefore)((0, uploadFile_1.default)("icon"), (0, validation_1.createValidationMiddleware)(specialist_validation_1.updateSpecialtySchema)),
     __param(0, (0, routing_controllers_1.Req)()),
     __param(1, (0, routing_controllers_1.Body)()),
     __param(2, (0, routing_controllers_1.Param)("id")),

@@ -11,15 +11,13 @@ import {
   UploadedFile,
   UseBefore,
 } from "routing-controllers";
-import { uploadSingleFile } from "../../middlewares/uploadFile"; // Correct import
-import Joi from "joi";
+import createUploadMiddleware from "../../middlewares/uploadFile"; // Correct import
 import { createValidationMiddleware } from "../../middlewares/validation"; // Correct import
 import { Response } from "express";
 import sharp from "sharp";
 import path from "path";
 import { v4 as uuidv4 } from "uuid";
 import { PrismaClient } from "@prisma/client";
-import fs from "fs";
 import {
   specialtySchema,
   updateSpecialtySchema,
@@ -32,7 +30,10 @@ const prisma = new PrismaClient();
 @JsonController("/api/specialist")
 export class specialtyControllers {
   @Post("/")
-  @UseBefore(uploadSingleFile, createValidationMiddleware(specialtySchema))
+  @UseBefore(
+    createUploadMiddleware("icon"),
+    createValidationMiddleware(specialtySchema)
+  )
   async createSpecialty(
     @Req() req: any,
     @Body() body: any,
@@ -74,7 +75,7 @@ export class specialtyControllers {
 
   @Put("/:id")
   @UseBefore(
-    uploadSingleFile,
+    createUploadMiddleware("icon"),
     createValidationMiddleware(updateSpecialtySchema)
   )
   async updateSpecialty(
