@@ -2,6 +2,7 @@ import { PrismaClient } from "@prisma/client";
 
 import {
   Body,
+  Delete,
   Get,
   JsonController,
   Param,
@@ -206,5 +207,45 @@ export class invoiceControllers {
     return res
       .status(200)
       .json({ message: "invoice appended successfully", invoiceAfter });
+  }
+
+  @Delete("/:id")
+  async Remove_Invoice_Details(
+    @Req() req: any,
+    @Param("id") id: number,
+    @Res() res: Response
+  ) {
+    let invoiceDetail = await prisma.invoiceDetail.findUnique({
+      where: {
+        id,
+      },
+    });
+    if (!invoiceDetail) {
+      throw new ApiError("invoice Details not found", 404);
+    }
+    let invoice = await prisma.invoice.findUnique({
+      where: { id: invoiceDetail.invoiceId },
+    });
+
+    const invoiceTotal = new Decimal(invoice?.total || 0);
+    const invoiceDetailAmount = new Decimal(invoiceDetail.amount || 0);
+    const finalTotal = invoiceTotal.minus(invoiceDetailAmount);
+    await prisma.invoice.update({
+      where: { id: invoiceDetail.invoiceId },
+      data: { total: finalTotal },
+    });
+    await prisma.invoiceDetail.delete({
+      where: { id },
+    });
+    const invoiceAfter = await prisma.invoice.findUnique({
+      where: { id: invoiceDetail.invoiceId },
+      include: {
+        details: true,
+      },
+    });
+
+    return res
+      .status(200)
+      .json({ message: "invoice details removed successfully", invoiceAfter });
   }
 }

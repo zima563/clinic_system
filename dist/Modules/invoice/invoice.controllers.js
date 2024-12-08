@@ -170,6 +170,40 @@ let invoiceControllers = class invoiceControllers {
                 .json({ message: "invoice appended successfully", invoiceAfter });
         });
     }
+    Remove_Invoice_Details(req, id, res) {
+        return __awaiter(this, void 0, void 0, function* () {
+            let invoiceDetail = yield prisma.invoiceDetail.findUnique({
+                where: {
+                    id,
+                },
+            });
+            if (!invoiceDetail) {
+                throw new ApiError_1.default("invoice Details not found", 404);
+            }
+            let invoice = yield prisma.invoice.findUnique({
+                where: { id: invoiceDetail.invoiceId },
+            });
+            const invoiceTotal = new library_1.Decimal((invoice === null || invoice === void 0 ? void 0 : invoice.total) || 0);
+            const invoiceDetailAmount = new library_1.Decimal(invoiceDetail.amount || 0);
+            const finalTotal = invoiceTotal.minus(invoiceDetailAmount);
+            yield prisma.invoice.update({
+                where: { id: invoiceDetail.invoiceId },
+                data: { total: finalTotal },
+            });
+            yield prisma.invoiceDetail.delete({
+                where: { id },
+            });
+            const invoiceAfter = yield prisma.invoice.findUnique({
+                where: { id: invoiceDetail.invoiceId },
+                include: {
+                    details: true,
+                },
+            });
+            return res
+                .status(200)
+                .json({ message: "invoice details removed successfully", invoiceAfter });
+        });
+    }
 };
 exports.invoiceControllers = invoiceControllers;
 __decorate([
@@ -229,6 +263,15 @@ __decorate([
     __metadata("design:paramtypes", [Object, Object, Number, Object]),
     __metadata("design:returntype", Promise)
 ], invoiceControllers.prototype, "Append_Invoice_Details", null);
+__decorate([
+    (0, routing_controllers_1.Delete)("/:id"),
+    __param(0, (0, routing_controllers_1.Req)()),
+    __param(1, (0, routing_controllers_1.Param)("id")),
+    __param(2, (0, routing_controllers_1.Res)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, Number, Object]),
+    __metadata("design:returntype", Promise)
+], invoiceControllers.prototype, "Remove_Invoice_Details", null);
 exports.invoiceControllers = invoiceControllers = __decorate([
     (0, routing_controllers_1.JsonController)("/api/invoice")
 ], invoiceControllers);
