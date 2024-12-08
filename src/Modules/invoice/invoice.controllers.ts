@@ -15,6 +15,7 @@ import ApiFeatures from "../../utils/ApiFeatures";
 import { createValidationMiddleware } from "../../middlewares/validation";
 import {
   addInvoiceDetailValidation,
+  appendInvoiceDetailValidation,
   updateInvoiceDetailValidation,
 } from "./invoive.validation";
 import ApiError from "../../utils/ApiError";
@@ -162,5 +163,48 @@ export class invoiceControllers {
       Invoice,
       total,
     });
+  }
+
+  @Post("/:id")
+  @UseBefore(createValidationMiddleware(appendInvoiceDetailValidation))
+  async Append_Invoice_Details(
+    @Req() req: any,
+    @Body() body: any,
+    @Param("id") id: number,
+    @Res() res: Response
+  ) {
+    const invoice = await prisma.invoice.findUnique({
+      where: { id },
+      include: {
+        details: true,
+      },
+    });
+
+    const invoiceTotal = new Decimal(invoice?.total || 0);
+    const bodyAmount = new Decimal(body.amount || 0);
+    const finalTotal = invoiceTotal.plus(bodyAmount);
+    await prisma.invoice.update({
+      where: { id },
+      data: { total: finalTotal },
+    });
+
+    await prisma.invoiceDetail.create({
+      data: {
+        invoiceId: id,
+        ...body,
+      },
+      include: {
+        invoice: true,
+      },
+    });
+    const invoiceAfter = await prisma.invoice.findUnique({
+      where: { id },
+      include: {
+        details: true,
+      },
+    });
+    return res
+      .status(200)
+      .json({ message: "invoice appended successfully", invoiceAfter });
   }
 }

@@ -138,6 +138,38 @@ let invoiceControllers = class invoiceControllers {
             });
         });
     }
+    Append_Invoice_Details(req, body, id, res) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const invoice = yield prisma.invoice.findUnique({
+                where: { id },
+                include: {
+                    details: true,
+                },
+            });
+            const invoiceTotal = new library_1.Decimal((invoice === null || invoice === void 0 ? void 0 : invoice.total) || 0);
+            const bodyAmount = new library_1.Decimal(body.amount || 0);
+            const finalTotal = invoiceTotal.plus(bodyAmount);
+            yield prisma.invoice.update({
+                where: { id },
+                data: { total: finalTotal },
+            });
+            yield prisma.invoiceDetail.create({
+                data: Object.assign({ invoiceId: id }, body),
+                include: {
+                    invoice: true,
+                },
+            });
+            const invoiceAfter = yield prisma.invoice.findUnique({
+                where: { id },
+                include: {
+                    details: true,
+                },
+            });
+            return res
+                .status(200)
+                .json({ message: "invoice appended successfully", invoiceAfter });
+        });
+    }
 };
 exports.invoiceControllers = invoiceControllers;
 __decorate([
@@ -186,6 +218,17 @@ __decorate([
     __metadata("design:paramtypes", [Object, Number, Object]),
     __metadata("design:returntype", Promise)
 ], invoiceControllers.prototype, "List_Invoice_Details", null);
+__decorate([
+    (0, routing_controllers_1.Post)("/:id"),
+    (0, routing_controllers_1.UseBefore)((0, validation_1.createValidationMiddleware)(invoive_validation_1.appendInvoiceDetailValidation)),
+    __param(0, (0, routing_controllers_1.Req)()),
+    __param(1, (0, routing_controllers_1.Body)()),
+    __param(2, (0, routing_controllers_1.Param)("id")),
+    __param(3, (0, routing_controllers_1.Res)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, Object, Number, Object]),
+    __metadata("design:returntype", Promise)
+], invoiceControllers.prototype, "Append_Invoice_Details", null);
 exports.invoiceControllers = invoiceControllers = __decorate([
     (0, routing_controllers_1.JsonController)("/api/invoice")
 ], invoiceControllers);
