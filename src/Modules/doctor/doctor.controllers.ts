@@ -4,6 +4,7 @@ import {
   Get,
   JsonController,
   Param,
+  Patch,
   Post,
   Put,
   QueryParams,
@@ -169,5 +170,21 @@ export class doctorControllers {
       throw new ApiError("doctor not found", 404);
     }
     return res.status(200).json(doctor);
+  }
+
+  @Patch("/:id")
+  async DeactiveDoctor(
+    @Req() req: any,
+    @Param("id") id: number,
+    @Res() res: Response
+  ) {
+    if (!(await prisma.doctor.findUnique({ where: { id } }))) {
+      throw new ApiError("doctor not found", 404);
+    }
+    await prisma.doctor.update({
+      where: { id },
+      data: { isActive: false },
+    });
+    return res.status(200).json({ message: "doctor deactiveded successfully" });
   }
 }
