@@ -18,7 +18,14 @@ class ApiFeatures {
 
   filter(baseFilter = {}) {
     let filterObj = { ...baseFilter, ...this.searchQuery };
-    let excludedFields = ["page", "sort", "limit", "fields", "keyword"];
+    let excludedFields = [
+      "page",
+      "sort",
+      "limit",
+      "fields",
+      "keyword_phone",
+      "keyword",
+    ];
     excludedFields.forEach((val) => {
       delete filterObj[val];
     });
@@ -78,19 +85,21 @@ class ApiFeatures {
   }
 
   search(modelName: string) {
-    if (this.searchQuery.keyword) {
-      const keyword = this.searchQuery.keyword.toLowerCase();
-      if (modelName === "product") {
+    if (this.searchQuery.keyword || this.searchQuery.keyword_phone) {
+      const keyword_phone = this.searchQuery.keyword_phone?.toLowerCase() || "";
+      const keyword = this.searchQuery.keyword?.toLowerCase() || "";
+
+      if (modelName === "patient") {
         this.prismaQuery.where = {
           OR: [
-            { title: { contains: keyword, mode: "insensitive" } },
-            { description: { contains: keyword, mode: "insensitive" } },
-          ],
+            keyword_phone ? { phone: { contains: keyword_phone } } : undefined,
+            keyword ? { name: { contains: keyword } } : undefined,
+          ].filter(Boolean), // إزالة القيم undefined
         };
       } else {
         this.prismaQuery.where = {
           ...this.prismaQuery.where,
-          name: { contains: keyword, mode: "insensitive" },
+          ...(keyword && { name: { contains: keyword, mode: "insensitive" } }),
         };
       }
     }

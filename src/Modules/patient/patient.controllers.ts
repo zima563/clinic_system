@@ -1,9 +1,11 @@
 import {
   Body,
+  Get,
   JsonController,
   Param,
   Post,
   Put,
+  QueryParams,
   Req,
   Res,
   UseBefore,
@@ -14,6 +16,7 @@ import { CheckPhoneMiddleware } from "../../middlewares/phoneExist";
 import { PrismaClient } from "@prisma/client";
 import { Request, Response } from "express";
 import ApiError from "../../utils/ApiError";
+import ApiFeatures from "../../utils/ApiFeatures";
 
 const prisma = new PrismaClient();
 
@@ -60,5 +63,31 @@ export class patientController {
       data: body,
     });
     return res.status(200).json({ message: "patient updated successfully" });
+  }
+
+  @Get("/")
+  async listPatient(
+    @Req() req: any,
+    @QueryParams() query: any,
+    @Body() body: any,
+    @Res() res: any
+  ) {
+    // Initialize ApiFeatures with the Prisma model and the search query
+    const apiFeatures = new ApiFeatures(prisma.patient, query);
+
+    // Apply filters, sorting, field selection, search, and pagination
+    await apiFeatures.filter().sort().limitedFields().search("patient"); // Specify the model name, 'user' in this case
+
+    await apiFeatures.paginateWithCount();
+
+    // Execute the query and get the result and pagination
+    const { result, pagination } = await apiFeatures.exec("patient");
+
+    // Return the result along with pagination information
+    return res.status(200).json({
+      data: result,
+      pagination: pagination, // Use the pagination here
+      count: result.length,
+    });
   }
 }

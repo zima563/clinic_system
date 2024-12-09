@@ -20,7 +20,14 @@ class ApiFeatures {
     }
     filter(baseFilter = {}) {
         let filterObj = Object.assign(Object.assign({}, baseFilter), this.searchQuery);
-        let excludedFields = ["page", "sort", "limit", "fields", "keyword"];
+        let excludedFields = [
+            "page",
+            "sort",
+            "limit",
+            "fields",
+            "keyword_phone",
+            "keyword",
+        ];
         excludedFields.forEach((val) => {
             delete filterObj[val];
         });
@@ -74,18 +81,20 @@ class ApiFeatures {
         return this;
     }
     search(modelName) {
-        if (this.searchQuery.keyword) {
-            const keyword = this.searchQuery.keyword.toLowerCase();
-            if (modelName === "product") {
+        var _a, _b;
+        if (this.searchQuery.keyword || this.searchQuery.keyword_phone) {
+            const keyword_phone = ((_a = this.searchQuery.keyword_phone) === null || _a === void 0 ? void 0 : _a.toLowerCase()) || "";
+            const keyword = ((_b = this.searchQuery.keyword) === null || _b === void 0 ? void 0 : _b.toLowerCase()) || "";
+            if (modelName === "patient") {
                 this.prismaQuery.where = {
                     OR: [
-                        { title: { contains: keyword, mode: "insensitive" } },
-                        { description: { contains: keyword, mode: "insensitive" } },
-                    ],
+                        keyword_phone ? { phone: { contains: keyword_phone } } : undefined,
+                        keyword ? { name: { contains: keyword } } : undefined,
+                    ].filter(Boolean), // إزالة القيم undefined
                 };
             }
             else {
-                this.prismaQuery.where = Object.assign(Object.assign({}, this.prismaQuery.where), { name: { contains: keyword, mode: "insensitive" } });
+                this.prismaQuery.where = Object.assign(Object.assign({}, this.prismaQuery.where), (keyword && { name: { contains: keyword, mode: "insensitive" } }));
             }
         }
         return this;
