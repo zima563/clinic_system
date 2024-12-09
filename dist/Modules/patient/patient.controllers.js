@@ -20,6 +20,9 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.patientController = void 0;
 const routing_controllers_1 = require("routing-controllers");
@@ -27,6 +30,7 @@ const validation_1 = require("../../middlewares/validation");
 const patient_validation_1 = require("./patient.validation");
 const phoneExist_1 = require("../../middlewares/phoneExist");
 const client_1 = require("@prisma/client");
+const ApiError_1 = __importDefault(require("../../utils/ApiError"));
 const prisma = new client_1.PrismaClient();
 let patientController = class patientController {
     addPatient(req, body, res) {
@@ -42,6 +46,25 @@ let patientController = class patientController {
             return res.status(200).json(patient);
         });
     }
+    updatePatient(req, id, body, res) {
+        return __awaiter(this, void 0, void 0, function* () {
+            if (body.birthdate) {
+                const birthdate = new Date(body.birthdate);
+                body.birthdate = birthdate.toISOString(); // Ensure it’s in ISO 8601 format
+            }
+            let patient = yield prisma.patient.findUnique({
+                where: { id },
+            });
+            if (!patient) {
+                throw new ApiError_1.default("patient not found", 404);
+            }
+            yield prisma.patient.update({
+                where: { id },
+                data: body,
+            });
+            return res.status(200).json({ message: "patient updated successfully" });
+        });
+    }
 };
 exports.patientController = patientController;
 __decorate([
@@ -54,6 +77,17 @@ __decorate([
     __metadata("design:paramtypes", [Object, Object, Object]),
     __metadata("design:returntype", Promise)
 ], patientController.prototype, "addPatient", null);
+__decorate([
+    (0, routing_controllers_1.Put)("/:id"),
+    (0, routing_controllers_1.UseBefore)((0, validation_1.createValidationMiddleware)(patient_validation_1.UpdatePatientSchema)),
+    __param(0, (0, routing_controllers_1.Req)()),
+    __param(1, (0, routing_controllers_1.Param)("id")),
+    __param(2, (0, routing_controllers_1.Body)()),
+    __param(3, (0, routing_controllers_1.Res)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, Number, Object, Object]),
+    __metadata("design:returntype", Promise)
+], patientController.prototype, "updatePatient", null);
 exports.patientController = patientController = __decorate([
     (0, routing_controllers_1.JsonController)("/api/patients")
 ], patientController);
