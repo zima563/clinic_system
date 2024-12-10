@@ -156,6 +156,31 @@ let scheduleControllers = class scheduleControllers {
             return res.status(200).json(updatedSchedule);
         });
     }
+    deleteSchedule(id, res) {
+        return __awaiter(this, void 0, void 0, function* () {
+            // Check if the schedule exists
+            const schedule = yield prisma.schedule.findUnique({
+                where: { id },
+            });
+            if (!schedule) {
+                throw new ApiError_1.default("schedule not found", 404);
+            }
+            yield prisma.scheduleDate.deleteMany({
+                where: { scheduleId: id },
+            });
+            yield prisma.date.deleteMany({
+                where: {
+                    scheduleDates: {
+                        none: {},
+                    },
+                },
+            });
+            yield prisma.schedule.delete({
+                where: { id },
+            });
+            return res.status(200).json({ message: "Schedule deleted successfully" });
+        });
+    }
 };
 exports.scheduleControllers = scheduleControllers;
 __decorate([
@@ -197,6 +222,14 @@ __decorate([
     __metadata("design:paramtypes", [Number, Object, Object]),
     __metadata("design:returntype", Promise)
 ], scheduleControllers.prototype, "updateSchedule", null);
+__decorate([
+    (0, routing_controllers_1.Delete)("/:id"),
+    __param(0, (0, routing_controllers_1.Param)("id")),
+    __param(1, (0, routing_controllers_1.Res)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Number, Object]),
+    __metadata("design:returntype", Promise)
+], scheduleControllers.prototype, "deleteSchedule", null);
 exports.scheduleControllers = scheduleControllers = __decorate([
     (0, routing_controllers_1.JsonController)("/api/schedule")
 ], scheduleControllers);

@@ -1,4 +1,5 @@
 import {
+  Delete,
   Get,
   JsonController,
   Param,
@@ -167,5 +168,35 @@ export class scheduleControllers {
 
     // Return the updated schedule
     return res.status(200).json(updatedSchedule);
+  }
+
+  @Delete("/:id")
+  async deleteSchedule(@Param("id") id: number, @Res() res: Response) {
+    // Check if the schedule exists
+    const schedule = await prisma.schedule.findUnique({
+      where: { id },
+    });
+
+    if (!schedule) {
+      throw new ApiError("schedule not found", 404);
+    }
+
+    await prisma.scheduleDate.deleteMany({
+      where: { scheduleId: id },
+    });
+
+    await prisma.date.deleteMany({
+      where: {
+        scheduleDates: {
+          none: {},
+        },
+      },
+    });
+
+    await prisma.schedule.delete({
+      where: { id },
+    });
+
+    return res.status(200).json({ message: "Schedule deleted successfully" });
   }
 }
