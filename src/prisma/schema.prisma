@@ -99,8 +99,10 @@ model Schedule {
 }
 
 model Date {
-  id   Int      @id @default(autoincrement())
-  date DateTime
+  id       Int      @id @default(autoincrement())
+  date     DateTime
+  fromTime String
+  toTime   String
 
   scheduleDates ScheduleDate[]
 }
