@@ -98,6 +98,64 @@ let scheduleControllers = class scheduleControllers {
             return res.status(200).json(schedule);
         });
     }
+    updateSchedule(id, req, res) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const { doctorId, servicesId, price, dates } = req.body;
+            const schedule = yield prisma.schedule.findUnique({
+                where: {
+                    id: id, // Get the schedule by ID
+                },
+                include: {
+                    dates: true, // Include the related dates
+                },
+            });
+            if (!schedule) {
+                throw new ApiError_1.default("schedule not found", 404);
+            }
+            yield prisma.schedule.update({
+                where: {
+                    id: id, // Find the schedule by the provided id
+                },
+                data: {
+                    doctorId,
+                    servicesId,
+                    price,
+                    dates: {
+                        // Update the dates related to the schedule
+                        deleteMany: {}, // Optional: If you want to clear old dates before adding new ones
+                        create: dates.map((date) => ({
+                            date: {
+                                create: {
+                                    date: `${date.date}T00:00:00.000Z`,
+                                    fromTime: date.fromTime,
+                                    toTime: date.toTime,
+                                },
+                            },
+                        })),
+                    },
+                },
+                include: {
+                    dates: {
+                        include: {
+                            date: true, // Include the related dates
+                        },
+                    },
+                },
+            });
+            let updatedSchedule = yield prisma.schedule.findUnique({
+                where: { id },
+                include: {
+                    dates: {
+                        include: {
+                            date: true,
+                        },
+                    },
+                },
+            });
+            // Return the updated schedule
+            return res.status(200).json(updatedSchedule);
+        });
+    }
 };
 exports.scheduleControllers = scheduleControllers;
 __decorate([
@@ -128,6 +186,17 @@ __decorate([
     __metadata("design:paramtypes", [Object, Number, Object]),
     __metadata("design:returntype", Promise)
 ], scheduleControllers.prototype, "showScheduleDetails", null);
+__decorate([
+    (0, routing_controllers_1.Put)("/:id"),
+    (0, routing_controllers_1.UseBefore)((0, validation_1.createValidationMiddleware)(schedule_validations_1.updateScheduleSchema)) // Optional validation middleware
+    ,
+    __param(0, (0, routing_controllers_1.Param)("id")),
+    __param(1, (0, routing_controllers_1.Req)()),
+    __param(2, (0, routing_controllers_1.Res)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Number, Object, Object]),
+    __metadata("design:returntype", Promise)
+], scheduleControllers.prototype, "updateSchedule", null);
 exports.scheduleControllers = scheduleControllers = __decorate([
     (0, routing_controllers_1.JsonController)("/api/schedule")
 ], scheduleControllers);

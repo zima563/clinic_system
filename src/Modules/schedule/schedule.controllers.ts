@@ -3,13 +3,17 @@ import {
   JsonController,
   Param,
   Post,
+  Put,
   QueryParam,
   Req,
   Res,
   UseBefore,
 } from "routing-controllers";
 import { createValidationMiddleware } from "../../middlewares/validation";
-import { addscheduleSchema } from "./schedule.validations";
+import {
+  addscheduleSchema,
+  updateScheduleSchema,
+} from "./schedule.validations";
 import { Request, Response } from "express";
 import { PrismaClient } from "@prisma/client";
 import ApiFeatures from "../../utils/ApiFeatures";
@@ -98,5 +102,70 @@ export class scheduleControllers {
       throw new ApiError("schedule not found", 404);
     }
     return res.status(200).json(schedule);
+  }
+
+  @Put("/:id")
+  @UseBefore(createValidationMiddleware(updateScheduleSchema)) // Optional validation middleware
+  async updateSchedule(
+    @Param("id") id: number,
+    @Req() req: Request,
+    @Res() res: Response
+  ) {
+    const { doctorId, servicesId, price, dates } = req.body;
+    const schedule = await prisma.schedule.findUnique({
+      where: {
+        id: id, // Get the schedule by ID
+      },
+      include: {
+        dates: true, // Include the related dates
+      },
+    });
+
+    if (!schedule) {
+      throw new ApiError("schedule not found", 404);
+    }
+    await prisma.schedule.update({
+      where: {
+        id: id, // Find the schedule by the provided id
+      },
+      data: {
+        doctorId,
+        servicesId,
+        price,
+        dates: {
+          // Update the dates related to the schedule
+          deleteMany: {}, // Optional: If you want to clear old dates before adding new ones
+          create: dates.map((date: any) => ({
+            date: {
+              create: {
+                date: `${date.date}T00:00:00.000Z`,
+                fromTime: date.fromTime,
+                toTime: date.toTime,
+              },
+            },
+          })),
+        },
+      },
+      include: {
+        dates: {
+          include: {
+            date: true, // Include the related dates
+          },
+        },
+      },
+    });
+    let updatedSchedule = await prisma.schedule.findUnique({
+      where: { id },
+      include: {
+        dates: {
+          include: {
+            date: true,
+          },
+        },
+      },
+    });
+
+    // Return the updated schedule
+    return res.status(200).json(updatedSchedule);
   }
 }
