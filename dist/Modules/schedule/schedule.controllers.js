@@ -30,6 +30,7 @@ const validation_1 = require("../../middlewares/validation");
 const schedule_validations_1 = require("./schedule.validations");
 const client_1 = require("@prisma/client");
 const ApiFeatures_1 = __importDefault(require("../../utils/ApiFeatures"));
+const ApiError_1 = __importDefault(require("../../utils/ApiError"));
 const prisma = new client_1.PrismaClient();
 let scheduleControllers = class scheduleControllers {
     addSchema(req, res) {
@@ -72,11 +73,29 @@ let scheduleControllers = class scheduleControllers {
             yield apiFeatures.filter().limitedFields().sort().search("schedule");
             yield apiFeatures.paginateWithCount();
             const { result, pagination } = yield apiFeatures.exec("schedule");
-            res.status(200).json({
+            return res.status(200).json({
                 data: result,
                 pagination,
                 count: result.length,
             });
+        });
+    }
+    showScheduleDetails(req, id, res) {
+        return __awaiter(this, void 0, void 0, function* () {
+            let schedule = yield prisma.schedule.findUnique({
+                where: { id },
+                include: {
+                    dates: {
+                        include: {
+                            date: true,
+                        },
+                    },
+                },
+            });
+            if (!schedule) {
+                throw new ApiError_1.default("schedule not found", 404);
+            }
+            return res.status(200).json(schedule);
         });
     }
 };
@@ -100,6 +119,15 @@ __decorate([
     __metadata("design:paramtypes", [Object, Object, String, String]),
     __metadata("design:returntype", Promise)
 ], scheduleControllers.prototype, "listSchedules", null);
+__decorate([
+    (0, routing_controllers_1.Get)("/:id"),
+    __param(0, (0, routing_controllers_1.Req)()),
+    __param(1, (0, routing_controllers_1.Param)("id")),
+    __param(2, (0, routing_controllers_1.Res)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, Number, Object]),
+    __metadata("design:returntype", Promise)
+], scheduleControllers.prototype, "showScheduleDetails", null);
 exports.scheduleControllers = scheduleControllers = __decorate([
     (0, routing_controllers_1.JsonController)("/api/schedule")
 ], scheduleControllers);

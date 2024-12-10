@@ -1,6 +1,7 @@
 import {
   Get,
   JsonController,
+  Param,
   Post,
   QueryParam,
   Req,
@@ -12,6 +13,7 @@ import { addscheduleSchema } from "./schedule.validations";
 import { Request, Response } from "express";
 import { PrismaClient } from "@prisma/client";
 import ApiFeatures from "../../utils/ApiFeatures";
+import ApiError from "../../utils/ApiError";
 const prisma = new PrismaClient();
 
 @JsonController("/api/schedule")
@@ -69,10 +71,32 @@ export class scheduleControllers {
     await apiFeatures.paginateWithCount();
 
     const { result, pagination } = await apiFeatures.exec("schedule");
-    res.status(200).json({
+    return res.status(200).json({
       data: result,
       pagination,
       count: result.length,
     });
+  }
+
+  @Get("/:id")
+  async showScheduleDetails(
+    @Req() req: Request,
+    @Param("id") id: number,
+    @Res() res: Response
+  ) {
+    let schedule = await prisma.schedule.findUnique({
+      where: { id },
+      include: {
+        dates: {
+          include: {
+            date: true,
+          },
+        },
+      },
+    });
+    if (!schedule) {
+      throw new ApiError("schedule not found", 404);
+    }
+    return res.status(200).json(schedule);
   }
 }
