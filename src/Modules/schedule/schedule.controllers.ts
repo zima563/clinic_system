@@ -1,8 +1,17 @@
-import { JsonController, Post, Req, Res, UseBefore } from "routing-controllers";
+import {
+  Get,
+  JsonController,
+  Post,
+  QueryParam,
+  Req,
+  Res,
+  UseBefore,
+} from "routing-controllers";
 import { createValidationMiddleware } from "../../middlewares/validation";
 import { addscheduleSchema } from "./schedule.validations";
 import { Request, Response } from "express";
 import { PrismaClient } from "@prisma/client";
+import ApiFeatures from "../../utils/ApiFeatures";
 const prisma = new PrismaClient();
 
 @JsonController("/api/schedule")
@@ -37,5 +46,33 @@ export class scheduleControllers {
       },
     });
     return res.status(200).json(schedule);
+  }
+
+  @Get("/")
+  async listSchedules(
+    @Req() req: Request,
+    @Res() res: Response,
+    @QueryParam("doctorId") doctorId?: string,
+    @QueryParam("servicesId") servicesId?: string
+  ) {
+    const parsedDoctorId = doctorId ? parseInt(doctorId, 10) : undefined;
+    const parsedServicesId = servicesId ? parseInt(servicesId, 10) : undefined;
+
+    const query = {
+      ...req.query,
+      doctorId: parsedDoctorId,
+      servicesId: parsedServicesId,
+    };
+
+    const apiFeatures = new ApiFeatures(prisma.schedule, query);
+    await apiFeatures.filter().limitedFields().sort().search("schedule");
+    await apiFeatures.paginateWithCount();
+
+    const { result, pagination } = await apiFeatures.exec("schedule");
+    res.status(200).json({
+      data: result,
+      pagination,
+      count: result.length,
+    });
   }
 }

@@ -30,20 +30,9 @@ class ApiFeatures {
       delete filterObj[val];
     });
 
-    // Add `parentId` to the query if it's provided in the search query
-    if (filterObj.parentId) {
-      this.prismaQuery.where.parentId =
-        filterObj.parentId === "null" ? null : parseInt(filterObj.parentId, 10);
-    }
-
-    // Add `categoryId` to the query if it's provided in the search query
-    if (filterObj.categoryId) {
-      this.prismaQuery.where.categoryId = parseInt(filterObj.categoryId, 10);
-    }
-
-    // Add `createdAt` filter for a specific day
+    // Filter by specific day (YYYY-MM-DD)
     if (this.searchQuery.day) {
-      const date = new Date(this.searchQuery.day); // Format: YYYY-MM-DD
+      const date = new Date(this.searchQuery.day);
       const startOfDay = new Date(date.setUTCHours(0, 0, 0, 0));
       const endOfDay = new Date(date.setUTCHours(23, 59, 59, 999));
       this.prismaQuery.where.createdAt = {
@@ -146,6 +135,14 @@ class ApiFeatures {
     } else if (modelName === "product") {
       this.prismaQuery.include = {
         category: true,
+      };
+    } else if (modelName === "schedule") {
+      this.prismaQuery.include = {
+        dates: {
+          include: {
+            date: true,
+          },
+        },
       };
     }
 
