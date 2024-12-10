@@ -90,4 +90,19 @@ export class patientController {
       count: result.length,
     });
   }
+
+  @Get("/:id")
+  async getPatient(
+    @Req() req: Request,
+    @Param("id") id: number,
+    @Res() res: Response
+  ) {
+    let patient = await prisma.patient.findUnique({
+      where: { id },
+    });
+    if (!patient) {
+      throw new ApiError("patient not found", 404);
+    }
+    return res.status(200).json(patient);
+  }
 }
