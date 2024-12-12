@@ -5,6 +5,7 @@ import {
   JsonController,
   Param,
   Post,
+  QueryParam,
   Req,
   Res,
   UseBefore,
@@ -79,10 +80,39 @@ export class visitController {
     }
     let VisitDetails = await prisma.visitDetail.findMany({
       where: { visitId: id },
+      include: {},
     });
     return res.status(200).json({
       data: VisitDetails,
       total: visit.total,
+    });
+  }
+
+  @Get("/")
+  async getAllVisits(
+    @Req() req: Request,
+    @Res() res: Response,
+    @QueryParam("patientId") patientId?: number
+  ) {
+    let filter: any = {};
+    if (patientId) {
+      filter.patientId = patientId;
+    }
+    let visits = await prisma.visit.findMany({
+      where: {
+        details: {
+          some: {
+            patientId,
+          },
+        },
+      },
+      include: {
+        details: true,
+      },
+    });
+    return res.status(200).json({
+      data: visits,
+      count: visits.length,
     });
   }
 }

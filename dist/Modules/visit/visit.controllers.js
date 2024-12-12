@@ -80,10 +80,35 @@ let visitController = class visitController {
             }
             let VisitDetails = yield prisma.visitDetail.findMany({
                 where: { visitId: id },
+                include: {},
             });
             return res.status(200).json({
                 data: VisitDetails,
                 total: visit.total,
+            });
+        });
+    }
+    getAllVisits(req, res, patientId) {
+        return __awaiter(this, void 0, void 0, function* () {
+            let filter = {};
+            if (patientId) {
+                filter.patientId = patientId;
+            }
+            let visits = yield prisma.visit.findMany({
+                where: {
+                    details: {
+                        some: {
+                            patientId,
+                        },
+                    },
+                },
+                include: {
+                    details: true,
+                },
+            });
+            return res.status(200).json({
+                data: visits,
+                count: visits.length,
             });
         });
     }
@@ -108,6 +133,15 @@ __decorate([
     __metadata("design:paramtypes", [Object, Number, Object]),
     __metadata("design:returntype", Promise)
 ], visitController.prototype, "showVisitDetails", null);
+__decorate([
+    (0, routing_controllers_1.Get)("/"),
+    __param(0, (0, routing_controllers_1.Req)()),
+    __param(1, (0, routing_controllers_1.Res)()),
+    __param(2, (0, routing_controllers_1.QueryParam)("patientId")),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, Object, Number]),
+    __metadata("design:returntype", Promise)
+], visitController.prototype, "getAllVisits", null);
 exports.visitController = visitController = __decorate([
     (0, routing_controllers_1.JsonController)("/api/visit")
 ], visitController);
