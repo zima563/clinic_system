@@ -176,7 +176,7 @@ __decorate([
     __metadata("design:returntype", Promise)
 ], appointmentController.prototype, "updateStatus", null);
 __decorate([
-    (0, routing_controllers_1.Patch)("/:id"),
+    (0, routing_controllers_1.Put)("/:id"),
     (0, routing_controllers_1.UseBefore)((0, validation_1.createValidationMiddleware)(appointment_validation_1.updateAppointmentSchema)),
     __param(0, (0, routing_controllers_1.Req)()),
     __param(1, (0, routing_controllers_1.Param)("id")),

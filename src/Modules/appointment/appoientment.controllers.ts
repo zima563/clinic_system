@@ -5,6 +5,7 @@ import {
   Param,
   Patch,
   Post,
+  Put,
   QueryParam,
   Req,
   Res,
@@ -124,7 +125,7 @@ export class appointmentController {
       .json({ message: `appointment updated successfully to ${body.status}` });
   }
 
-  @Patch("/:id")
+  @Put("/:id")
   @UseBefore(createValidationMiddleware(updateAppointmentSchema))
   async updateAppintment(
     @Req() req: Request,
