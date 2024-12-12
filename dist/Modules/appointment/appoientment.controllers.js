@@ -34,17 +34,10 @@ const prisma = new client_1.PrismaClient();
 let appointmentController = class appointmentController {
     addAppointment(req, body, res) {
         return __awaiter(this, void 0, void 0, function* () {
-            // let date = await prisma.scheduleDate.findFirst({
-            //    where:{ dateId: body.dateId }
-            // })
-            // const scheduleDate: number = date?.id || undefined,
-            // let appointment = await prisma.appointment.create({
-            //   data: {
-            //     patientId: body.patientId,
-            //     scheduleDateId: date?.id,
-            //   },
-            // });
-            // return res.status(200).json(appointment);
+            let appointment = yield prisma.appointment.create({
+                data: body,
+            });
+            return res.status(200).json(appointment);
         });
     }
     getAppointment(req, res, patientId) {

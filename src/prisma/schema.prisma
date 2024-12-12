@@ -165,13 +165,13 @@ model Patient {
 }
 
 model Appointment {
-  id             Int               @id @default(autoincrement())
-  patientId      Int
-  status         AppointmentStatus @default(pending)
-  scheduleDateId Int
+  id         Int               @id @default(autoincrement())
+  patientId  Int
+  status     AppointmentStatus @default(pending)
+  scheduleId Int
 
   patient  Patient  @relation(fields: [patientId], references: [id])
-  schedule Schedule @relation(fields: [scheduleDateId], references: [id])
+  schedule Schedule @relation(fields: [scheduleId], references: [id])
 }
 
 model Visit {
