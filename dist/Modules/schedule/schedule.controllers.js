@@ -83,6 +83,7 @@ let scheduleControllers = class scheduleControllers {
     updateSchedule(id, req, res) {
         return __awaiter(this, void 0, void 0, function* () {
             const { doctorId, servicesId, price, date, fromTime, toTime } = req.body;
+            const parsedDate = date ? new Date(date) : undefined;
             const schedule = yield prisma.schedule.findUnique({
                 where: {
                     id: id, // Get the schedule by ID
@@ -99,7 +100,7 @@ let scheduleControllers = class scheduleControllers {
                     doctorId,
                     servicesId,
                     price,
-                    date,
+                    date: parsedDate,
                     fromTime,
                     toTime,
                 },

@@ -97,6 +97,7 @@ export class scheduleControllers {
     @Res() res: Response
   ) {
     const { doctorId, servicesId, price, date, fromTime, toTime } = req.body;
+    const parsedDate = date ? new Date(date) : undefined;
     const schedule = await prisma.schedule.findUnique({
       where: {
         id: id, // Get the schedule by ID
@@ -106,6 +107,7 @@ export class scheduleControllers {
     if (!schedule) {
       throw new ApiError("schedule not found", 404);
     }
+
     await prisma.schedule.update({
       where: {
         id: id, // Find the schedule by the provided id
@@ -114,7 +116,7 @@ export class scheduleControllers {
         doctorId,
         servicesId,
         price,
-        date,
+        date: parsedDate,
         fromTime,
         toTime,
       },
