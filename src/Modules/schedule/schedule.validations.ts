@@ -45,23 +45,23 @@ export const addscheduleSchema = Joi.object({
 
 export const updateScheduleSchema = Joi.object({
   id: Joi.string().required(),
-  doctorId: Joi.number().integer().positiv.messages({
+  doctorId: Joi.number().integer().positive().messages({
     "number.base": "Doctor ID must be a number.",
     "number.integer": "Doctor ID must be an integer.",
     "number.positive": "Doctor ID must be a positive number.",
   }),
 
-  servicesId: Joi.number().integer().positiv.messages({
+  servicesId: Joi.number().integer().positive().messages({
     "number.base": "Service ID must be a number.",
     "number.integer": "Service ID must be an integer.",
     "number.positive": "Service ID must be a positive number.",
   }),
 
-  price: Joi.number().positiv.messages({
+  price: Joi.number().positive().messages({
     "number.base": "Price must be a number.",
     "number.positive": "Price must be a positive number.",
   }),
-  date: Joi.string().isoDat.messages({
+  date: Joi.string().isoDate().messages({
     "string.base": "Date must be a string.",
     "string.isoDate": "Date must be in ISO 8601 format.",
   }),
