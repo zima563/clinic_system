@@ -176,7 +176,7 @@ model Appointment {
 
 model Visit {
   id        Int      @id @default(autoincrement())
-  rf        String   @unique
+  rf        String   @unique @default(uuid())
   total     Decimal  @db.Decimal(18, 2)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

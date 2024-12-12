@@ -21,6 +21,7 @@ const doctor_controllers_1 = require("./Modules/doctor/doctor.controllers");
 const patient_controllers_1 = require("./Modules/patient/patient.controllers");
 const schedule_controllers_1 = require("./Modules/schedule/schedule.controllers");
 const appoientment_controllers_1 = require("./Modules/appointment/appoientment.controllers");
+const visit_controllers_1 = require("./Modules/visit/visit.controllers");
 const app = (0, express_1.default)();
 // Add body parser middleware
 app.use(express_1.default.json({ limit: "50mb" })); // Parses application/json request bodies
@@ -43,6 +44,7 @@ app.use((0, cors_1.default)({
         patient_controllers_1.patientController,
         schedule_controllers_1.scheduleControllers,
         appoientment_controllers_1.appointmentController,
+        visit_controllers_1.visitController,
     ], // Adjust path to your controllers
     middlewares: [validation_1.createValidationMiddleware, ErrorHandler_1.ErrorHandler],
     defaultErrorHandler: false,

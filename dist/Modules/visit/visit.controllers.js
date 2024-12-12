@@ -1,0 +1,85 @@
+"use strict";
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+var __param = (this && this.__param) || function (paramIndex, decorator) {
+    return function (target, key) { decorator(target, key, paramIndex); }
+};
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.visitController = void 0;
+const routing_controllers_1 = require("routing-controllers");
+const validation_1 = require("../../middlewares/validation");
+const visit_validation_1 = require("./visit.validation");
+const client_1 = require("@prisma/client");
+const prisma = new client_1.PrismaClient();
+let visitController = class visitController {
+    createVisit(req, body, res) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const { visitDetails } = body;
+            const total = visitDetails.reduce((sum, detail) => sum + detail.price, 0);
+            const visit = yield prisma.visit.create({
+                data: {
+                    total,
+                },
+            });
+            const createdVisitDetails = yield prisma.visitDetail.createMany({
+                data: visitDetails.map((detail) => ({
+                    visitId: visit.id,
+                    patientId: detail.patientId,
+                    status: detail.status,
+                    price: detail.price,
+                    scheduleId: detail.scheduleId,
+                })),
+            });
+            const invoice = yield prisma.invoice.create({
+                data: {
+                    total,
+                },
+            });
+            for (const invoiceData of visitDetails) {
+                const invoiceDetail = yield prisma.invoiceDetail.create({
+                    data: {
+                        description: visit.rf,
+                        amount: invoiceData.price,
+                        invoiceId: invoice.id, // Link the invoice detail to the invoice
+                    },
+                });
+            }
+            return res.status(201).json({
+                message: "Visit created successfully with associated invoice details.",
+                visit,
+                visitDetails: createdVisitDetails,
+                invoice,
+            });
+        });
+    }
+};
+exports.visitController = visitController;
+__decorate([
+    (0, routing_controllers_1.Post)("/"),
+    (0, routing_controllers_1.UseBefore)((0, validation_1.createValidationMiddleware)(visit_validation_1.createVisitSchema)),
+    __param(0, (0, routing_controllers_1.Req)()),
+    __param(1, (0, routing_controllers_1.Body)()),
+    __param(2, (0, routing_controllers_1.Res)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, Object, Object]),
+    __metadata("design:returntype", Promise)
+], visitController.prototype, "createVisit", null);
+exports.visitController = visitController = __decorate([
+    (0, routing_controllers_1.JsonController)("/api/visit")
+], visitController);

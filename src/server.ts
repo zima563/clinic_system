@@ -17,6 +17,7 @@ import { doctorControllers } from "./Modules/doctor/doctor.controllers";
 import { patientController } from "./Modules/patient/patient.controllers";
 import { scheduleControllers } from "./Modules/schedule/schedule.controllers";
 import { appointmentController } from "./Modules/appointment/appoientment.controllers";
+import { visitController } from "./Modules/visit/visit.controllers";
 
 const app = express();
 
@@ -44,6 +45,7 @@ useExpressServer(app, {
     patientController,
     scheduleControllers,
     appointmentController,
+    visitController,
   ], // Adjust path to your controllers
   middlewares: [createValidationMiddleware, ErrorHandler],
   defaultErrorHandler: false,
