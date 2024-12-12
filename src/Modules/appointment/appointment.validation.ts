@@ -14,3 +14,20 @@ export const addAppointmentValidationSchema = Joi.object({
     "any.required": "The schedule ID is required.",
   }),
 });
+
+enum AppointmentStatus {
+  pending = "pending",
+  confirmed = "confirmed",
+  canceled = "canceled",
+}
+
+export const updateAppointmentStatusSchema = Joi.object({
+  id: Joi.string().required(),
+  status: Joi.string()
+    .valid(
+      AppointmentStatus.pending,
+      AppointmentStatus.confirmed,
+      AppointmentStatus.canceled
+    )
+    .required(),
+});

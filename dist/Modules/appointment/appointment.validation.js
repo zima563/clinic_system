@@ -3,7 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.addAppointmentValidationSchema = void 0;
+exports.updateAppointmentStatusSchema = exports.addAppointmentValidationSchema = void 0;
 const joi_1 = __importDefault(require("joi"));
 exports.addAppointmentValidationSchema = joi_1.default.object({
     patientId: joi_1.default.number().integer().positive().required().messages({
@@ -18,4 +18,16 @@ exports.addAppointmentValidationSchema = joi_1.default.object({
         "number.positive": "The schedule ID must be a positive number.",
         "any.required": "The schedule ID is required.",
     }),
+});
+var AppointmentStatus;
+(function (AppointmentStatus) {
+    AppointmentStatus["pending"] = "pending";
+    AppointmentStatus["confirmed"] = "confirmed";
+    AppointmentStatus["canceled"] = "canceled";
+})(AppointmentStatus || (AppointmentStatus = {}));
+exports.updateAppointmentStatusSchema = joi_1.default.object({
+    id: joi_1.default.string().required(),
+    status: joi_1.default.string()
+        .valid(AppointmentStatus.pending, AppointmentStatus.confirmed, AppointmentStatus.canceled)
+        .required(),
 });
