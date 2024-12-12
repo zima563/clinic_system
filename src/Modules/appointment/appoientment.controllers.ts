@@ -2,6 +2,7 @@ import {
   Body,
   Get,
   JsonController,
+  Param,
   Post,
   QueryParam,
   Req,
@@ -30,8 +31,8 @@ export class appointmentController {
     return res.status(200).json(appointment);
   }
 
-  @Get("/")
-  async getAppointment(
+  @Get("/patient")
+  async getPatientAppointment(
     @Req() req: Request,
     @Res() res: Response,
     @QueryParam("patientId") patientId?: number
@@ -39,19 +40,39 @@ export class appointmentController {
     if (!patientId) {
       throw new ApiError("patientId must exist", 401);
     }
-    // let appointments = await prisma.appointment.findMany({
-    //   where: { patientId },
-    //   include: {
-    //     schedule: {
-    //       include: {
-    //         dates: true,
-    //       },
-    //     },
-    //   },
-    // });
-    // return res.status(200).json({
-    //   data: appointments,
-    //   count: appointments.length,
-    // });
+    let appointments = await prisma.appointment.findMany({
+      where: { patientId },
+      include: {
+        schedule: true,
+        patient: true,
+      },
+    });
+    return res.status(200).json({
+      data: appointments,
+      count: appointments.length,
+    });
+  }
+
+  @Get("/")
+  async getAppointment(@Req() req: Request, @Res() res: Response) {
+    const today = new Date();
+
+    const normalizedDate = today.toISOString().split("T")[0];
+
+    let appointments = await prisma.appointment.findMany({
+      where: {
+        schedule: {
+          date: `${normalizedDate}T00:00:00.000Z`,
+        },
+      },
+      include: {
+        schedule: true,
+        patient: true,
+      },
+    });
+    return res.status(200).json({
+      data: appointments,
+      count: appointments.length,
+    });
   }
 }
