@@ -31,3 +31,17 @@ export const updateAppointmentStatusSchema = Joi.object({
     )
     .required(),
 });
+
+export const updateAppointmentSchema = Joi.object({
+  id: Joi.string().required(),
+  patientId: Joi.number().integer().positive().messages({
+    "number.base": "The patient ID must be a number.",
+    "number.integer": "The patient ID must be an integer.",
+    "number.positive": "The patient ID must be a positive number.",
+  }),
+  scheduleId: Joi.number().integer().positive().messages({
+    "number.base": "The schedule ID must be a number.",
+    "number.integer": "The schedule ID must be an integer.",
+    "number.positive": "The schedule ID must be a positive number.",
+  }),
+});

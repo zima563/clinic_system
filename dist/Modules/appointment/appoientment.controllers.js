@@ -112,6 +112,20 @@ let appointmentController = class appointmentController {
                 .json({ message: `appointment updated successfully to ${body.status}` });
         });
     }
+    updateAppintment(req, id, body, res) {
+        return __awaiter(this, void 0, void 0, function* () {
+            if (!(yield prisma.appointment.findUnique({ where: { id } }))) {
+                throw new ApiError_1.default("appointment not found", 404);
+            }
+            yield prisma.appointment.update({
+                where: { id },
+                data: body,
+            });
+            return res
+                .status(200)
+                .json({ message: `appointment updated successfully` });
+        });
+    }
 };
 exports.appointmentController = appointmentController;
 __decorate([
@@ -161,6 +175,17 @@ __decorate([
     __metadata("design:paramtypes", [Object, Number, Object, Object]),
     __metadata("design:returntype", Promise)
 ], appointmentController.prototype, "updateStatus", null);
+__decorate([
+    (0, routing_controllers_1.Patch)("/:id"),
+    (0, routing_controllers_1.UseBefore)((0, validation_1.createValidationMiddleware)(appointment_validation_1.updateAppointmentSchema)),
+    __param(0, (0, routing_controllers_1.Req)()),
+    __param(1, (0, routing_controllers_1.Param)("id")),
+    __param(2, (0, routing_controllers_1.Body)()),
+    __param(3, (0, routing_controllers_1.Res)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, Number, Object, Object]),
+    __metadata("design:returntype", Promise)
+], appointmentController.prototype, "updateAppintment", null);
 exports.appointmentController = appointmentController = __decorate([
     (0, routing_controllers_1.JsonController)("/api/appointment")
 ], appointmentController);

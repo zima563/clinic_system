@@ -13,6 +13,7 @@ import {
 import { createValidationMiddleware } from "../../middlewares/validation";
 import {
   addAppointmentValidationSchema,
+  updateAppointmentSchema,
   updateAppointmentStatusSchema,
 } from "./appointment.validation";
 import { Request, Response } from "express";
@@ -121,5 +122,25 @@ export class appointmentController {
     return res
       .status(200)
       .json({ message: `appointment updated successfully to ${body.status}` });
+  }
+
+  @Patch("/:id")
+  @UseBefore(createValidationMiddleware(updateAppointmentSchema))
+  async updateAppintment(
+    @Req() req: Request,
+    @Param("id") id: number,
+    @Body() body: any,
+    @Res() res: Response
+  ) {
+    if (!(await prisma.appointment.findUnique({ where: { id } }))) {
+      throw new ApiError("appointment not found", 404);
+    }
+    await prisma.appointment.update({
+      where: { id },
+      data: body,
+    });
+    return res
+      .status(200)
+      .json({ message: `appointment updated successfully` });
   }
 }
