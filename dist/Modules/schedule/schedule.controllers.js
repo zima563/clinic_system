@@ -35,30 +35,15 @@ const prisma = new client_1.PrismaClient();
 let scheduleControllers = class scheduleControllers {
     addSchema(req, res) {
         return __awaiter(this, void 0, void 0, function* () {
-            const { doctorId, servicesId, price, dates } = req.body;
+            const { doctorId, servicesId, price, date, fromTime, toTime } = req.body;
             const schedule = yield prisma.schedule.create({
                 data: {
                     doctorId,
                     servicesId,
                     price,
-                    dates: {
-                        create: dates.map((date) => ({
-                            date: {
-                                create: {
-                                    date: `${date.date}T00:00:00.000Z`,
-                                    fromTime: date.fromTime,
-                                    toTime: date.toTime,
-                                },
-                            },
-                        })),
-                    },
-                },
-                include: {
-                    dates: {
-                        include: {
-                            date: true,
-                        },
-                    },
+                    date: `${date}T00:00:00.000Z`,
+                    fromTime: fromTime,
+                    toTime: toTime,
                 },
             });
             return res.status(200).json(schedule);
@@ -80,17 +65,27 @@ let scheduleControllers = class scheduleControllers {
             });
         });
     }
+    listSchedulesDates(req, res, doctorId, servicesId) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const query = Object.assign(Object.assign({}, req.query), { doctorId,
+                servicesId });
+            const apiFeatures = new ApiFeatures_1.default(prisma.schedule, query);
+            yield apiFeatures.filter().limitedFields().sort().search("schedule");
+            yield apiFeatures.paginateWithCount();
+            const { result, pagination } = yield apiFeatures.exec("schedule");
+            const dates = result.flatMap((item) => item.dates || []);
+            const date = dates.flatMap((item) => item.date || []);
+            return res.status(200).json({
+                data: date,
+                pagination,
+                count: date.length,
+            });
+        });
+    }
     showScheduleDetails(req, id, res) {
         return __awaiter(this, void 0, void 0, function* () {
             let schedule = yield prisma.schedule.findUnique({
                 where: { id },
-                include: {
-                    dates: {
-                        include: {
-                            date: true,
-                        },
-                    },
-                },
             });
             if (!schedule) {
                 throw new ApiError_1.default("schedule not found", 404);
@@ -100,13 +95,10 @@ let scheduleControllers = class scheduleControllers {
     }
     updateSchedule(id, req, res) {
         return __awaiter(this, void 0, void 0, function* () {
-            const { doctorId, servicesId, price, dates } = req.body;
+            const { doctorId, servicesId, price, date, fromTime, toTime } = req.body;
             const schedule = yield prisma.schedule.findUnique({
                 where: {
                     id: id, // Get the schedule by ID
-                },
-                include: {
-                    dates: true, // Include the related dates
                 },
             });
             if (!schedule) {
@@ -120,37 +112,13 @@ let scheduleControllers = class scheduleControllers {
                     doctorId,
                     servicesId,
                     price,
-                    dates: {
-                        // Update the dates related to the schedule
-                        deleteMany: {}, // Optional: If you want to clear old dates before adding new ones
-                        create: dates.map((date) => ({
-                            date: {
-                                create: {
-                                    date: `${date.date}T00:00:00.000Z`,
-                                    fromTime: date.fromTime,
-                                    toTime: date.toTime,
-                                },
-                            },
-                        })),
-                    },
-                },
-                include: {
-                    dates: {
-                        include: {
-                            date: true, // Include the related dates
-                        },
-                    },
+                    date,
+                    fromTime,
+                    toTime,
                 },
             });
             let updatedSchedule = yield prisma.schedule.findUnique({
                 where: { id },
-                include: {
-                    dates: {
-                        include: {
-                            date: true,
-                        },
-                    },
-                },
             });
             // Return the updated schedule
             return res.status(200).json(updatedSchedule);
@@ -165,16 +133,6 @@ let scheduleControllers = class scheduleControllers {
             if (!schedule) {
                 throw new ApiError_1.default("schedule not found", 404);
             }
-            yield prisma.scheduleDate.deleteMany({
-                where: { scheduleId: id },
-            });
-            yield prisma.date.deleteMany({
-                where: {
-                    scheduleDates: {
-                        none: {},
-                    },
-                },
-            });
             yield prisma.schedule.delete({
                 where: { id },
             });
@@ -202,6 +160,16 @@ __decorate([
     __metadata("design:paramtypes", [Object, Object, String, String]),
     __metadata("design:returntype", Promise)
 ], scheduleControllers.prototype, "listSchedules", null);
+__decorate([
+    (0, routing_controllers_1.Get)("/dates"),
+    __param(0, (0, routing_controllers_1.Req)()),
+    __param(1, (0, routing_controllers_1.Res)()),
+    __param(2, (0, routing_controllers_1.QueryParam)("doctorId")),
+    __param(3, (0, routing_controllers_1.QueryParam)("servicesId")),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, Object, Number, Number]),
+    __metadata("design:returntype", Promise)
+], scheduleControllers.prototype, "listSchedulesDates", null);
 __decorate([
     (0, routing_controllers_1.Get)("/:id"),
     __param(0, (0, routing_controllers_1.Req)()),

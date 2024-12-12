@@ -20,20 +20,52 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.appointmentController = void 0;
 const routing_controllers_1 = require("routing-controllers");
 const validation_1 = require("../../middlewares/validation");
 const appointment_validation_1 = require("./appointment.validation");
 const client_1 = require("@prisma/client");
+const ApiError_1 = __importDefault(require("../../utils/ApiError"));
 const prisma = new client_1.PrismaClient();
 let appointmentController = class appointmentController {
     addAppointment(req, body, res) {
         return __awaiter(this, void 0, void 0, function* () {
-            let appointment = yield prisma.appointment.create({
-                data: body,
-            });
-            return res.status(200).json(appointment);
+            // let date = await prisma.scheduleDate.findFirst({
+            //    where:{ dateId: body.dateId }
+            // })
+            // const scheduleDate: number = date?.id || undefined,
+            // let appointment = await prisma.appointment.create({
+            //   data: {
+            //     patientId: body.patientId,
+            //     scheduleDateId: date?.id,
+            //   },
+            // });
+            // return res.status(200).json(appointment);
+        });
+    }
+    getAppointment(req, res, patientId) {
+        return __awaiter(this, void 0, void 0, function* () {
+            if (!patientId) {
+                throw new ApiError_1.default("patientId must exist", 401);
+            }
+            // let appointments = await prisma.appointment.findMany({
+            //   where: { patientId },
+            //   include: {
+            //     schedule: {
+            //       include: {
+            //         dates: true,
+            //       },
+            //     },
+            //   },
+            // });
+            // return res.status(200).json({
+            //   data: appointments,
+            //   count: appointments.length,
+            // });
         });
     }
 };
@@ -48,6 +80,15 @@ __decorate([
     __metadata("design:paramtypes", [Object, Object, Object]),
     __metadata("design:returntype", Promise)
 ], appointmentController.prototype, "addAppointment", null);
+__decorate([
+    (0, routing_controllers_1.Get)("/"),
+    __param(0, (0, routing_controllers_1.Req)()),
+    __param(1, (0, routing_controllers_1.Res)()),
+    __param(2, (0, routing_controllers_1.QueryParam)("patientId")),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, Object, Number]),
+    __metadata("design:returntype", Promise)
+], appointmentController.prototype, "getAppointment", null);
 exports.appointmentController = appointmentController = __decorate([
     (0, routing_controllers_1.JsonController)("/api/appointment")
 ], appointmentController);

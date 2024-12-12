@@ -26,30 +26,15 @@ export class scheduleControllers {
   @Post("/")
   @UseBefore(createValidationMiddleware(addscheduleSchema))
   async addSchema(@Req() req: Request, @Res() res: Response) {
-    const { doctorId, servicesId, price, dates } = req.body;
+    const { doctorId, servicesId, price, date, fromTime, toTime } = req.body;
     const schedule = await prisma.schedule.create({
       data: {
         doctorId,
         servicesId,
         price,
-        dates: {
-          create: dates.map((date: any) => ({
-            date: {
-              create: {
-                date: `${date.date}T00:00:00.000Z`,
-                fromTime: date.fromTime,
-                toTime: date.toTime,
-              },
-            },
-          })),
-        },
-      },
-      include: {
-        dates: {
-          include: {
-            date: true,
-          },
-        },
+        date: `${date}T00:00:00.000Z`,
+        fromTime: fromTime,
+        toTime: toTime,
       },
     });
     return res.status(200).json(schedule);
@@ -83,6 +68,34 @@ export class scheduleControllers {
     });
   }
 
+  @Get("/dates")
+  async listSchedulesDates(
+    @Req() req: Request,
+    @Res() res: Response,
+    @QueryParam("doctorId") doctorId: number,
+    @QueryParam("servicesId") servicesId: number
+  ) {
+    const query = {
+      ...req.query,
+      doctorId,
+      servicesId,
+    };
+
+    const apiFeatures = new ApiFeatures(prisma.schedule, query);
+    await apiFeatures.filter().limitedFields().sort().search("schedule");
+    await apiFeatures.paginateWithCount();
+
+    const { result, pagination } = await apiFeatures.exec("schedule");
+
+    const dates = result.flatMap((item: any) => item.dates || []);
+    const date = dates.flatMap((item: any) => item.date || []);
+    return res.status(200).json({
+      data: date,
+      pagination,
+      count: date.length,
+    });
+  }
+
   @Get("/:id")
   async showScheduleDetails(
     @Req() req: Request,
@@ -91,13 +104,6 @@ export class scheduleControllers {
   ) {
     let schedule = await prisma.schedule.findUnique({
       where: { id },
-      include: {
-        dates: {
-          include: {
-            date: true,
-          },
-        },
-      },
     });
     if (!schedule) {
       throw new ApiError("schedule not found", 404);
@@ -112,13 +118,10 @@ export class scheduleControllers {
     @Req() req: Request,
     @Res() res: Response
   ) {
-    const { doctorId, servicesId, price, dates } = req.body;
+    const { doctorId, servicesId, price, date, fromTime, toTime } = req.body;
     const schedule = await prisma.schedule.findUnique({
       where: {
         id: id, // Get the schedule by ID
-      },
-      include: {
-        dates: true, // Include the related dates
       },
     });
 
@@ -133,37 +136,13 @@ export class scheduleControllers {
         doctorId,
         servicesId,
         price,
-        dates: {
-          // Update the dates related to the schedule
-          deleteMany: {}, // Optional: If you want to clear old dates before adding new ones
-          create: dates.map((date: any) => ({
-            date: {
-              create: {
-                date: `${date.date}T00:00:00.000Z`,
-                fromTime: date.fromTime,
-                toTime: date.toTime,
-              },
-            },
-          })),
-        },
-      },
-      include: {
-        dates: {
-          include: {
-            date: true, // Include the related dates
-          },
-        },
+        date,
+        fromTime,
+        toTime,
       },
     });
     let updatedSchedule = await prisma.schedule.findUnique({
       where: { id },
-      include: {
-        dates: {
-          include: {
-            date: true,
-          },
-        },
-      },
     });
 
     // Return the updated schedule
@@ -180,18 +159,6 @@ export class scheduleControllers {
     if (!schedule) {
       throw new ApiError("schedule not found", 404);
     }
-
-    await prisma.scheduleDate.deleteMany({
-      where: { scheduleId: id },
-    });
-
-    await prisma.date.deleteMany({
-      where: {
-        scheduleDates: {
-          none: {},
-        },
-      },
-    });
 
     await prisma.schedule.delete({
       where: { id },

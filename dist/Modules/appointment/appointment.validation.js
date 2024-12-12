@@ -12,7 +12,7 @@ exports.addAppointmentValidationSchema = joi_1.default.object({
         "number.positive": "The patient ID must be a positive number.",
         "any.required": "The patient ID is required.",
     }),
-    scheduleId: joi_1.default.number().integer().positive().required().messages({
+    dateId: joi_1.default.number().integer().positive().required().messages({
         "number.base": "The schedule ID must be a number.",
         "number.integer": "The schedule ID must be an integer.",
         "number.positive": "The schedule ID must be a positive number.",

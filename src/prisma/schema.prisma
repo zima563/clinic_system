@@ -88,34 +88,16 @@ model Schedule {
   doctorId   Int
   servicesId Int
   price      Decimal  @db.Decimal(18, 2)
+  date       DateTime
+  fromTime   String
+  toTime     String
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
 
-  doctor   Doctor         @relation(fields: [doctorId], references: [id])
-  service  Service        @relation(fields: [servicesId], references: [id])
-  dates    ScheduleDate[]
-  visits   VisitDetail[]
-  patients Appointment[]
-}
-
-model Date {
-  id       Int      @id @default(autoincrement())
-  date     DateTime
-  fromTime String
-  toTime   String
-
-  scheduleDates ScheduleDate[]
-}
-
-model ScheduleDate {
-  id         Int      @id @default(autoincrement())
-  scheduleId Int
-  dateId     Int
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
-
-  schedule Schedule @relation(fields: [scheduleId], references: [id])
-  date     Date     @relation(fields: [dateId], references: [id])
+  doctor       Doctor        @relation(fields: [doctorId], references: [id])
+  service      Service       @relation(fields: [servicesId], references: [id])
+  visits       VisitDetail[]
+  appointments Appointment[]
 }
 
 model Specialty {
@@ -183,13 +165,13 @@ model Patient {
 }
 
 model Appointment {
-  id         Int               @id @default(autoincrement())
-  patientId  Int
-  status     AppointmentStatus @default(pending)
-  scheduleId Int
+  id             Int               @id @default(autoincrement())
+  patientId      Int
+  status         AppointmentStatus @default(pending)
+  scheduleDateId Int
 
   patient  Patient  @relation(fields: [patientId], references: [id])
-  schedule Schedule @relation(fields: [scheduleId], references: [id])
+  schedule Schedule @relation(fields: [scheduleDateId], references: [id])
 }
 
 model Visit {
