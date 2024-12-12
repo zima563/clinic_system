@@ -79,6 +79,23 @@ let appointmentController = class appointmentController {
             });
         });
     }
+    showAppointmnetDetail(req, id, res) {
+        return __awaiter(this, void 0, void 0, function* () {
+            let appointment = yield prisma.appointment.findUnique({
+                where: {
+                    id,
+                },
+                include: {
+                    schedule: true,
+                    patient: true,
+                },
+            });
+            if (!appointment) {
+                throw new ApiError_1.default("appointment not found", 404);
+            }
+            return res.status(200).json(appointment);
+        });
+    }
 };
 exports.appointmentController = appointmentController;
 __decorate([
@@ -108,6 +125,15 @@ __decorate([
     __metadata("design:paramtypes", [Object, Object]),
     __metadata("design:returntype", Promise)
 ], appointmentController.prototype, "getAppointment", null);
+__decorate([
+    (0, routing_controllers_1.Get)("/:id"),
+    __param(0, (0, routing_controllers_1.Req)()),
+    __param(1, (0, routing_controllers_1.Param)("id")),
+    __param(2, (0, routing_controllers_1.Res)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, Number, Object]),
+    __metadata("design:returntype", Promise)
+], appointmentController.prototype, "showAppointmnetDetail", null);
 exports.appointmentController = appointmentController = __decorate([
     (0, routing_controllers_1.JsonController)("/api/appointment")
 ], appointmentController);

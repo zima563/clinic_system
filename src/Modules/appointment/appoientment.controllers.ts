@@ -75,4 +75,25 @@ export class appointmentController {
       count: appointments.length,
     });
   }
+
+  @Get("/:id")
+  async showAppointmnetDetail(
+    @Req() req: Request,
+    @Param("id") id: number,
+    @Res() res: Response
+  ) {
+    let appointment = await prisma.appointment.findUnique({
+      where: {
+        id,
+      },
+      include: {
+        schedule: true,
+        patient: true,
+      },
+    });
+    if (!appointment) {
+      throw new ApiError("appointment not found", 404);
+    }
+    return res.status(200).json(appointment);
+  }
 }
