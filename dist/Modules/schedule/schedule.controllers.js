@@ -49,11 +49,15 @@ let scheduleControllers = class scheduleControllers {
             return res.status(200).json(schedule);
         });
     }
-    listSchedules(req, res, doctorId, servicesId) {
+    listSchedules(req, res, doctorId, servicesId, date) {
         return __awaiter(this, void 0, void 0, function* () {
             const parsedDoctorId = doctorId ? parseInt(doctorId, 10) : undefined;
             const parsedServicesId = servicesId ? parseInt(servicesId, 10) : undefined;
             const query = Object.assign(Object.assign({}, req.query), { doctorId: parsedDoctorId, servicesId: parsedServicesId });
+            // Add date filtering if the date is provided
+            if (date) {
+                query.date = new Date(date);
+            }
             const apiFeatures = new ApiFeatures_1.default(prisma.schedule, query);
             yield apiFeatures.filter().limitedFields().sort().search("schedule");
             yield apiFeatures.paginateWithCount();
@@ -62,23 +66,6 @@ let scheduleControllers = class scheduleControllers {
                 data: result,
                 pagination,
                 count: result.length,
-            });
-        });
-    }
-    listSchedulesDates(req, res, doctorId, servicesId) {
-        return __awaiter(this, void 0, void 0, function* () {
-            const query = Object.assign(Object.assign({}, req.query), { doctorId,
-                servicesId });
-            const apiFeatures = new ApiFeatures_1.default(prisma.schedule, query);
-            yield apiFeatures.filter().limitedFields().sort().search("schedule");
-            yield apiFeatures.paginateWithCount();
-            const { result, pagination } = yield apiFeatures.exec("schedule");
-            const dates = result.flatMap((item) => item.dates || []);
-            const date = dates.flatMap((item) => item.date || []);
-            return res.status(200).json({
-                data: date,
-                pagination,
-                count: date.length,
             });
         });
     }
@@ -156,20 +143,11 @@ __decorate([
     __param(1, (0, routing_controllers_1.Res)()),
     __param(2, (0, routing_controllers_1.QueryParam)("doctorId")),
     __param(3, (0, routing_controllers_1.QueryParam)("servicesId")),
+    __param(4, (0, routing_controllers_1.QueryParam)("date")),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Object, Object, String, String]),
+    __metadata("design:paramtypes", [Object, Object, String, String, String]),
     __metadata("design:returntype", Promise)
 ], scheduleControllers.prototype, "listSchedules", null);
-__decorate([
-    (0, routing_controllers_1.Get)("/dates"),
-    __param(0, (0, routing_controllers_1.Req)()),
-    __param(1, (0, routing_controllers_1.Res)()),
-    __param(2, (0, routing_controllers_1.QueryParam)("doctorId")),
-    __param(3, (0, routing_controllers_1.QueryParam)("servicesId")),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Object, Object, Number, Number]),
-    __metadata("design:returntype", Promise)
-], scheduleControllers.prototype, "listSchedulesDates", null);
 __decorate([
     (0, routing_controllers_1.Get)("/:id"),
     __param(0, (0, routing_controllers_1.Req)()),

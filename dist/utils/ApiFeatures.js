@@ -131,15 +131,6 @@ class ApiFeatures {
                     category: true,
                 };
             }
-            else if (modelName === "schedule") {
-                this.prismaQuery.include = {
-                    dates: {
-                        include: {
-                            date: true,
-                        },
-                    },
-                };
-            }
             const result = yield this.prismaModel.findMany(Object.assign({}, this.prismaQuery));
             return {
                 result,

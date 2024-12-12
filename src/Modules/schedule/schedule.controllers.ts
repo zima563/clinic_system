@@ -45,16 +45,22 @@ export class scheduleControllers {
     @Req() req: Request,
     @Res() res: Response,
     @QueryParam("doctorId") doctorId?: string,
-    @QueryParam("servicesId") servicesId?: string
+    @QueryParam("servicesId") servicesId?: string,
+    @QueryParam("date") date?: string
   ) {
     const parsedDoctorId = doctorId ? parseInt(doctorId, 10) : undefined;
     const parsedServicesId = servicesId ? parseInt(servicesId, 10) : undefined;
 
-    const query = {
+    const query: any = {
       ...req.query,
       doctorId: parsedDoctorId,
       servicesId: parsedServicesId,
     };
+
+    // Add date filtering if the date is provided
+    if (date) {
+      query.date = new Date(date);
+    }
 
     const apiFeatures = new ApiFeatures(prisma.schedule, query);
     await apiFeatures.filter().limitedFields().sort().search("schedule");
@@ -65,34 +71,6 @@ export class scheduleControllers {
       data: result,
       pagination,
       count: result.length,
-    });
-  }
-
-  @Get("/dates")
-  async listSchedulesDates(
-    @Req() req: Request,
-    @Res() res: Response,
-    @QueryParam("doctorId") doctorId: number,
-    @QueryParam("servicesId") servicesId: number
-  ) {
-    const query = {
-      ...req.query,
-      doctorId,
-      servicesId,
-    };
-
-    const apiFeatures = new ApiFeatures(prisma.schedule, query);
-    await apiFeatures.filter().limitedFields().sort().search("schedule");
-    await apiFeatures.paginateWithCount();
-
-    const { result, pagination } = await apiFeatures.exec("schedule");
-
-    const dates = result.flatMap((item: any) => item.dates || []);
-    const date = dates.flatMap((item: any) => item.date || []);
-    return res.status(200).json({
-      data: date,
-      pagination,
-      count: date.length,
     });
   }
 
