@@ -1,6 +1,9 @@
+import { Visit } from "./../../../node_modules/.prisma/client/index.d";
 import {
   Body,
+  Get,
   JsonController,
+  Param,
   Post,
   Req,
   Res,
@@ -10,6 +13,7 @@ import { createValidationMiddleware } from "../../middlewares/validation";
 import { createVisitSchema } from "./visit.validation";
 import { Request, Response } from "express";
 import { PrismaClient } from "@prisma/client";
+import ApiError from "../../utils/ApiError";
 const prisma = new PrismaClient();
 
 @JsonController("/api/visit")
@@ -60,6 +64,25 @@ export class visitController {
       visit,
       visitDetails: createdVisitDetails,
       invoice,
+    });
+  }
+
+  @Get("/:id")
+  async showVisitDetails(
+    @Req() req: Request,
+    @Param("id") id: number,
+    @Res() res: Response
+  ) {
+    let visit = await prisma.visit.findUnique({ where: { id } });
+    if (!visit) {
+      throw new ApiError("visit not found");
+    }
+    let VisitDetails = await prisma.visitDetail.findMany({
+      where: { visitId: id },
+    });
+    return res.status(200).json({
+      data: VisitDetails,
+      total: visit.total,
     });
   }
 }
