@@ -35,47 +35,53 @@ let visitController = class visitController {
     createVisit(req, body, res) {
         return __awaiter(this, void 0, void 0, function* () {
             const { visitDetails } = body;
+            // Calculate total from visitDetails
             const total = visitDetails.reduce((sum, detail) => sum + detail.price, 0);
-            const visit = yield prisma.visit.create({
-                data: {
-                    total,
-                },
-            });
-            const createdVisitDetails = yield prisma.visitDetail.createMany({
-                data: visitDetails.map((detail) => ({
-                    visitId: visit.id,
-                    patientId: detail.patientId,
-                    status: detail.status,
-                    price: detail.price,
-                    scheduleId: detail.scheduleId,
-                })),
-            });
-            const invoice = yield prisma.invoice.create({
-                data: {
-                    total,
-                },
-            });
-            yield prisma.visitInvoice.create({
-                data: {
-                    visitId: visit.id,
-                    invoiceId: invoice.id,
-                },
-            });
-            for (const invoiceData of visitDetails) {
-                const invoiceDetail = yield prisma.invoiceDetail.create({
+            // Use Prisma transaction for atomicity
+            const result = yield prisma.$transaction((prisma) => __awaiter(this, void 0, void 0, function* () {
+                // Create visit
+                const visit = yield prisma.visit.create({
                     data: {
-                        description: visit.rf,
-                        amount: invoiceData.price,
-                        invoiceId: invoice.id, // Link the invoice detail to the invoice
+                        total,
                     },
                 });
-            }
-            return res.status(201).json({
-                message: "Visit created successfully with associated invoice details.",
-                visit,
-                visitDetails: createdVisitDetails,
-                invoice,
-            });
+                // Create visit details
+                const createdVisitDetails = yield Promise.all(visitDetails.map((detail) => __awaiter(this, void 0, void 0, function* () {
+                    return prisma.visitDetail.create({
+                        data: {
+                            visitId: visit.id,
+                            patientId: detail.patientId,
+                            status: detail.status,
+                            price: detail.price,
+                            scheduleId: detail.scheduleId,
+                        },
+                    });
+                })));
+                // Create invoice with a unique RF (reference)
+                const invoice = yield prisma.invoice.create({
+                    data: {
+                        total,
+                    },
+                });
+                // Link visit and invoice
+                yield prisma.visitInvoice.create({
+                    data: {
+                        visitId: visit.id,
+                        invoiceId: invoice.id,
+                    },
+                });
+                // Create invoice details linked to visit details
+                const createdInvoiceDetails = yield Promise.all(createdVisitDetails.map((visitDetail) => prisma.invoiceDetail.create({
+                    data: {
+                        description: `Detail for schedule ${visitDetail.scheduleId}`, // Customize description as needed
+                        amount: visitDetail.price,
+                        invoiceId: invoice.id,
+                        visitDetailsId: visitDetail.id, // Link InvoiceDetail to VisitDetail
+                    },
+                })));
+                return { visit, createdVisitDetails, invoice, createdInvoiceDetails };
+            }));
+            return res.status(201).json(Object.assign({ message: "Visit created successfully with associated invoice details." }, result));
         });
     }
     showVisitDetails(req, id, res) {

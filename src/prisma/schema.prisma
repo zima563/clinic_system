@@ -123,14 +123,16 @@ model Invoice {
 }
 
 model InvoiceDetail {
-  id          Int      @id @default(autoincrement())
-  invoiceId   Int
-  description String
-  amount      Decimal  @db.Decimal(18, 2)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id             Int      @id @default(autoincrement())
+  invoiceId      Int
+  description    String
+  amount         Decimal  @db.Decimal(18, 2)
+  visitDetailsId Int?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
 
-  invoice Invoice @relation(fields: [invoiceId], references: [id])
+  invoice     Invoice      @relation(fields: [invoiceId], references: [id])
+  visitDetail VisitDetail? @relation(fields: [visitDetailsId], references: [id])
 }
 
 model Doctor {
@@ -193,9 +195,10 @@ model VisitDetail {
   price      Decimal @db.Decimal(18, 2)
   scheduleId Int
 
-  visit    Visit    @relation(fields: [visitId], references: [id])
-  patient  Patient  @relation(fields: [patientId], references: [id])
-  schedule Schedule @relation(fields: [scheduleId], references: [id])
+  visit         Visit           @relation(fields: [visitId], references: [id])
+  patient       Patient         @relation(fields: [patientId], references: [id])
+  schedule      Schedule        @relation(fields: [scheduleId], references: [id])
+  invoiceDetail InvoiceDetail[]
 }
 
 model VisitInvoice {
