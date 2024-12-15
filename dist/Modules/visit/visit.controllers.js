@@ -55,6 +55,12 @@ let visitController = class visitController {
                     total,
                 },
             });
+            yield prisma.visitInvoice.create({
+                data: {
+                    visitId: visit.id,
+                    invoiceId: invoice.id,
+                },
+            });
             for (const invoiceData of visitDetails) {
                 const invoiceDetail = yield prisma.invoiceDetail.create({
                     data: {

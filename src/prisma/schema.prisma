@@ -117,8 +117,9 @@ model Invoice {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  details InvoiceDetail[]
-  patient Patient?
+  details      InvoiceDetail[]
+  patient      Patient?
+  VisitInvoice VisitInvoice[]
 }
 
 model InvoiceDetail {
@@ -129,8 +130,7 @@ model InvoiceDetail {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  invoice      Invoice        @relation(fields: [invoiceId], references: [id])
-  VisitInvoice VisitInvoice[]
+  invoice Invoice @relation(fields: [invoiceId], references: [id])
 }
 
 model Doctor {
@@ -199,13 +199,13 @@ model VisitDetail {
 }
 
 model VisitInvoice {
-  visitId         Int
-  invoiceDetailId Int
+  visitId   Int
+  invoiceId Int
 
-  visit         Visit         @relation(fields: [visitId], references: [id])
-  invoiceDetail InvoiceDetail @relation(fields: [invoiceDetailId], references: [id])
+  visit   Visit   @relation(fields: [visitId], references: [id])
+  invoice Invoice @relation(fields: [invoiceId], references: [id])
 
-  @@id([visitId, invoiceDetailId])
+  @@id([visitId, invoiceId])
 }
 
 enum Gender {

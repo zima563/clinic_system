@@ -11,7 +11,7 @@ import {
   UseBefore,
 } from "routing-controllers";
 import { createValidationMiddleware } from "../../middlewares/validation";
-import { createVisitSchema } from "./visit.validation";
+import { appendVisitSchema, createVisitSchema } from "./visit.validation";
 import { Request, Response } from "express";
 import { PrismaClient } from "@prisma/client";
 import ApiError from "../../utils/ApiError";
@@ -49,6 +49,12 @@ export class visitController {
     const invoice = await prisma.invoice.create({
       data: {
         total,
+      },
+    });
+    await prisma.visitInvoice.create({
+      data: {
+        visitId: visit.id,
+        invoiceId: invoice.id,
       },
     });
     for (const invoiceData of visitDetails) {
@@ -115,4 +121,47 @@ export class visitController {
       count: visits.length,
     });
   }
+
+  //   @Post("/:visitId/details")
+  //   @UseBefore(createValidationMiddleware(appendVisitSchema))
+  //   async appendVisitDetails(
+  //     @Req() req: Request,
+  //     @Body() body: any,
+  //     @Param("visitId") visitId: number,
+  //     @Res() res: Response
+  //   ) {
+  //     const { visitDetails } = body;
+
+  //     const visit = await prisma.visit.findUnique({ where: { id: visitId } });
+  //     if (!visit) {
+  //       throw new ApiError("visit not found");
+  //     }
+
+  //     let visitInvoice = await prisma.visitInvoice.findFirst({
+  //       where: { visitId },
+  //       include: {
+  //         invoiceDetail: true,
+  //       },
+  //     });
+  //     return res.json(visit);
+  //     const createdVisitDetails = await prisma.visitDetail.createMany({
+  //       data: visitDetails.map((detail: any) => ({
+  //         visitId,
+  //         patientId: detail.patientId,
+  //         status: detail.status,
+  //         price: detail.price,
+  //         scheduleId: detail.scheduleId,
+  //       })),
+  //     });
+
+  //     for (const detail of visitDetails) {
+  //       await prisma.invoiceDetail.create({
+  //         data: {
+  //           description: `Charge for patient ${detail.patientId}`,
+  //           amount: detail.price,
+  //           invoiceId: invoice.id,
+  //         },
+  //       });
+  //     }
+  //   }
 }
