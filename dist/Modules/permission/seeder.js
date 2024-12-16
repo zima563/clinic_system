@@ -84,6 +84,29 @@ let PermissionController = class PermissionController {
             });
         });
     }
+    ListPermissions(req, res) {
+        return __awaiter(this, void 0, void 0, function* () {
+            let permissions = yield prisma.permission.findMany();
+            return res.status(200).json({
+                data: permissions,
+                count: permissions.length,
+            });
+        });
+    }
+    ListUserPermissions(req, userId, res) {
+        return __awaiter(this, void 0, void 0, function* () {
+            let permissions = yield prisma.userPermission.findMany({
+                where: { userId },
+                include: {
+                    permission: true,
+                },
+            });
+            return res.status(200).json({
+                data: permissions,
+                count: permissions.length,
+            });
+        });
+    }
 };
 exports.PermissionController = PermissionController;
 PermissionController.permissionIdsSchema = joi_1.default.object({
@@ -118,6 +141,23 @@ __decorate([
     __metadata("design:paramtypes", [Request, Number, Object, Object]),
     __metadata("design:returntype", Promise)
 ], PermissionController.prototype, "assignPermissionsToUser", null);
+__decorate([
+    (0, routing_controllers_1.Get)("/"),
+    __param(0, (0, routing_controllers_1.Req)()),
+    __param(1, (0, routing_controllers_1.Res)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Request, Object]),
+    __metadata("design:returntype", Promise)
+], PermissionController.prototype, "ListPermissions", null);
+__decorate([
+    (0, routing_controllers_1.Get)("/:id"),
+    __param(0, (0, routing_controllers_1.Req)()),
+    __param(1, (0, routing_controllers_1.Param)("id")),
+    __param(2, (0, routing_controllers_1.Res)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Request, Number, Object]),
+    __metadata("design:returntype", Promise)
+], PermissionController.prototype, "ListUserPermissions", null);
 exports.PermissionController = PermissionController = __decorate([
     (0, routing_controllers_1.JsonController)("/api/permissions")
 ], PermissionController);

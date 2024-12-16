@@ -95,4 +95,31 @@ export class PermissionController {
       message: "Permissions assigned to user successfully",
     });
   }
+
+  @Get("/")
+  async ListPermissions(@Req() req: Request, @Res() res: Response) {
+    let permissions = await prisma.permission.findMany();
+    return res.status(200).json({
+      data: permissions,
+      count: permissions.length,
+    });
+  }
+
+  @Get("/:id")
+  async ListUserPermissions(
+    @Req() req: Request,
+    @Param("id") userId: number,
+    @Res() res: Response
+  ) {
+    let permissions = await prisma.userPermission.findMany({
+      where: { userId },
+      include: {
+        permission: true,
+      },
+    });
+    return res.status(200).json({
+      data: permissions,
+      count: permissions.length,
+    });
+  }
 }
