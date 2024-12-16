@@ -95,6 +95,9 @@ let PermissionController = class PermissionController {
     }
     ListUserPermissions(req, userId, res) {
         return __awaiter(this, void 0, void 0, function* () {
+            if (!(yield prisma.user.findUnique({ where: { id: userId } }))) {
+                throw new ApiError_1.default("user not found", 404);
+            }
             let permissions = yield prisma.userPermission.findMany({
                 where: { userId },
                 include: {

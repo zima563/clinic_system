@@ -111,6 +111,9 @@ export class PermissionController {
     @Param("id") userId: number,
     @Res() res: Response
   ) {
+    if (!(await prisma.user.findUnique({ where: { id: userId } }))) {
+      throw new ApiError("user not found", 404);
+    }
     let permissions = await prisma.userPermission.findMany({
       where: { userId },
       include: {
