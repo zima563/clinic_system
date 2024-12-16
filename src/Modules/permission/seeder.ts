@@ -96,6 +96,50 @@ export class PermissionController {
     });
   }
 
+  @Post("/assignToRole/:id")
+  @UseBefore(
+    createValidationMiddleware(PermissionController.permissionIdsSchema)
+  )
+  async assignPermissionsToRole(
+    @Req() req: Request,
+    @Param("id") id: number,
+    @Body() body: { permissionIds: number[] },
+    @Res() res: Response
+  ) {
+    const role = await prisma.role.findUnique({
+      where: { id },
+      include: {
+        rolePermissions: true,
+      },
+    });
+    if (!role) {
+      throw new ApiError("user not found", 404);
+    }
+
+    const permissions = await prisma.permission.findMany({
+      where: {
+        id: { in: body.permissionIds },
+      },
+    });
+
+    if (permissions.length !== body.permissionIds.length) {
+      throw new ApiError("One or more permissions not found", 404);
+    }
+
+    await prisma.$transaction(async (tx) => {
+      const rolePermissions = body.permissionIds.map((permissionId) => ({
+        roleId: id,
+        permissionId,
+      }));
+      await tx.rolePermission.createMany({
+        data: rolePermissions,
+      });
+    });
+    return res.status(200).json({
+      message: "Permissions assigned to role successfully",
+    });
+  }
+
   @Get("/")
   async ListPermissions(@Req() req: Request, @Res() res: Response) {
     let permissions = await prisma.permission.findMany();
@@ -105,7 +149,7 @@ export class PermissionController {
     });
   }
 
-  @Get("/:id")
+  @Get("/user/:id")
   async ListUserPermissions(
     @Req() req: Request,
     @Param("id") userId: number,
@@ -116,6 +160,26 @@ export class PermissionController {
     }
     let permissions = await prisma.userPermission.findMany({
       where: { userId },
+      include: {
+        permission: true,
+      },
+    });
+    return res.status(200).json({
+      data: permissions,
+      count: permissions.length,
+    });
+  }
+  @Get("/role/:id")
+  async ListRolePermissions(
+    @Req() req: Request,
+    @Param("id") roleId: number,
+    @Res() res: Response
+  ) {
+    if (!(await prisma.role.findUnique({ where: { id: roleId } }))) {
+      throw new ApiError("user not found", 404);
+    }
+    let permissions = await prisma.rolePermission.findMany({
+      where: { roleId },
       include: {
         permission: true,
       },

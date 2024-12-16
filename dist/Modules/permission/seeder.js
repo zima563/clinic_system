@@ -84,6 +84,39 @@ let PermissionController = class PermissionController {
             });
         });
     }
+    assignPermissionsToRole(req, id, body, res) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const role = yield prisma.role.findUnique({
+                where: { id },
+                include: {
+                    rolePermissions: true,
+                },
+            });
+            if (!role) {
+                throw new ApiError_1.default("user not found", 404);
+            }
+            const permissions = yield prisma.permission.findMany({
+                where: {
+                    id: { in: body.permissionIds },
+                },
+            });
+            if (permissions.length !== body.permissionIds.length) {
+                throw new ApiError_1.default("One or more permissions not found", 404);
+            }
+            yield prisma.$transaction((tx) => __awaiter(this, void 0, void 0, function* () {
+                const rolePermissions = body.permissionIds.map((permissionId) => ({
+                    roleId: id,
+                    permissionId,
+                }));
+                yield tx.rolePermission.createMany({
+                    data: rolePermissions,
+                });
+            }));
+            return res.status(200).json({
+                message: "Permissions assigned to role successfully",
+            });
+        });
+    }
     ListPermissions(req, res) {
         return __awaiter(this, void 0, void 0, function* () {
             let permissions = yield prisma.permission.findMany();
@@ -100,6 +133,23 @@ let PermissionController = class PermissionController {
             }
             let permissions = yield prisma.userPermission.findMany({
                 where: { userId },
+                include: {
+                    permission: true,
+                },
+            });
+            return res.status(200).json({
+                data: permissions,
+                count: permissions.length,
+            });
+        });
+    }
+    ListRolePermissions(req, roleId, res) {
+        return __awaiter(this, void 0, void 0, function* () {
+            if (!(yield prisma.role.findUnique({ where: { id: roleId } }))) {
+                throw new ApiError_1.default("user not found", 404);
+            }
+            let permissions = yield prisma.rolePermission.findMany({
+                where: { roleId },
                 include: {
                     permission: true,
                 },
@@ -145,6 +195,17 @@ __decorate([
     __metadata("design:returntype", Promise)
 ], PermissionController.prototype, "assignPermissionsToUser", null);
 __decorate([
+    (0, routing_controllers_1.Post)("/assignToRole/:id"),
+    (0, routing_controllers_1.UseBefore)((0, validation_1.createValidationMiddleware)(PermissionController.permissionIdsSchema)),
+    __param(0, (0, routing_controllers_1.Req)()),
+    __param(1, (0, routing_controllers_1.Param)("id")),
+    __param(2, (0, routing_controllers_1.Body)()),
+    __param(3, (0, routing_controllers_1.Res)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Request, Number, Object, Object]),
+    __metadata("design:returntype", Promise)
+], PermissionController.prototype, "assignPermissionsToRole", null);
+__decorate([
     (0, routing_controllers_1.Get)("/"),
     __param(0, (0, routing_controllers_1.Req)()),
     __param(1, (0, routing_controllers_1.Res)()),
@@ -153,7 +214,7 @@ __decorate([
     __metadata("design:returntype", Promise)
 ], PermissionController.prototype, "ListPermissions", null);
 __decorate([
-    (0, routing_controllers_1.Get)("/:id"),
+    (0, routing_controllers_1.Get)("/user/:id"),
     __param(0, (0, routing_controllers_1.Req)()),
     __param(1, (0, routing_controllers_1.Param)("id")),
     __param(2, (0, routing_controllers_1.Res)()),
@@ -161,6 +222,15 @@ __decorate([
     __metadata("design:paramtypes", [Request, Number, Object]),
     __metadata("design:returntype", Promise)
 ], PermissionController.prototype, "ListUserPermissions", null);
+__decorate([
+    (0, routing_controllers_1.Get)("/role/:id"),
+    __param(0, (0, routing_controllers_1.Req)()),
+    __param(1, (0, routing_controllers_1.Param)("id")),
+    __param(2, (0, routing_controllers_1.Res)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Request, Number, Object]),
+    __metadata("design:returntype", Promise)
+], PermissionController.prototype, "ListRolePermissions", null);
 exports.PermissionController = PermissionController = __decorate([
     (0, routing_controllers_1.JsonController)("/api/permissions")
 ], PermissionController);
