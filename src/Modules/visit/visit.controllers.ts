@@ -1,6 +1,7 @@
 import { Visit } from "./../../../node_modules/.prisma/client/index.d";
 import {
   Body,
+  Delete,
   Get,
   JsonController,
   Param,
@@ -145,72 +146,156 @@ export class visitController {
     });
   }
 
-  //   @Post("/:visitId/details")
-  //   @UseBefore(createValidationMiddleware(appendVisitSchema))
-  //   async appendVisitDetails(
-  //     @Req() req: Request,
-  //     @Body() body: any,
-  //     @Param("visitId") visitId: number,
-  //     @Res() res: Response
-  //   ) {
-  //     const { visitDetails } = body;
+  @Post("/:visitId/details")
+  @UseBefore(createValidationMiddleware(appendVisitSchema))
+  async appendVisitDetails(
+    @Req() req: Request,
+    @Body() body: any,
+    @Param("visitId") visitId: number,
+    @Res() res: Response
+  ) {
+    const { visitDetails } = body;
 
-  //     const visit = await prisma.visit.findUnique({ where: { id: visitId } });
-  //     if (!visit) {
-  //       throw new ApiError("visit not found");
-  //     }
+    // Ensure the visit exists
+    const visit = await prisma.visit.findUnique({ where: { id: visitId } });
+    if (!visit) {
+      throw new ApiError("Visit not found");
+    }
 
-  //     let visitInvoice = await prisma.visitInvoice.findFirst({
-  //       where: { visitId },
-  //       include: {
-  //         invoice: true,
-  //       },
-  //     });
-  //     if (!visitInvoice) {
-  //       throw new ApiError("visit invoice not found");
-  //     }
-  //     const createdVisitDetails = await prisma.visitDetail.createMany({
-  //       data: visitDetails.map((detail: any) => ({
-  //         visitId,
-  //         patientId: detail.patientId,
-  //         status: detail.status,
-  //         price: detail.price,
-  //         scheduleId: detail.scheduleId,
-  //       })),
-  //     });
+    // Check if the visit has an associated invoice
+    let visitInvoice = await prisma.visitInvoice.findFirst({
+      where: { visitId },
+      include: { invoice: true },
+    });
+    if (!visitInvoice) {
+      throw new ApiError("Visit invoice not found");
+    }
 
-  //     for (const detail of visitDetails) {
-  //       await prisma.invoiceDetail.create({
-  //         data: {
-  //           description: `Charge for patient ${visit.rf}`,
-  //           amount: detail.price,
-  //           invoiceId: visitInvoice?.invoiceId,
-  //         },
-  //       });
-  //     }
-  //     const totalVisitPrice = visitDetails.reduce(
-  //       (sum: number, detail: any) => sum + parseFloat(detail.price),
-  //       0
-  //     );
+    // Start a Prisma transaction to ensure atomic operations
+    const result = await prisma.$transaction(async (prisma) => {
+      // Add the new visit details
+      const createdVisitDetails = await prisma.visitDetail.createMany({
+        data: visitDetails.map((detail: any) => ({
+          visitId,
+          patientId: detail.patientId,
+          status: detail.status,
+          price: detail.price,
+          scheduleId: detail.scheduleId,
+        })),
+      });
 
-  //     const roundedTotalVisitPrice = new Decimal(totalVisitPrice).toFixed(2);
+      // Link each InvoiceDetail to the corresponding VisitDetail
+      for (let i = 0; i < visitDetails.length; i++) {
+        const visitDetail = await prisma.visitDetail.findFirst({
+          where: { visitId, scheduleId: visitDetails[i].scheduleId },
+        });
 
-  //     await prisma.visit.update({
-  //       where: { id: visitId },
-  //       data: { total: visit.total.add(new Decimal(roundedTotalVisitPrice)) },
-  //     });
+        // Create invoice detail and link to the visit detail
+        if (visitDetail) {
+          await prisma.invoiceDetail.create({
+            data: {
+              description: `Charge for patient ${visit.rf}`, // Customize description
+              amount: visitDetails[i].price,
+              invoiceId: visitInvoice?.invoiceId,
+              visitDetailsId: visitDetail.id, // Link to the VisitDetail
+            },
+          });
+        }
+      }
 
-  //     await prisma.invoice.update({
-  //       where: { id: visitInvoice.invoiceId },
-  //       data: {
-  //         total: visitInvoice.invoice.total.add(
-  //           new Decimal(roundedTotalVisitPrice)
-  //         ),
-  //       },
-  //     });
+      // Calculate the total amount to be added
+      const totalVisitPrice = visitDetails.reduce(
+        (sum: number, detail: any) => sum + parseFloat(detail.price),
+        0
+      );
 
-  //     return res
-  //       .status(200)
-  //       .json({ message: "visit details updated successfully" });
-  //   }
+      // Use Decimal to ensure precision in financial calculations
+      const roundedTotalVisitPrice = new Decimal(totalVisitPrice).toFixed(2);
+
+      // Update the visit's total cost
+      await prisma.visit.update({
+        where: { id: visitId },
+        data: { total: visit.total.add(new Decimal(roundedTotalVisitPrice)) },
+      });
+
+      // Update the invoice's total cost
+      await prisma.invoice.update({
+        where: { id: visitInvoice.invoiceId },
+        data: {
+          total: visitInvoice.invoice.total.add(
+            new Decimal(roundedTotalVisitPrice)
+          ),
+        },
+      });
+
+      return { createdVisitDetails, visitInvoice };
+    });
+
+    return res.status(200).json({
+      message: "Visit details updated successfully",
+    });
+  }
+
+  @Delete("/:visitId/details/:visitDetailId")
+  async removeVisitDetails(
+    @Req() req: Request,
+    @Param("visitDetailId") visitDetailId: number,
+    @Param("visitId") visitId: number,
+    @Res() res: Response
+  ) {
+    const visit = await prisma.visit.findUnique({ where: { id: visitId } });
+    if (!visit) {
+      throw new ApiError("Visit not found");
+    }
+
+    let visitInvoice = await prisma.visitInvoice.findFirst({
+      where: { visitId },
+      include: { invoice: true },
+    });
+    if (!visitInvoice) {
+      throw new ApiError("Visit invoice not found");
+    }
+
+    // Fetch visit details related to this visit
+    const visitDetail = await prisma.visitDetail.findUnique({
+      where: { id: visitDetailId },
+      include: { invoiceDetail: true }, // Include related invoice details
+    });
+    if (!visitDetail) {
+      throw new ApiError("visit detail not found");
+    }
+
+    const result = await prisma.$transaction(async (prisma) => {
+      await prisma.invoiceDetail.deleteMany({
+        where: { visitDetailsId: visitDetail.id },
+      });
+
+      await prisma.visitDetail.delete({
+        where: { id: visitDetailId },
+      });
+
+      const totalVisitPrice =
+        visit.total.toNumber() - parseFloat(visitDetail.price.toString());
+      const updatedVisitTotal = new Decimal(totalVisitPrice);
+
+      await prisma.visit.update({
+        where: { id: visitId },
+        data: { total: updatedVisitTotal },
+      });
+
+      const totalInvoicePrice = visitInvoice?.invoice.total.toNumber() || 0;
+      const updatedInvoiceTotal = new Decimal(totalInvoicePrice).sub(
+        new Decimal(visitDetail.price.toString())
+      );
+
+      await prisma.invoice.update({
+        where: { id: visitInvoice.invoiceId },
+        data: { total: updatedInvoiceTotal },
+      });
+    });
+
+    return res.status(200).json({
+      message: "Visit details removed successfully",
+    });
+  }
 }

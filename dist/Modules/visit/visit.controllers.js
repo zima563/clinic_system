@@ -30,6 +30,7 @@ const validation_1 = require("../../middlewares/validation");
 const visit_validation_1 = require("./visit.validation");
 const client_1 = require("@prisma/client");
 const ApiError_1 = __importDefault(require("../../utils/ApiError"));
+const library_1 = require("@prisma/client/runtime/library");
 const prisma = new client_1.PrismaClient();
 let visitController = class visitController {
     createVisit(req, body, res) {
@@ -124,6 +125,120 @@ let visitController = class visitController {
             });
         });
     }
+    appendVisitDetails(req, body, visitId, res) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const { visitDetails } = body;
+            // Ensure the visit exists
+            const visit = yield prisma.visit.findUnique({ where: { id: visitId } });
+            if (!visit) {
+                throw new ApiError_1.default("Visit not found");
+            }
+            // Check if the visit has an associated invoice
+            let visitInvoice = yield prisma.visitInvoice.findFirst({
+                where: { visitId },
+                include: { invoice: true },
+            });
+            if (!visitInvoice) {
+                throw new ApiError_1.default("Visit invoice not found");
+            }
+            // Start a Prisma transaction to ensure atomic operations
+            const result = yield prisma.$transaction((prisma) => __awaiter(this, void 0, void 0, function* () {
+                // Add the new visit details
+                const createdVisitDetails = yield prisma.visitDetail.createMany({
+                    data: visitDetails.map((detail) => ({
+                        visitId,
+                        patientId: detail.patientId,
+                        status: detail.status,
+                        price: detail.price,
+                        scheduleId: detail.scheduleId,
+                    })),
+                });
+                // Link each InvoiceDetail to the corresponding VisitDetail
+                for (let i = 0; i < visitDetails.length; i++) {
+                    const visitDetail = yield prisma.visitDetail.findFirst({
+                        where: { visitId, scheduleId: visitDetails[i].scheduleId },
+                    });
+                    // Create invoice detail and link to the visit detail
+                    if (visitDetail) {
+                        yield prisma.invoiceDetail.create({
+                            data: {
+                                description: `Charge for patient ${visit.rf}`, // Customize description
+                                amount: visitDetails[i].price,
+                                invoiceId: visitInvoice === null || visitInvoice === void 0 ? void 0 : visitInvoice.invoiceId,
+                                visitDetailsId: visitDetail.id, // Link to the VisitDetail
+                            },
+                        });
+                    }
+                }
+                // Calculate the total amount to be added
+                const totalVisitPrice = visitDetails.reduce((sum, detail) => sum + parseFloat(detail.price), 0);
+                // Use Decimal to ensure precision in financial calculations
+                const roundedTotalVisitPrice = new library_1.Decimal(totalVisitPrice).toFixed(2);
+                // Update the visit's total cost
+                yield prisma.visit.update({
+                    where: { id: visitId },
+                    data: { total: visit.total.add(new library_1.Decimal(roundedTotalVisitPrice)) },
+                });
+                // Update the invoice's total cost
+                yield prisma.invoice.update({
+                    where: { id: visitInvoice.invoiceId },
+                    data: {
+                        total: visitInvoice.invoice.total.add(new library_1.Decimal(roundedTotalVisitPrice)),
+                    },
+                });
+                return { createdVisitDetails, visitInvoice };
+            }));
+            return res.status(200).json({
+                message: "Visit details updated successfully",
+            });
+        });
+    }
+    removeVisitDetails(req, visitDetailId, visitId, res) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const visit = yield prisma.visit.findUnique({ where: { id: visitId } });
+            if (!visit) {
+                throw new ApiError_1.default("Visit not found");
+            }
+            let visitInvoice = yield prisma.visitInvoice.findFirst({
+                where: { visitId },
+                include: { invoice: true },
+            });
+            if (!visitInvoice) {
+                throw new ApiError_1.default("Visit invoice not found");
+            }
+            // Fetch visit details related to this visit
+            const visitDetail = yield prisma.visitDetail.findUnique({
+                where: { id: visitDetailId },
+                include: { invoiceDetail: true }, // Include related invoice details
+            });
+            if (!visitDetail) {
+                throw new ApiError_1.default("visit detail not found");
+            }
+            const result = yield prisma.$transaction((prisma) => __awaiter(this, void 0, void 0, function* () {
+                yield prisma.invoiceDetail.deleteMany({
+                    where: { visitDetailsId: visitDetail.id },
+                });
+                yield prisma.visitDetail.delete({
+                    where: { id: visitDetailId },
+                });
+                const totalVisitPrice = visit.total.toNumber() - parseFloat(visitDetail.price.toString());
+                const updatedVisitTotal = new library_1.Decimal(totalVisitPrice);
+                yield prisma.visit.update({
+                    where: { id: visitId },
+                    data: { total: updatedVisitTotal },
+                });
+                const totalInvoicePrice = (visitInvoice === null || visitInvoice === void 0 ? void 0 : visitInvoice.invoice.total.toNumber()) || 0;
+                const updatedInvoiceTotal = new library_1.Decimal(totalInvoicePrice).sub(new library_1.Decimal(visitDetail.price.toString()));
+                yield prisma.invoice.update({
+                    where: { id: visitInvoice.invoiceId },
+                    data: { total: updatedInvoiceTotal },
+                });
+            }));
+            return res.status(200).json({
+                message: "Visit details removed successfully",
+            });
+        });
+    }
 };
 exports.visitController = visitController;
 __decorate([
@@ -154,6 +269,27 @@ __decorate([
     __metadata("design:paramtypes", [Object, Object, Number]),
     __metadata("design:returntype", Promise)
 ], visitController.prototype, "getAllVisits", null);
+__decorate([
+    (0, routing_controllers_1.Post)("/:visitId/details"),
+    (0, routing_controllers_1.UseBefore)((0, validation_1.createValidationMiddleware)(visit_validation_1.appendVisitSchema)),
+    __param(0, (0, routing_controllers_1.Req)()),
+    __param(1, (0, routing_controllers_1.Body)()),
+    __param(2, (0, routing_controllers_1.Param)("visitId")),
+    __param(3, (0, routing_controllers_1.Res)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, Object, Number, Object]),
+    __metadata("design:returntype", Promise)
+], visitController.prototype, "appendVisitDetails", null);
+__decorate([
+    (0, routing_controllers_1.Delete)("/:visitId/details/:visitDetailId"),
+    __param(0, (0, routing_controllers_1.Req)()),
+    __param(1, (0, routing_controllers_1.Param)("visitDetailId")),
+    __param(2, (0, routing_controllers_1.Param)("visitId")),
+    __param(3, (0, routing_controllers_1.Res)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, Number, Number, Object]),
+    __metadata("design:returntype", Promise)
+], visitController.prototype, "removeVisitDetails", null);
 exports.visitController = visitController = __decorate([
     (0, routing_controllers_1.JsonController)("/api/visit")
 ], visitController);
