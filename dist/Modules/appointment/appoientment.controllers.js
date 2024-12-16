@@ -30,6 +30,8 @@ const validation_1 = require("../../middlewares/validation");
 const appointment_validation_1 = require("./appointment.validation");
 const client_1 = require("@prisma/client");
 const ApiError_1 = __importDefault(require("../../utils/ApiError"));
+const protectedRoute_1 = require("../../middlewares/protectedRoute");
+const permissionMiddleWare_1 = require("../../middlewares/permissionMiddleWare");
 const prisma = new client_1.PrismaClient();
 let appointmentController = class appointmentController {
     addAppointment(req, body, res) {
@@ -140,6 +142,7 @@ __decorate([
 ], appointmentController.prototype, "addAppointment", null);
 __decorate([
     (0, routing_controllers_1.Get)("/patient"),
+    (0, routing_controllers_1.UseBefore)(protectedRoute_1.ProtectRoutesMiddleware, (0, permissionMiddleWare_1.permissionMiddleware)("getPatientAppointment")),
     __param(0, (0, routing_controllers_1.Req)()),
     __param(1, (0, routing_controllers_1.Res)()),
     __param(2, (0, routing_controllers_1.QueryParam)("patientId")),

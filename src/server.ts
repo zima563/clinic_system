@@ -19,6 +19,8 @@ import { scheduleControllers } from "./Modules/schedule/schedule.controllers";
 import { appointmentController } from "./Modules/appointment/appoientment.controllers";
 import { visitController } from "./Modules/visit/visit.controllers";
 import { PermissionController } from "./Modules/permission/seeder";
+import { permissionMiddleware } from "./middlewares/permissionMiddleWare";
+import { ProtectRoutesMiddleware } from "./middlewares/protectedRoute";
 
 const app = express();
 
@@ -49,7 +51,12 @@ useExpressServer(app, {
     visitController,
     PermissionController,
   ], // Adjust path to your controllers
-  middlewares: [createValidationMiddleware, ErrorHandler],
+  middlewares: [
+    ProtectRoutesMiddleware,
+    permissionMiddleware,
+    createValidationMiddleware,
+    ErrorHandler,
+  ],
   defaultErrorHandler: false,
 });
 

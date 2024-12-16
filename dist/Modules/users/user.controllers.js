@@ -135,7 +135,7 @@ let userControllers = class userControllers {
                 throw new ApiError_1.default("email or password incorrect");
             }
             else {
-                let token = jsonwebtoken_1.default.sign({ user }, process.env.JWT_KEY);
+                let token = jsonwebtoken_1.default.sign({ userId: user.id }, process.env.JWT_KEY);
                 return res.status(200).json(token);
             }
         });

@@ -23,6 +23,8 @@ const schedule_controllers_1 = require("./Modules/schedule/schedule.controllers"
 const appoientment_controllers_1 = require("./Modules/appointment/appoientment.controllers");
 const visit_controllers_1 = require("./Modules/visit/visit.controllers");
 const seeder_1 = require("./Modules/permission/seeder");
+const permissionMiddleWare_1 = require("./middlewares/permissionMiddleWare");
+const protectedRoute_1 = require("./middlewares/protectedRoute");
 const app = (0, express_1.default)();
 // Add body parser middleware
 app.use(express_1.default.json({ limit: "50mb" })); // Parses application/json request bodies
@@ -48,7 +50,12 @@ app.use((0, cors_1.default)({
         visit_controllers_1.visitController,
         seeder_1.PermissionController,
     ], // Adjust path to your controllers
-    middlewares: [validation_1.createValidationMiddleware, ErrorHandler_1.ErrorHandler],
+    middlewares: [
+        protectedRoute_1.ProtectRoutesMiddleware,
+        permissionMiddleWare_1.permissionMiddleware,
+        validation_1.createValidationMiddleware,
+        ErrorHandler_1.ErrorHandler,
+    ],
     defaultErrorHandler: false,
 });
 // app.use("/uploads", express.static("uploads")); // Serve static files

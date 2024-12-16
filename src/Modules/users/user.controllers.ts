@@ -149,7 +149,7 @@ export class userControllers {
     if (!(user && bcrypt.compareSync(body.password, user.password))) {
       throw new ApiError("email or password incorrect");
     } else {
-      let token = jwt.sign({ user }, process.env.JWT_KEY!);
+      let token = jwt.sign({ userId: user.id }, process.env.JWT_KEY!);
       return res.status(200).json(token);
     }
   }
