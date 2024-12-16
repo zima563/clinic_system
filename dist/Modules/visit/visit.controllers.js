@@ -239,6 +239,49 @@ let visitController = class visitController {
             });
         });
     }
+    deleteVisit(req, id, res) {
+        return __awaiter(this, void 0, void 0, function* () {
+            let visit = yield prisma.visit.findUnique({
+                where: { id },
+                include: {
+                    details: true,
+                    VisitInvoice: {
+                        include: {
+                            invoice: {
+                                include: { details: true },
+                            },
+                        },
+                    },
+                },
+            });
+            if (!visit) {
+                throw new ApiError_1.default("visit not found", 404);
+            }
+            yield prisma.$transaction((prisma) => __awaiter(this, void 0, void 0, function* () {
+                for (const VisitInvoice of visit.VisitInvoice) {
+                    const invoiceId = VisitInvoice.invoiceId;
+                    yield prisma.invoiceDetail.deleteMany({
+                        where: { invoiceId },
+                    });
+                    yield prisma.visitDetail.deleteMany({
+                        where: { visitId: id },
+                    });
+                    yield prisma.visitInvoice.deleteMany({
+                        where: { visitId: id },
+                    });
+                    yield prisma.invoice.delete({
+                        where: { id: invoiceId },
+                    });
+                    yield prisma.visit.delete({
+                        where: { id },
+                    });
+                }
+            }));
+            return res
+                .status(200)
+                .json({ message: "Visit and all related data deleted successfully." });
+        });
+    }
 };
 exports.visitController = visitController;
 __decorate([
@@ -290,6 +333,15 @@ __decorate([
     __metadata("design:paramtypes", [Object, Number, Number, Object]),
     __metadata("design:returntype", Promise)
 ], visitController.prototype, "removeVisitDetails", null);
+__decorate([
+    (0, routing_controllers_1.Delete)("/:id"),
+    __param(0, (0, routing_controllers_1.Req)()),
+    __param(1, (0, routing_controllers_1.Param)("id")),
+    __param(2, (0, routing_controllers_1.Res)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, Number, Object]),
+    __metadata("design:returntype", Promise)
+], visitController.prototype, "deleteVisit", null);
 exports.visitController = visitController = __decorate([
     (0, routing_controllers_1.JsonController)("/api/visit")
 ], visitController);

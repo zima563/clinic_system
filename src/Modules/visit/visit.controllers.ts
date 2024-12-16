@@ -298,4 +298,57 @@ export class visitController {
       message: "Visit details removed successfully",
     });
   }
+
+  @Delete("/:id")
+  async deleteVisit(
+    @Req() req: Request,
+    @Param("id") id: number,
+    @Res() res: Response
+  ) {
+    let visit = await prisma.visit.findUnique({
+      where: { id },
+      include: {
+        details: true,
+        VisitInvoice: {
+          include: {
+            invoice: {
+              include: { details: true },
+            },
+          },
+        },
+      },
+    });
+    if (!visit) {
+      throw new ApiError("visit not found", 404);
+    }
+
+    await prisma.$transaction(async (prisma) => {
+      for (const VisitInvoice of visit.VisitInvoice) {
+        const invoiceId = VisitInvoice.invoiceId;
+        await prisma.invoiceDetail.deleteMany({
+          where: { invoiceId },
+        });
+
+        await prisma.visitDetail.deleteMany({
+          where: { visitId: id },
+        });
+
+        await prisma.visitInvoice.deleteMany({
+          where: { visitId: id },
+        });
+
+        await prisma.invoice.delete({
+          where: { id: invoiceId },
+        });
+
+        await prisma.visit.delete({
+          where: { id },
+        });
+      }
+    });
+
+    return res
+      .status(200)
+      .json({ message: "Visit and all related data deleted successfully." });
+  }
 }
