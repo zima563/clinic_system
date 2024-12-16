@@ -127,7 +127,7 @@ export class appointmentController {
 
   @Put("/:id")
   @UseBefore(createValidationMiddleware(updateAppointmentSchema))
-  async updateAppintment(
+  async updateAppointment(
     @Req() req: Request,
     @Param("id") id: number,
     @Body() body: any,
