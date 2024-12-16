@@ -20,11 +20,17 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.PermissionController = void 0;
 const routing_controllers_1 = require("routing-controllers");
 const client_1 = require("@prisma/client");
 const permissions_1 = require("./permissions");
+const joi_1 = __importDefault(require("joi"));
+const validation_1 = require("../../middlewares/validation");
+const ApiError_1 = __importDefault(require("../../utils/ApiError"));
 const prisma = new client_1.PrismaClient();
 let PermissionController = class PermissionController {
     seedPermissions(res) {
@@ -45,8 +51,55 @@ let PermissionController = class PermissionController {
             });
         });
     }
+    assignPermissionsToUser(req, id, body, res) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const user = yield prisma.user.findUnique({
+                where: { id },
+                include: {
+                    userPermissions: true,
+                },
+            });
+            if (!user) {
+                throw new ApiError_1.default("user not found", 404);
+            }
+            const permissions = yield prisma.permission.findMany({
+                where: {
+                    id: { in: body.permissionIds },
+                },
+            });
+            if (permissions.length !== body.permissionIds.length) {
+                throw new ApiError_1.default("One or more permissions not found", 404);
+            }
+            yield prisma.$transaction((tx) => __awaiter(this, void 0, void 0, function* () {
+                const userPermissions = body.permissionIds.map((permissionId) => ({
+                    userId: id,
+                    permissionId,
+                }));
+                yield tx.userPermission.createMany({
+                    data: userPermissions,
+                });
+            }));
+            return res.status(200).json({
+                message: "Permissions assigned to user successfully",
+            });
+        });
+    }
 };
 exports.PermissionController = PermissionController;
+PermissionController.permissionIdsSchema = joi_1.default.object({
+    id: joi_1.default.string().required(),
+    permissionIds: joi_1.default.array()
+        .items(joi_1.default.number().integer().positive().required())
+        .min(1)
+        .required()
+        .messages({
+        "array.base": "permissionIds should be an array",
+        "array.min": "permissionIds should contain at least one element",
+        "number.base": "Each permissionId should be an integer",
+        "number.integer": "Each permissionId should be an integer",
+        "number.positive": "Each permissionId should be a positive integer",
+    }),
+});
 __decorate([
     (0, routing_controllers_1.Post)("/seed"),
     __param(0, (0, routing_controllers_1.Res)()),
@@ -54,6 +107,17 @@ __decorate([
     __metadata("design:paramtypes", [Object]),
     __metadata("design:returntype", Promise)
 ], PermissionController.prototype, "seedPermissions", null);
+__decorate([
+    (0, routing_controllers_1.Post)("/assignToUser/:id"),
+    (0, routing_controllers_1.UseBefore)((0, validation_1.createValidationMiddleware)(PermissionController.permissionIdsSchema)),
+    __param(0, (0, routing_controllers_1.Req)()),
+    __param(1, (0, routing_controllers_1.Param)("id")),
+    __param(2, (0, routing_controllers_1.Body)()),
+    __param(3, (0, routing_controllers_1.Res)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Request, Number, Object, Object]),
+    __metadata("design:returntype", Promise)
+], PermissionController.prototype, "assignPermissionsToUser", null);
 exports.PermissionController = PermissionController = __decorate([
     (0, routing_controllers_1.JsonController)("/api/permissions")
 ], PermissionController);
