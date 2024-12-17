@@ -31,6 +31,7 @@ const appointment_validation_1 = require("./appointment.validation");
 const client_1 = require("@prisma/client");
 const ApiError_1 = __importDefault(require("../../utils/ApiError"));
 const protectedRoute_1 = require("../../middlewares/protectedRoute");
+const roleOrPermission_1 = require("../../middlewares/roleOrPermission");
 const prisma = new client_1.PrismaClient();
 let appointmentController = class appointmentController {
     addAppointment(req, body, res) {
@@ -131,7 +132,7 @@ let appointmentController = class appointmentController {
 exports.appointmentController = appointmentController;
 __decorate([
     (0, routing_controllers_1.Post)("/"),
-    (0, routing_controllers_1.UseBefore)((0, validation_1.createValidationMiddleware)(appointment_validation_1.addAppointmentValidationSchema)),
+    (0, routing_controllers_1.UseBefore)(protectedRoute_1.ProtectRoutesMiddleware, (0, roleOrPermission_1.roleOrPermissionMiddleware)("addAppointment"), (0, validation_1.createValidationMiddleware)(appointment_validation_1.addAppointmentValidationSchema)),
     __param(0, (0, routing_controllers_1.Req)()),
     __param(1, (0, routing_controllers_1.Body)()),
     __param(2, (0, routing_controllers_1.Res)()),
@@ -141,7 +142,7 @@ __decorate([
 ], appointmentController.prototype, "addAppointment", null);
 __decorate([
     (0, routing_controllers_1.Get)("/patient"),
-    (0, routing_controllers_1.UseBefore)(protectedRoute_1.ProtectRoutesMiddleware),
+    (0, routing_controllers_1.UseBefore)(protectedRoute_1.ProtectRoutesMiddleware, (0, roleOrPermission_1.roleOrPermissionMiddleware)("getPatientAppointment")),
     __param(0, (0, routing_controllers_1.Req)()),
     __param(1, (0, routing_controllers_1.Res)()),
     __param(2, (0, routing_controllers_1.QueryParam)("patientId")),
@@ -151,6 +152,7 @@ __decorate([
 ], appointmentController.prototype, "getPatientAppointment", null);
 __decorate([
     (0, routing_controllers_1.Get)("/"),
+    (0, routing_controllers_1.UseBefore)(protectedRoute_1.ProtectRoutesMiddleware, (0, roleOrPermission_1.roleOrPermissionMiddleware)("getAppointment")),
     __param(0, (0, routing_controllers_1.Req)()),
     __param(1, (0, routing_controllers_1.Res)()),
     __metadata("design:type", Function),
@@ -159,6 +161,7 @@ __decorate([
 ], appointmentController.prototype, "getAppointment", null);
 __decorate([
     (0, routing_controllers_1.Get)("/:id"),
+    (0, routing_controllers_1.UseBefore)(protectedRoute_1.ProtectRoutesMiddleware, (0, roleOrPermission_1.roleOrPermissionMiddleware)("showAppointmnetDetail")),
     __param(0, (0, routing_controllers_1.Req)()),
     __param(1, (0, routing_controllers_1.Param)("id")),
     __param(2, (0, routing_controllers_1.Res)()),
@@ -168,7 +171,7 @@ __decorate([
 ], appointmentController.prototype, "showAppointmnetDetail", null);
 __decorate([
     (0, routing_controllers_1.Patch)("/:id"),
-    (0, routing_controllers_1.UseBefore)((0, validation_1.createValidationMiddleware)(appointment_validation_1.updateAppointmentStatusSchema)),
+    (0, routing_controllers_1.UseBefore)(protectedRoute_1.ProtectRoutesMiddleware, (0, roleOrPermission_1.roleOrPermissionMiddleware)("updateStatus"), (0, validation_1.createValidationMiddleware)(appointment_validation_1.updateAppointmentStatusSchema)),
     __param(0, (0, routing_controllers_1.Req)()),
     __param(1, (0, routing_controllers_1.Param)("id")),
     __param(2, (0, routing_controllers_1.Body)()),
@@ -179,7 +182,7 @@ __decorate([
 ], appointmentController.prototype, "updateStatus", null);
 __decorate([
     (0, routing_controllers_1.Put)("/:id"),
-    (0, routing_controllers_1.UseBefore)((0, validation_1.createValidationMiddleware)(appointment_validation_1.updateAppointmentSchema)),
+    (0, routing_controllers_1.UseBefore)(protectedRoute_1.ProtectRoutesMiddleware, (0, roleOrPermission_1.roleOrPermissionMiddleware)("updateAppointment"), (0, validation_1.createValidationMiddleware)(appointment_validation_1.updateAppointmentSchema)),
     __param(0, (0, routing_controllers_1.Req)()),
     __param(1, (0, routing_controllers_1.Param)("id")),
     __param(2, (0, routing_controllers_1.Body)()),

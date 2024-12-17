@@ -25,6 +25,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.patientController = void 0;
+const protectedRoute_1 = require("./../../middlewares/protectedRoute");
 const routing_controllers_1 = require("routing-controllers");
 const validation_1 = require("../../middlewares/validation");
 const patient_validation_1 = require("./patient.validation");
@@ -32,6 +33,7 @@ const phoneExist_1 = require("../../middlewares/phoneExist");
 const client_1 = require("@prisma/client");
 const ApiError_1 = __importDefault(require("../../utils/ApiError"));
 const ApiFeatures_1 = __importDefault(require("../../utils/ApiFeatures"));
+const roleOrPermission_1 = require("../../middlewares/roleOrPermission");
 const prisma = new client_1.PrismaClient();
 let patientController = class patientController {
     addPatient(req, body, res) {
@@ -98,7 +100,7 @@ let patientController = class patientController {
 exports.patientController = patientController;
 __decorate([
     (0, routing_controllers_1.Post)("/"),
-    (0, routing_controllers_1.UseBefore)((0, validation_1.createValidationMiddleware)(patient_validation_1.addPatientSchema), phoneExist_1.CheckPhoneMiddleware),
+    (0, routing_controllers_1.UseBefore)(protectedRoute_1.ProtectRoutesMiddleware, (0, roleOrPermission_1.roleOrPermissionMiddleware)("addPatient"), (0, validation_1.createValidationMiddleware)(patient_validation_1.addPatientSchema), phoneExist_1.CheckPhoneMiddleware),
     __param(0, (0, routing_controllers_1.Req)()),
     __param(1, (0, routing_controllers_1.Body)()),
     __param(2, (0, routing_controllers_1.Res)()),
@@ -108,7 +110,7 @@ __decorate([
 ], patientController.prototype, "addPatient", null);
 __decorate([
     (0, routing_controllers_1.Put)("/:id"),
-    (0, routing_controllers_1.UseBefore)((0, validation_1.createValidationMiddleware)(patient_validation_1.UpdatePatientSchema)),
+    (0, routing_controllers_1.UseBefore)(protectedRoute_1.ProtectRoutesMiddleware, (0, roleOrPermission_1.roleOrPermissionMiddleware)("updatePatient"), (0, validation_1.createValidationMiddleware)(patient_validation_1.UpdatePatientSchema)),
     __param(0, (0, routing_controllers_1.Req)()),
     __param(1, (0, routing_controllers_1.Param)("id")),
     __param(2, (0, routing_controllers_1.Body)()),
@@ -119,6 +121,7 @@ __decorate([
 ], patientController.prototype, "updatePatient", null);
 __decorate([
     (0, routing_controllers_1.Get)("/"),
+    (0, routing_controllers_1.UseBefore)(protectedRoute_1.ProtectRoutesMiddleware, (0, roleOrPermission_1.roleOrPermissionMiddleware)("listPatient")),
     __param(0, (0, routing_controllers_1.Req)()),
     __param(1, (0, routing_controllers_1.QueryParams)()),
     __param(2, (0, routing_controllers_1.Body)()),
@@ -129,6 +132,7 @@ __decorate([
 ], patientController.prototype, "listPatient", null);
 __decorate([
     (0, routing_controllers_1.Get)("/:id"),
+    (0, routing_controllers_1.UseBefore)(protectedRoute_1.ProtectRoutesMiddleware, (0, roleOrPermission_1.roleOrPermissionMiddleware)("getPatient")),
     __param(0, (0, routing_controllers_1.Req)()),
     __param(1, (0, routing_controllers_1.Param)("id")),
     __param(2, (0, routing_controllers_1.Res)()),

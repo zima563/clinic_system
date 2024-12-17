@@ -1,3 +1,4 @@
+import { ProtectRoutesMiddleware } from "./../../middlewares/protectedRoute";
 import {
   Body,
   Delete,
@@ -20,12 +21,17 @@ import {
 import { PrismaClient } from "@prisma/client";
 import ApiError from "../../utils/ApiError";
 import ApiFeatures from "../../utils/ApiFeatures";
+import { roleOrPermissionMiddleware } from "../../middlewares/roleOrPermission";
 const prisma = new PrismaClient();
 
 @JsonController("/api/services")
 export class serviceController {
   @Post("/")
-  @UseBefore(createValidationMiddleware(addServiceValidation))
+  @UseBefore(
+    ProtectRoutesMiddleware,
+    roleOrPermissionMiddleware("addService"),
+    createValidationMiddleware(addServiceValidation)
+  )
   async addService(@Body() body: any, @Res() res: Response) {
     if (await prisma.service.findFirst({ where: { title: body.title } })) {
       throw new ApiError("service title already exists", 409);
@@ -37,6 +43,7 @@ export class serviceController {
   }
 
   @Get("/all")
+  @UseBefore(ProtectRoutesMiddleware, roleOrPermissionMiddleware("allServices"))
   async allServices(@QueryParams() query: any, @Res() res: Response) {
     try {
       const baseFilter = {
@@ -66,7 +73,11 @@ export class serviceController {
   }
 
   @Put("/:id")
-  @UseBefore(createValidationMiddleware(updateServiceValidation))
+  @UseBefore(
+    ProtectRoutesMiddleware,
+    roleOrPermissionMiddleware("updateService"),
+    createValidationMiddleware(updateServiceValidation)
+  )
   async updateService(
     @Param("id") id: number,
     @Body() body: any,
@@ -83,7 +94,11 @@ export class serviceController {
   }
 
   @Get("/:id")
-  @UseBefore(createValidationMiddleware(updateServiceValidation))
+  @UseBefore(
+    ProtectRoutesMiddleware,
+    roleOrPermissionMiddleware("getService"),
+    createValidationMiddleware(updateServiceValidation)
+  )
   async getService(@Param("id") id: number, @Res() res: Response) {
     let service = await prisma.service.findUnique({
       where: { id },
@@ -95,6 +110,10 @@ export class serviceController {
   }
 
   @Patch("/:id")
+  @UseBefore(
+    ProtectRoutesMiddleware,
+    roleOrPermissionMiddleware("deactiveService")
+  )
   async deactiveService(@Param("id") id: number, @Res() res: Response) {
     if (!(await prisma.service.findUnique({ where: { id } }))) {
       throw new ApiError("service not found", 404);

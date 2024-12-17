@@ -25,6 +25,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.invoiceControllers = void 0;
+const protectedRoute_1 = require("./../../middlewares/protectedRoute");
 const client_1 = require("@prisma/client");
 const routing_controllers_1 = require("routing-controllers");
 const ApiFeatures_1 = __importDefault(require("../../utils/ApiFeatures"));
@@ -32,6 +33,7 @@ const validation_1 = require("../../middlewares/validation");
 const invoive_validation_1 = require("./invoive.validation");
 const ApiError_1 = __importDefault(require("../../utils/ApiError"));
 const library_1 = require("@prisma/client/runtime/library");
+const roleOrPermission_1 = require("../../middlewares/roleOrPermission");
 const prisma = new client_1.PrismaClient();
 let invoiceControllers = class invoiceControllers {
     createInvoice(req, body, res) {
@@ -208,7 +210,7 @@ let invoiceControllers = class invoiceControllers {
 exports.invoiceControllers = invoiceControllers;
 __decorate([
     (0, routing_controllers_1.Post)("/"),
-    (0, routing_controllers_1.UseBefore)((0, validation_1.createValidationMiddleware)(invoive_validation_1.addInvoiceDetailValidation)),
+    (0, routing_controllers_1.UseBefore)(protectedRoute_1.ProtectRoutesMiddleware, (0, roleOrPermission_1.roleOrPermissionMiddleware)("createInvoice"), (0, validation_1.createValidationMiddleware)(invoive_validation_1.addInvoiceDetailValidation)),
     __param(0, (0, routing_controllers_1.Req)()),
     __param(1, (0, routing_controllers_1.Body)()),
     __param(2, (0, routing_controllers_1.Res)()),
@@ -218,6 +220,7 @@ __decorate([
 ], invoiceControllers.prototype, "createInvoice", null);
 __decorate([
     (0, routing_controllers_1.Get)("/"),
+    (0, routing_controllers_1.UseBefore)(protectedRoute_1.ProtectRoutesMiddleware, (0, roleOrPermission_1.roleOrPermissionMiddleware)("listInvoice")),
     __param(0, (0, routing_controllers_1.Req)()),
     __param(1, (0, routing_controllers_1.Res)()),
     __metadata("design:type", Function),
@@ -226,7 +229,7 @@ __decorate([
 ], invoiceControllers.prototype, "listInvoice", null);
 __decorate([
     (0, routing_controllers_1.Put)("/:id"),
-    (0, routing_controllers_1.UseBefore)((0, validation_1.createValidationMiddleware)(invoive_validation_1.updateInvoiceDetailValidation)),
+    (0, routing_controllers_1.UseBefore)(protectedRoute_1.ProtectRoutesMiddleware, (0, roleOrPermission_1.roleOrPermissionMiddleware)("updateInvoiceDetail"), (0, validation_1.createValidationMiddleware)(invoive_validation_1.updateInvoiceDetailValidation)),
     __param(0, (0, routing_controllers_1.Param)("id")),
     __param(1, (0, routing_controllers_1.Body)()),
     __param(2, (0, routing_controllers_1.Res)()),
@@ -236,6 +239,7 @@ __decorate([
 ], invoiceControllers.prototype, "updateInvoiceDetail", null);
 __decorate([
     (0, routing_controllers_1.Get)("/:id"),
+    (0, routing_controllers_1.UseBefore)(protectedRoute_1.ProtectRoutesMiddleware, (0, roleOrPermission_1.roleOrPermissionMiddleware)("Show_Invoice_Details")),
     __param(0, (0, routing_controllers_1.Req)()),
     __param(1, (0, routing_controllers_1.Param)("id")),
     __param(2, (0, routing_controllers_1.Res)()),
@@ -245,6 +249,7 @@ __decorate([
 ], invoiceControllers.prototype, "Show_Invoice_Details", null);
 __decorate([
     (0, routing_controllers_1.Get)("/list/:id"),
+    (0, routing_controllers_1.UseBefore)(protectedRoute_1.ProtectRoutesMiddleware, (0, roleOrPermission_1.roleOrPermissionMiddleware)("List_Invoice_Details")),
     __param(0, (0, routing_controllers_1.Req)()),
     __param(1, (0, routing_controllers_1.Param)("id")),
     __param(2, (0, routing_controllers_1.Res)()),
@@ -254,7 +259,7 @@ __decorate([
 ], invoiceControllers.prototype, "List_Invoice_Details", null);
 __decorate([
     (0, routing_controllers_1.Post)("/:id"),
-    (0, routing_controllers_1.UseBefore)((0, validation_1.createValidationMiddleware)(invoive_validation_1.appendInvoiceDetailValidation)),
+    (0, routing_controllers_1.UseBefore)(protectedRoute_1.ProtectRoutesMiddleware, (0, roleOrPermission_1.roleOrPermissionMiddleware)("Append_Invoice_Details"), (0, validation_1.createValidationMiddleware)(invoive_validation_1.appendInvoiceDetailValidation)),
     __param(0, (0, routing_controllers_1.Req)()),
     __param(1, (0, routing_controllers_1.Body)()),
     __param(2, (0, routing_controllers_1.Param)("id")),
@@ -265,6 +270,7 @@ __decorate([
 ], invoiceControllers.prototype, "Append_Invoice_Details", null);
 __decorate([
     (0, routing_controllers_1.Delete)("/:id"),
+    (0, routing_controllers_1.UseBefore)(protectedRoute_1.ProtectRoutesMiddleware, (0, roleOrPermission_1.roleOrPermissionMiddleware)("Remove_Invoice_Details")),
     __param(0, (0, routing_controllers_1.Req)()),
     __param(1, (0, routing_controllers_1.Param)("id")),
     __param(2, (0, routing_controllers_1.Res)()),

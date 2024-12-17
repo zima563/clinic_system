@@ -21,12 +21,17 @@ import { Request, Response } from "express";
 import { PrismaClient } from "@prisma/client";
 import ApiError from "../../utils/ApiError";
 import { ProtectRoutesMiddleware } from "../../middlewares/protectedRoute";
+import { roleOrPermissionMiddleware } from "../../middlewares/roleOrPermission";
 const prisma = new PrismaClient();
 
 @JsonController("/api/appointment")
 export class appointmentController {
   @Post("/")
-  @UseBefore(createValidationMiddleware(addAppointmentValidationSchema))
+  @UseBefore(
+    ProtectRoutesMiddleware,
+    roleOrPermissionMiddleware("addAppointment"),
+    createValidationMiddleware(addAppointmentValidationSchema)
+  )
   async addAppointment(
     @Req() req: Request,
     @Body() body: any,
@@ -39,7 +44,10 @@ export class appointmentController {
   }
 
   @Get("/patient")
-  @UseBefore(ProtectRoutesMiddleware)
+  @UseBefore(
+    ProtectRoutesMiddleware,
+    roleOrPermissionMiddleware("getPatientAppointment")
+  )
   async getPatientAppointment(
     @Req() req: Request,
     @Res() res: Response,
@@ -62,6 +70,10 @@ export class appointmentController {
   }
 
   @Get("/")
+  @UseBefore(
+    ProtectRoutesMiddleware,
+    roleOrPermissionMiddleware("getAppointment")
+  )
   async getAppointment(@Req() req: Request, @Res() res: Response) {
     const today = new Date();
 
@@ -85,6 +97,10 @@ export class appointmentController {
   }
 
   @Get("/:id")
+  @UseBefore(
+    ProtectRoutesMiddleware,
+    roleOrPermissionMiddleware("showAppointmnetDetail")
+  )
   async showAppointmnetDetail(
     @Req() req: Request,
     @Param("id") id: number,
@@ -106,7 +122,11 @@ export class appointmentController {
   }
 
   @Patch("/:id")
-  @UseBefore(createValidationMiddleware(updateAppointmentStatusSchema))
+  @UseBefore(
+    ProtectRoutesMiddleware,
+    roleOrPermissionMiddleware("updateStatus"),
+    createValidationMiddleware(updateAppointmentStatusSchema)
+  )
   async updateStatus(
     @Req() req: Request,
     @Param("id") id: number,
@@ -128,7 +148,11 @@ export class appointmentController {
   }
 
   @Put("/:id")
-  @UseBefore(createValidationMiddleware(updateAppointmentSchema))
+  @UseBefore(
+    ProtectRoutesMiddleware,
+    roleOrPermissionMiddleware("updateAppointment"),
+    createValidationMiddleware(updateAppointmentSchema)
+  )
   async updateAppointment(
     @Req() req: Request,
     @Param("id") id: number,

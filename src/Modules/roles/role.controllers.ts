@@ -20,13 +20,19 @@ import {
   createRoleValidation,
   updateRoleValidation,
 } from "./role.validation";
+import { ProtectRoutesMiddleware } from "../../middlewares/protectedRoute";
+import { roleOrPermissionMiddleware } from "../../middlewares/roleOrPermission";
 
 const prisma = new PrismaClient();
 
 @JsonController("/api/roles")
 export class roleControllers {
   @Post("/")
-  @UseBefore(createValidationMiddleware(createRoleValidation))
+  @UseBefore(
+    ProtectRoutesMiddleware,
+    roleOrPermissionMiddleware("createRole"),
+    createValidationMiddleware(createRoleValidation)
+  )
   async createRole(@Body() body: any, @Res() res: Response) {
     if (await prisma.role.findFirst({ where: { name: body.name } })) {
       throw new ApiError("this role name already exist", 409);
@@ -37,6 +43,7 @@ export class roleControllers {
 
   // GET /all does not use CheckEmailMiddleware
   @Get("/all")
+  @UseBefore(ProtectRoutesMiddleware, roleOrPermissionMiddleware("allRoles"))
   async allRoles(@QueryParams() query: any, @Res() res: Response) {
     try {
       const apiFeatures = new ApiFeatures(prisma.role, query);
@@ -63,7 +70,11 @@ export class roleControllers {
   }
 
   @Post("/userRole/:userId")
-  @UseBefore(createValidationMiddleware(assignRoleToUserValidation))
+  @UseBefore(
+    ProtectRoutesMiddleware,
+    roleOrPermissionMiddleware("assignRoleToUser"),
+    createValidationMiddleware(assignRoleToUserValidation)
+  )
   async assignRoleToUser(
     @Param("userId") userId: number,
     @Body() body: any,
@@ -88,6 +99,10 @@ export class roleControllers {
   }
 
   @Get("/userRole/all")
+  @UseBefore(
+    ProtectRoutesMiddleware,
+    roleOrPermissionMiddleware("getAllRoleUsers")
+  )
   async getAllRoleUsers(@QueryParams() query: any, @Res() res: Response) {
     let all = await prisma.userRole.findMany({
       include: {
@@ -99,7 +114,11 @@ export class roleControllers {
   }
 
   @Put("/:id")
-  @UseBefore(createValidationMiddleware(updateRoleValidation))
+  @UseBefore(
+    ProtectRoutesMiddleware,
+    roleOrPermissionMiddleware("updateRole"),
+    createValidationMiddleware(updateRoleValidation)
+  )
   async updateRole(
     @Param("id") id: number,
     @Body() body: any,
@@ -119,6 +138,7 @@ export class roleControllers {
   }
 
   @Delete("/:id")
+  @UseBefore(ProtectRoutesMiddleware, roleOrPermissionMiddleware("deleteRole"))
   async deleteRole(@Param("id") id: number, @Res() res: Response) {
     if (!(await prisma.role.findUnique({ where: { id } }))) {
       throw new ApiError("role not found");

@@ -31,9 +31,11 @@ const schedule_validations_1 = require("./schedule.validations");
 const client_1 = require("@prisma/client");
 const ApiFeatures_1 = __importDefault(require("../../utils/ApiFeatures"));
 const ApiError_1 = __importDefault(require("../../utils/ApiError"));
+const protectedRoute_1 = require("../../middlewares/protectedRoute");
+const roleOrPermission_1 = require("../../middlewares/roleOrPermission");
 const prisma = new client_1.PrismaClient();
 let scheduleControllers = class scheduleControllers {
-    addSchema(req, res) {
+    addSchedule(req, res) {
         return __awaiter(this, void 0, void 0, function* () {
             const { doctorId, servicesId, price, date, fromTime, toTime } = req.body;
             const schedule = yield prisma.schedule.create({
@@ -131,15 +133,16 @@ let scheduleControllers = class scheduleControllers {
 exports.scheduleControllers = scheduleControllers;
 __decorate([
     (0, routing_controllers_1.Post)("/"),
-    (0, routing_controllers_1.UseBefore)((0, validation_1.createValidationMiddleware)(schedule_validations_1.addscheduleSchema)),
+    (0, routing_controllers_1.UseBefore)(protectedRoute_1.ProtectRoutesMiddleware, (0, roleOrPermission_1.roleOrPermissionMiddleware)("addSchedule"), (0, validation_1.createValidationMiddleware)(schedule_validations_1.addscheduleSchema)),
     __param(0, (0, routing_controllers_1.Req)()),
     __param(1, (0, routing_controllers_1.Res)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [Object, Object]),
     __metadata("design:returntype", Promise)
-], scheduleControllers.prototype, "addSchema", null);
+], scheduleControllers.prototype, "addSchedule", null);
 __decorate([
     (0, routing_controllers_1.Get)("/"),
+    (0, routing_controllers_1.UseBefore)(protectedRoute_1.ProtectRoutesMiddleware, (0, roleOrPermission_1.roleOrPermissionMiddleware)("listSchedules")),
     __param(0, (0, routing_controllers_1.Req)()),
     __param(1, (0, routing_controllers_1.Res)()),
     __param(2, (0, routing_controllers_1.QueryParam)("doctorId")),
@@ -151,6 +154,7 @@ __decorate([
 ], scheduleControllers.prototype, "listSchedules", null);
 __decorate([
     (0, routing_controllers_1.Get)("/:id"),
+    (0, routing_controllers_1.UseBefore)(protectedRoute_1.ProtectRoutesMiddleware, (0, roleOrPermission_1.roleOrPermissionMiddleware)("showScheduleDetails")),
     __param(0, (0, routing_controllers_1.Req)()),
     __param(1, (0, routing_controllers_1.Param)("id")),
     __param(2, (0, routing_controllers_1.Res)()),
@@ -160,7 +164,7 @@ __decorate([
 ], scheduleControllers.prototype, "showScheduleDetails", null);
 __decorate([
     (0, routing_controllers_1.Put)("/:id"),
-    (0, routing_controllers_1.UseBefore)((0, validation_1.createValidationMiddleware)(schedule_validations_1.updateScheduleSchema)) // Optional validation middleware
+    (0, routing_controllers_1.UseBefore)(protectedRoute_1.ProtectRoutesMiddleware, (0, roleOrPermission_1.roleOrPermissionMiddleware)("updateSchedule"), (0, validation_1.createValidationMiddleware)(schedule_validations_1.updateScheduleSchema)) // Optional validation middleware
     ,
     __param(0, (0, routing_controllers_1.Param)("id")),
     __param(1, (0, routing_controllers_1.Req)()),
@@ -171,6 +175,7 @@ __decorate([
 ], scheduleControllers.prototype, "updateSchedule", null);
 __decorate([
     (0, routing_controllers_1.Delete)("/:id"),
+    (0, routing_controllers_1.UseBefore)(protectedRoute_1.ProtectRoutesMiddleware, (0, roleOrPermission_1.roleOrPermissionMiddleware)("deleteSchedule")),
     __param(0, (0, routing_controllers_1.Param)("id")),
     __param(1, (0, routing_controllers_1.Res)()),
     __metadata("design:type", Function),

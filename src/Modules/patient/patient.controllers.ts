@@ -1,3 +1,4 @@
+import { ProtectRoutesMiddleware } from "./../../middlewares/protectedRoute";
 import {
   Body,
   Get,
@@ -17,13 +18,19 @@ import { PrismaClient } from "@prisma/client";
 import { Request, Response } from "express";
 import ApiError from "../../utils/ApiError";
 import ApiFeatures from "../../utils/ApiFeatures";
+import { roleOrPermissionMiddleware } from "../../middlewares/roleOrPermission";
 
 const prisma = new PrismaClient();
 
 @JsonController("/api/patients")
 export class patientController {
   @Post("/")
-  @UseBefore(createValidationMiddleware(addPatientSchema), CheckPhoneMiddleware)
+  @UseBefore(
+    ProtectRoutesMiddleware,
+    roleOrPermissionMiddleware("addPatient"),
+    createValidationMiddleware(addPatientSchema),
+    CheckPhoneMiddleware
+  )
   async addPatient(
     @Req() req: Request,
     @Body() body: any,
@@ -41,7 +48,11 @@ export class patientController {
   }
 
   @Put("/:id")
-  @UseBefore(createValidationMiddleware(UpdatePatientSchema))
+  @UseBefore(
+    ProtectRoutesMiddleware,
+    roleOrPermissionMiddleware("updatePatient"),
+    createValidationMiddleware(UpdatePatientSchema)
+  )
   async updatePatient(
     @Req() req: Request,
     @Param("id") id: number,
@@ -66,6 +77,7 @@ export class patientController {
   }
 
   @Get("/")
+  @UseBefore(ProtectRoutesMiddleware, roleOrPermissionMiddleware("listPatient"))
   async listPatient(
     @Req() req: any,
     @QueryParams() query: any,
@@ -92,6 +104,7 @@ export class patientController {
   }
 
   @Get("/:id")
+  @UseBefore(ProtectRoutesMiddleware, roleOrPermissionMiddleware("getPatient"))
   async getPatient(
     @Req() req: Request,
     @Param("id") id: number,

@@ -1,3 +1,4 @@
+import { ProtectRoutesMiddleware } from "./../../middlewares/protectedRoute";
 import { PrismaClient } from "@prisma/client";
 
 import {
@@ -22,12 +23,17 @@ import {
 import ApiError from "../../utils/ApiError";
 import { Decimal } from "@prisma/client/runtime/library";
 import { Response } from "express";
+import { roleOrPermissionMiddleware } from "../../middlewares/roleOrPermission";
 const prisma = new PrismaClient();
 
 @JsonController("/api/invoice")
 export class invoiceControllers {
   @Post("/")
-  @UseBefore(createValidationMiddleware(addInvoiceDetailValidation))
+  @UseBefore(
+    ProtectRoutesMiddleware,
+    roleOrPermissionMiddleware("createInvoice"),
+    createValidationMiddleware(addInvoiceDetailValidation)
+  )
   async createInvoice(
     @Req() req: any,
     @Body() body: any,
@@ -55,6 +61,7 @@ export class invoiceControllers {
   }
 
   @Get("/")
+  @UseBefore(ProtectRoutesMiddleware, roleOrPermissionMiddleware("listInvoice"))
   async listInvoice(@Req() req: any, @Res() res: Response) {
     const apiFeatures = new ApiFeatures(prisma.invoice, req.query);
 
@@ -79,7 +86,11 @@ export class invoiceControllers {
   }
 
   @Put("/:id")
-  @UseBefore(createValidationMiddleware(updateInvoiceDetailValidation))
+  @UseBefore(
+    ProtectRoutesMiddleware,
+    roleOrPermissionMiddleware("updateInvoiceDetail"),
+    createValidationMiddleware(updateInvoiceDetailValidation)
+  )
   async updateInvoiceDetail(
     @Param("id") id: number,
     @Body() body: any,
@@ -128,6 +139,10 @@ export class invoiceControllers {
   }
 
   @Get("/:id")
+  @UseBefore(
+    ProtectRoutesMiddleware,
+    roleOrPermissionMiddleware("Show_Invoice_Details")
+  )
   async Show_Invoice_Details(
     @Req() req: any,
     @Param("id") id: number,
@@ -148,6 +163,10 @@ export class invoiceControllers {
   }
 
   @Get("/list/:id")
+  @UseBefore(
+    ProtectRoutesMiddleware,
+    roleOrPermissionMiddleware("List_Invoice_Details")
+  )
   async List_Invoice_Details(
     @Req() req: any,
     @Param("id") id: number,
@@ -167,7 +186,11 @@ export class invoiceControllers {
   }
 
   @Post("/:id")
-  @UseBefore(createValidationMiddleware(appendInvoiceDetailValidation))
+  @UseBefore(
+    ProtectRoutesMiddleware,
+    roleOrPermissionMiddleware("Append_Invoice_Details"),
+    createValidationMiddleware(appendInvoiceDetailValidation)
+  )
   async Append_Invoice_Details(
     @Req() req: any,
     @Body() body: any,
@@ -210,6 +233,10 @@ export class invoiceControllers {
   }
 
   @Delete("/:id")
+  @UseBefore(
+    ProtectRoutesMiddleware,
+    roleOrPermissionMiddleware("Remove_Invoice_Details")
+  )
   async Remove_Invoice_Details(
     @Req() req: any,
     @Param("id") id: number,

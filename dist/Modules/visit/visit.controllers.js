@@ -25,12 +25,14 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.visitController = void 0;
+const protectedRoute_1 = require("./../../middlewares/protectedRoute");
 const routing_controllers_1 = require("routing-controllers");
 const validation_1 = require("../../middlewares/validation");
 const visit_validation_1 = require("./visit.validation");
 const client_1 = require("@prisma/client");
 const ApiError_1 = __importDefault(require("../../utils/ApiError"));
 const library_1 = require("@prisma/client/runtime/library");
+const roleOrPermission_1 = require("../../middlewares/roleOrPermission");
 const prisma = new client_1.PrismaClient();
 let visitController = class visitController {
     createVisit(req, body, res) {
@@ -286,7 +288,7 @@ let visitController = class visitController {
 exports.visitController = visitController;
 __decorate([
     (0, routing_controllers_1.Post)("/"),
-    (0, routing_controllers_1.UseBefore)((0, validation_1.createValidationMiddleware)(visit_validation_1.createVisitSchema)),
+    (0, routing_controllers_1.UseBefore)(protectedRoute_1.ProtectRoutesMiddleware, (0, roleOrPermission_1.roleOrPermissionMiddleware)("createVisit"), (0, validation_1.createValidationMiddleware)(visit_validation_1.createVisitSchema)),
     __param(0, (0, routing_controllers_1.Req)()),
     __param(1, (0, routing_controllers_1.Body)()),
     __param(2, (0, routing_controllers_1.Res)()),
@@ -296,6 +298,7 @@ __decorate([
 ], visitController.prototype, "createVisit", null);
 __decorate([
     (0, routing_controllers_1.Get)("/:id"),
+    (0, routing_controllers_1.UseBefore)(protectedRoute_1.ProtectRoutesMiddleware, (0, roleOrPermission_1.roleOrPermissionMiddleware)("showVisitDetails")),
     __param(0, (0, routing_controllers_1.Req)()),
     __param(1, (0, routing_controllers_1.Param)("id")),
     __param(2, (0, routing_controllers_1.Res)()),
@@ -305,6 +308,7 @@ __decorate([
 ], visitController.prototype, "showVisitDetails", null);
 __decorate([
     (0, routing_controllers_1.Get)("/"),
+    (0, routing_controllers_1.UseBefore)(protectedRoute_1.ProtectRoutesMiddleware, (0, roleOrPermission_1.roleOrPermissionMiddleware)("getAllVisits")),
     __param(0, (0, routing_controllers_1.Req)()),
     __param(1, (0, routing_controllers_1.Res)()),
     __param(2, (0, routing_controllers_1.QueryParam)("patientId")),
@@ -314,7 +318,7 @@ __decorate([
 ], visitController.prototype, "getAllVisits", null);
 __decorate([
     (0, routing_controllers_1.Post)("/:visitId/details"),
-    (0, routing_controllers_1.UseBefore)((0, validation_1.createValidationMiddleware)(visit_validation_1.appendVisitSchema)),
+    (0, routing_controllers_1.UseBefore)(protectedRoute_1.ProtectRoutesMiddleware, (0, roleOrPermission_1.roleOrPermissionMiddleware)("appendVisitDetails"), (0, validation_1.createValidationMiddleware)(visit_validation_1.appendVisitSchema)),
     __param(0, (0, routing_controllers_1.Req)()),
     __param(1, (0, routing_controllers_1.Body)()),
     __param(2, (0, routing_controllers_1.Param)("visitId")),
@@ -325,6 +329,7 @@ __decorate([
 ], visitController.prototype, "appendVisitDetails", null);
 __decorate([
     (0, routing_controllers_1.Delete)("/:visitId/details/:visitDetailId"),
+    (0, routing_controllers_1.UseBefore)(protectedRoute_1.ProtectRoutesMiddleware, (0, roleOrPermission_1.roleOrPermissionMiddleware)("removeVisitDetails")),
     __param(0, (0, routing_controllers_1.Req)()),
     __param(1, (0, routing_controllers_1.Param)("visitDetailId")),
     __param(2, (0, routing_controllers_1.Param)("visitId")),
@@ -335,6 +340,7 @@ __decorate([
 ], visitController.prototype, "removeVisitDetails", null);
 __decorate([
     (0, routing_controllers_1.Delete)("/:id"),
+    (0, routing_controllers_1.UseBefore)(protectedRoute_1.ProtectRoutesMiddleware, (0, roleOrPermission_1.roleOrPermissionMiddleware)("deleteVisit")),
     __param(0, (0, routing_controllers_1.Req)()),
     __param(1, (0, routing_controllers_1.Param)("id")),
     __param(2, (0, routing_controllers_1.Res)()),

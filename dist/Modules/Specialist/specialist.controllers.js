@@ -36,6 +36,8 @@ const client_1 = require("@prisma/client");
 const specialist_validation_1 = require("./specialist.validation");
 const ApiError_1 = __importDefault(require("../../utils/ApiError"));
 const ApiFeatures_1 = __importDefault(require("../../utils/ApiFeatures"));
+const protectedRoute_1 = require("../../middlewares/protectedRoute");
+const roleOrPermission_1 = require("../../middlewares/roleOrPermission");
 const prisma = new client_1.PrismaClient();
 let specialtyControllers = class specialtyControllers {
     createSpecialty(req, body, res) {
@@ -134,7 +136,7 @@ let specialtyControllers = class specialtyControllers {
 exports.specialtyControllers = specialtyControllers;
 __decorate([
     (0, routing_controllers_1.Post)("/"),
-    (0, routing_controllers_1.UseBefore)((0, uploadFile_1.default)("icon"), (0, validation_1.createValidationMiddleware)(specialist_validation_1.specialtySchema)),
+    (0, routing_controllers_1.UseBefore)(protectedRoute_1.ProtectRoutesMiddleware, (0, roleOrPermission_1.roleOrPermissionMiddleware)("createSpecialty"), (0, uploadFile_1.default)("icon"), (0, validation_1.createValidationMiddleware)(specialist_validation_1.specialtySchema)),
     __param(0, (0, routing_controllers_1.Req)()),
     __param(1, (0, routing_controllers_1.Body)()),
     __param(2, (0, routing_controllers_1.Res)()),
@@ -144,7 +146,7 @@ __decorate([
 ], specialtyControllers.prototype, "createSpecialty", null);
 __decorate([
     (0, routing_controllers_1.Put)("/:id"),
-    (0, routing_controllers_1.UseBefore)((0, uploadFile_1.default)("icon"), (0, validation_1.createValidationMiddleware)(specialist_validation_1.updateSpecialtySchema)),
+    (0, routing_controllers_1.UseBefore)(protectedRoute_1.ProtectRoutesMiddleware, (0, roleOrPermission_1.roleOrPermissionMiddleware)("updateSpecialty"), (0, uploadFile_1.default)("icon"), (0, validation_1.createValidationMiddleware)(specialist_validation_1.updateSpecialtySchema)),
     __param(0, (0, routing_controllers_1.Req)()),
     __param(1, (0, routing_controllers_1.Body)()),
     __param(2, (0, routing_controllers_1.Param)("id")),
@@ -155,6 +157,7 @@ __decorate([
 ], specialtyControllers.prototype, "updateSpecialty", null);
 __decorate([
     (0, routing_controllers_1.Get)("/all"),
+    (0, routing_controllers_1.UseBefore)(protectedRoute_1.ProtectRoutesMiddleware, (0, roleOrPermission_1.roleOrPermissionMiddleware)("allSpecialtys")),
     __param(0, (0, routing_controllers_1.QueryParams)()),
     __param(1, (0, routing_controllers_1.Res)()),
     __metadata("design:type", Function),
@@ -163,6 +166,7 @@ __decorate([
 ], specialtyControllers.prototype, "allSpecialtys", null);
 __decorate([
     (0, routing_controllers_1.Get)("/:id"),
+    (0, routing_controllers_1.UseBefore)(protectedRoute_1.ProtectRoutesMiddleware, (0, roleOrPermission_1.roleOrPermissionMiddleware)("getOneSpecialty")),
     __param(0, (0, routing_controllers_1.Param)("id")),
     __param(1, (0, routing_controllers_1.Res)()),
     __metadata("design:type", Function),

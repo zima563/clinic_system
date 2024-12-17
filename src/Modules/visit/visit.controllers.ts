@@ -1,3 +1,4 @@
+import { ProtectRoutesMiddleware } from "./../../middlewares/protectedRoute";
 import { Visit } from "./../../../node_modules/.prisma/client/index.d";
 import {
   Body,
@@ -18,12 +19,17 @@ import { Request, Response } from "express";
 import { PrismaClient } from "@prisma/client";
 import ApiError from "../../utils/ApiError";
 import { Decimal } from "@prisma/client/runtime/library";
+import { roleOrPermissionMiddleware } from "../../middlewares/roleOrPermission";
 const prisma = new PrismaClient();
 
 @JsonController("/api/visit")
 export class visitController {
   @Post("/")
-  @UseBefore(createValidationMiddleware(createVisitSchema))
+  @UseBefore(
+    ProtectRoutesMiddleware,
+    roleOrPermissionMiddleware("createVisit"),
+    createValidationMiddleware(createVisitSchema)
+  )
   async createVisit(
     @Req() req: Request,
     @Body() body: any,
@@ -99,6 +105,10 @@ export class visitController {
   }
 
   @Get("/:id")
+  @UseBefore(
+    ProtectRoutesMiddleware,
+    roleOrPermissionMiddleware("showVisitDetails")
+  )
   async showVisitDetails(
     @Req() req: Request,
     @Param("id") id: number,
@@ -119,6 +129,10 @@ export class visitController {
   }
 
   @Get("/")
+  @UseBefore(
+    ProtectRoutesMiddleware,
+    roleOrPermissionMiddleware("getAllVisits")
+  )
   async getAllVisits(
     @Req() req: Request,
     @Res() res: Response,
@@ -147,7 +161,11 @@ export class visitController {
   }
 
   @Post("/:visitId/details")
-  @UseBefore(createValidationMiddleware(appendVisitSchema))
+  @UseBefore(
+    ProtectRoutesMiddleware,
+    roleOrPermissionMiddleware("appendVisitDetails"),
+    createValidationMiddleware(appendVisitSchema)
+  )
   async appendVisitDetails(
     @Req() req: Request,
     @Body() body: any,
@@ -237,6 +255,10 @@ export class visitController {
   }
 
   @Delete("/:visitId/details/:visitDetailId")
+  @UseBefore(
+    ProtectRoutesMiddleware,
+    roleOrPermissionMiddleware("removeVisitDetails")
+  )
   async removeVisitDetails(
     @Req() req: Request,
     @Param("visitDetailId") visitDetailId: number,
@@ -300,6 +322,7 @@ export class visitController {
   }
 
   @Delete("/:id")
+  @UseBefore(ProtectRoutesMiddleware, roleOrPermissionMiddleware("deleteVisit"))
   async deleteVisit(
     @Req() req: Request,
     @Param("id") id: number,

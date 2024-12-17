@@ -25,6 +25,8 @@ import {
 } from "./specialist.validation";
 import ApiError from "../../utils/ApiError";
 import ApiFeatures from "../../utils/ApiFeatures";
+import { ProtectRoutesMiddleware } from "../../middlewares/protectedRoute";
+import { roleOrPermissionMiddleware } from "../../middlewares/roleOrPermission";
 
 const prisma = new PrismaClient();
 
@@ -32,6 +34,8 @@ const prisma = new PrismaClient();
 export class specialtyControllers {
   @Post("/")
   @UseBefore(
+    ProtectRoutesMiddleware,
+    roleOrPermissionMiddleware("createSpecialty"),
     createUploadMiddleware("icon"),
     createValidationMiddleware(specialtySchema)
   )
@@ -76,6 +80,8 @@ export class specialtyControllers {
 
   @Put("/:id")
   @UseBefore(
+    ProtectRoutesMiddleware,
+    roleOrPermissionMiddleware("updateSpecialty"),
     createUploadMiddleware("icon"),
     createValidationMiddleware(updateSpecialtySchema)
   )
@@ -131,6 +137,10 @@ export class specialtyControllers {
   }
 
   @Get("/all")
+  @UseBefore(
+    ProtectRoutesMiddleware,
+    roleOrPermissionMiddleware("allSpecialtys")
+  )
   async allSpecialtys(@QueryParams() query: any, @Res() res: Response) {
     const apiFeatures = new ApiFeatures(prisma.specialty, query);
 
@@ -150,6 +160,10 @@ export class specialtyControllers {
   }
 
   @Get("/:id")
+  @UseBefore(
+    ProtectRoutesMiddleware,
+    roleOrPermissionMiddleware("getOneSpecialty")
+  )
   async getOneSpecialty(@Param("id") id: number, @Res() res: Response) {
     let specialty = await prisma.specialty.findUnique({ where: { id } });
     if (!specialty) {

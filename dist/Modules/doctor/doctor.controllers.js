@@ -36,6 +36,8 @@ const uuid_1 = require("uuid");
 const sharp_1 = __importDefault(require("sharp"));
 const path_1 = __importDefault(require("path"));
 const ApiFeatures_1 = __importDefault(require("../../utils/ApiFeatures"));
+const protectedRoute_1 = require("../../middlewares/protectedRoute");
+const roleOrPermission_1 = require("../../middlewares/roleOrPermission");
 const prisma = new client_1.PrismaClient();
 let doctorControllers = class doctorControllers {
     addDoctor(req, body, res) {
@@ -147,7 +149,7 @@ let doctorControllers = class doctorControllers {
 exports.doctorControllers = doctorControllers;
 __decorate([
     (0, routing_controllers_1.Post)("/"),
-    (0, routing_controllers_1.UseBefore)((0, uploadFile_1.default)("icon"), (0, validation_1.createValidationMiddleware)(doctor_validation_1.addDoctorValidationSchema)),
+    (0, routing_controllers_1.UseBefore)(protectedRoute_1.ProtectRoutesMiddleware, (0, roleOrPermission_1.roleOrPermissionMiddleware)("addDoctor"), (0, uploadFile_1.default)("icon"), (0, validation_1.createValidationMiddleware)(doctor_validation_1.addDoctorValidationSchema)),
     __param(0, (0, routing_controllers_1.Req)()),
     __param(1, (0, routing_controllers_1.Body)()),
     __param(2, (0, routing_controllers_1.Res)()),
@@ -157,7 +159,7 @@ __decorate([
 ], doctorControllers.prototype, "addDoctor", null);
 __decorate([
     (0, routing_controllers_1.Put)("/:id"),
-    (0, routing_controllers_1.UseBefore)((0, uploadFile_1.default)("icon"), // Ensure this middleware works as expected
+    (0, routing_controllers_1.UseBefore)(protectedRoute_1.ProtectRoutesMiddleware, (0, roleOrPermission_1.roleOrPermissionMiddleware)("updateDoctor"), (0, uploadFile_1.default)("icon"), // Ensure this middleware works as expected
     (0, validation_1.createValidationMiddleware)(doctor_validation_1.UpdateDoctorValidationSchema)),
     __param(0, (0, routing_controllers_1.Req)()),
     __param(1, (0, routing_controllers_1.Body)()),
@@ -169,6 +171,7 @@ __decorate([
 ], doctorControllers.prototype, "updateDoctor", null);
 __decorate([
     (0, routing_controllers_1.Get)("/"),
+    (0, routing_controllers_1.UseBefore)(protectedRoute_1.ProtectRoutesMiddleware, (0, roleOrPermission_1.roleOrPermissionMiddleware)("listDoctors")),
     __param(0, (0, routing_controllers_1.Req)()),
     __param(1, (0, routing_controllers_1.QueryParams)()),
     __param(2, (0, routing_controllers_1.Body)()),
@@ -179,6 +182,7 @@ __decorate([
 ], doctorControllers.prototype, "listDoctors", null);
 __decorate([
     (0, routing_controllers_1.Get)("/:id"),
+    (0, routing_controllers_1.UseBefore)(protectedRoute_1.ProtectRoutesMiddleware, (0, roleOrPermission_1.roleOrPermissionMiddleware)("showDoctorDetails")),
     __param(0, (0, routing_controllers_1.Req)()),
     __param(1, (0, routing_controllers_1.Param)("id")),
     __param(2, (0, routing_controllers_1.Res)()),
@@ -188,6 +192,7 @@ __decorate([
 ], doctorControllers.prototype, "showDoctorDetails", null);
 __decorate([
     (0, routing_controllers_1.Patch)("/:id"),
+    (0, routing_controllers_1.UseBefore)(protectedRoute_1.ProtectRoutesMiddleware, (0, roleOrPermission_1.roleOrPermissionMiddleware)("DeactiveDoctor")),
     __param(0, (0, routing_controllers_1.Req)()),
     __param(1, (0, routing_controllers_1.Param)("id")),
     __param(2, (0, routing_controllers_1.Res)()),

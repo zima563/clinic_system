@@ -1,3 +1,4 @@
+import { ProtectRoutesMiddleware } from "./../../middlewares/protectedRoute";
 import { PrismaClient } from "@prisma/client";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
@@ -21,6 +22,7 @@ import { addUser, loginValidation, UpdateUser } from "./user.validations";
 import { CheckEmailMiddleware } from "../../middlewares/emailExists";
 import ApiFeatures from "../../utils/ApiFeatures";
 import ApiError from "../../utils/ApiError";
+import { roleOrPermissionMiddleware } from "../../middlewares/roleOrPermission";
 
 const prisma = new PrismaClient();
 
@@ -28,7 +30,11 @@ const prisma = new PrismaClient();
 export class userControllers {
   // Apply CheckEmailMiddleware only for the POST route (user creation)
   @Post("/")
-  @UseBefore(createValidationMiddleware(addUser))
+  @UseBefore(
+    ProtectRoutesMiddleware,
+    roleOrPermissionMiddleware("addUser"),
+    createValidationMiddleware(addUser)
+  )
   @UseBefore(CheckEmailMiddleware)
   async addUser(@Body() body: any, @Res() res: Response) {
     body.password = bcrypt.hashSync(body.password, 10);
@@ -38,6 +44,7 @@ export class userControllers {
 
   // GET /all does not use CheckEmailMiddleware
   @Get("/all")
+  @UseBefore(ProtectRoutesMiddleware, roleOrPermissionMiddleware("allUsers"))
   async allUsers(@QueryParams() query: any, @Res() res: Response) {
     try {
       // Add isDeleted = false condition to the query
@@ -74,6 +81,7 @@ export class userControllers {
   }
 
   @Get("/:id")
+  @UseBefore(ProtectRoutesMiddleware, roleOrPermissionMiddleware("getOneUser"))
   async getOneUser(
     @Param("id") id: number,
     @Res() res: Response,
@@ -87,7 +95,11 @@ export class userControllers {
   }
 
   @Put("/:id")
-  @UseBefore(createValidationMiddleware(UpdateUser))
+  @UseBefore(
+    ProtectRoutesMiddleware,
+    roleOrPermissionMiddleware("updateUser"),
+    createValidationMiddleware(UpdateUser)
+  )
   async updateUser(
     @Param("id") id: number,
     @Body() body: any,
@@ -105,6 +117,10 @@ export class userControllers {
   }
 
   @Patch("/:id")
+  @UseBefore(
+    ProtectRoutesMiddleware,
+    roleOrPermissionMiddleware("deactiveUser")
+  )
   async deactiveUser(
     @Param("id") id: number,
     @Body() body: any,
@@ -122,6 +138,7 @@ export class userControllers {
   }
 
   @Patch("/soft/:id")
+  @UseBefore(ProtectRoutesMiddleware, roleOrPermissionMiddleware("DeleteUser"))
   async DeleteUser(
     @Param("id") id: number,
     @Body() body: any,

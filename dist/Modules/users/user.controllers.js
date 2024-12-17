@@ -25,6 +25,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.userControllers = void 0;
+const protectedRoute_1 = require("./../../middlewares/protectedRoute");
 const client_1 = require("@prisma/client");
 const bcrypt_1 = __importDefault(require("bcrypt"));
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
@@ -34,6 +35,7 @@ const user_validations_1 = require("./user.validations");
 const emailExists_1 = require("../../middlewares/emailExists");
 const ApiFeatures_1 = __importDefault(require("../../utils/ApiFeatures"));
 const ApiError_1 = __importDefault(require("../../utils/ApiError"));
+const roleOrPermission_1 = require("../../middlewares/roleOrPermission");
 const prisma = new client_1.PrismaClient();
 let userControllers = class userControllers {
     // Apply CheckEmailMiddleware only for the POST route (user creation)
@@ -144,7 +146,7 @@ let userControllers = class userControllers {
 exports.userControllers = userControllers;
 __decorate([
     (0, routing_controllers_1.Post)("/"),
-    (0, routing_controllers_1.UseBefore)((0, validation_1.createValidationMiddleware)(user_validations_1.addUser)),
+    (0, routing_controllers_1.UseBefore)(protectedRoute_1.ProtectRoutesMiddleware, (0, roleOrPermission_1.roleOrPermissionMiddleware)("addUser"), (0, validation_1.createValidationMiddleware)(user_validations_1.addUser)),
     (0, routing_controllers_1.UseBefore)(emailExists_1.CheckEmailMiddleware),
     __param(0, (0, routing_controllers_1.Body)()),
     __param(1, (0, routing_controllers_1.Res)()),
@@ -154,6 +156,7 @@ __decorate([
 ], userControllers.prototype, "addUser", null);
 __decorate([
     (0, routing_controllers_1.Get)("/all"),
+    (0, routing_controllers_1.UseBefore)(protectedRoute_1.ProtectRoutesMiddleware, (0, roleOrPermission_1.roleOrPermissionMiddleware)("allUsers")),
     __param(0, (0, routing_controllers_1.QueryParams)()),
     __param(1, (0, routing_controllers_1.Res)()),
     __metadata("design:type", Function),
@@ -162,6 +165,7 @@ __decorate([
 ], userControllers.prototype, "allUsers", null);
 __decorate([
     (0, routing_controllers_1.Get)("/:id"),
+    (0, routing_controllers_1.UseBefore)(protectedRoute_1.ProtectRoutesMiddleware, (0, roleOrPermission_1.roleOrPermissionMiddleware)("getOneUser")),
     __param(0, (0, routing_controllers_1.Param)("id")),
     __param(1, (0, routing_controllers_1.Res)()),
     __metadata("design:type", Function),
@@ -170,7 +174,7 @@ __decorate([
 ], userControllers.prototype, "getOneUser", null);
 __decorate([
     (0, routing_controllers_1.Put)("/:id"),
-    (0, routing_controllers_1.UseBefore)((0, validation_1.createValidationMiddleware)(user_validations_1.UpdateUser)),
+    (0, routing_controllers_1.UseBefore)(protectedRoute_1.ProtectRoutesMiddleware, (0, roleOrPermission_1.roleOrPermissionMiddleware)("updateUser"), (0, validation_1.createValidationMiddleware)(user_validations_1.UpdateUser)),
     __param(0, (0, routing_controllers_1.Param)("id")),
     __param(1, (0, routing_controllers_1.Body)()),
     __param(2, (0, routing_controllers_1.Res)()),
@@ -180,6 +184,7 @@ __decorate([
 ], userControllers.prototype, "updateUser", null);
 __decorate([
     (0, routing_controllers_1.Patch)("/:id"),
+    (0, routing_controllers_1.UseBefore)(protectedRoute_1.ProtectRoutesMiddleware, (0, roleOrPermission_1.roleOrPermissionMiddleware)("deactiveUser")),
     __param(0, (0, routing_controllers_1.Param)("id")),
     __param(1, (0, routing_controllers_1.Body)()),
     __param(2, (0, routing_controllers_1.Res)()),
@@ -189,6 +194,7 @@ __decorate([
 ], userControllers.prototype, "deactiveUser", null);
 __decorate([
     (0, routing_controllers_1.Patch)("/soft/:id"),
+    (0, routing_controllers_1.UseBefore)(protectedRoute_1.ProtectRoutesMiddleware, (0, roleOrPermission_1.roleOrPermissionMiddleware)("DeleteUser")),
     __param(0, (0, routing_controllers_1.Param)("id")),
     __param(1, (0, routing_controllers_1.Body)()),
     __param(2, (0, routing_controllers_1.Res)()),

@@ -31,12 +31,16 @@ const permissions_1 = require("./permissions");
 const joi_1 = __importDefault(require("joi"));
 const validation_1 = require("../../middlewares/validation");
 const ApiError_1 = __importDefault(require("../../utils/ApiError"));
+const protectedRoute_1 = require("../../middlewares/protectedRoute");
+const roleOrPermission_1 = require("../../middlewares/roleOrPermission");
 const prisma = new client_1.PrismaClient();
 let PermissionController = class PermissionController {
     seedPermissions(res) {
         return __awaiter(this, void 0, void 0, function* () {
             yield prisma.$transaction((tx) => __awaiter(this, void 0, void 0, function* () {
-                yield tx.permission.deleteMany({});
+                yield tx.rolePermission.deleteMany();
+                yield tx.userPermission.deleteMany();
+                yield tx.permission.deleteMany();
                 for (const permission of permissions_1.permissions) {
                     yield tx.permission.upsert({
                         where: { name: permission.name },
@@ -93,7 +97,7 @@ let PermissionController = class PermissionController {
                 },
             });
             if (!role) {
-                throw new ApiError_1.default("user not found", 404);
+                throw new ApiError_1.default("role not found", 404);
             }
             const permissions = yield prisma.permission.findMany({
                 where: {
@@ -178,6 +182,10 @@ PermissionController.permissionIdsSchema = joi_1.default.object({
 });
 __decorate([
     (0, routing_controllers_1.Post)("/seed"),
+    (0, routing_controllers_1.UseBefore)()
+    // ProtectRoutesMiddleware,
+    // roleOrPermissionMiddleware("seedPermissions")
+    ,
     __param(0, (0, routing_controllers_1.Res)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [Object]),
@@ -185,7 +193,7 @@ __decorate([
 ], PermissionController.prototype, "seedPermissions", null);
 __decorate([
     (0, routing_controllers_1.Post)("/assignToUser/:id"),
-    (0, routing_controllers_1.UseBefore)((0, validation_1.createValidationMiddleware)(PermissionController.permissionIdsSchema)),
+    (0, routing_controllers_1.UseBefore)(protectedRoute_1.ProtectRoutesMiddleware, (0, roleOrPermission_1.roleOrPermissionMiddleware)("assignPermissionsToUser"), (0, validation_1.createValidationMiddleware)(PermissionController.permissionIdsSchema)),
     __param(0, (0, routing_controllers_1.Req)()),
     __param(1, (0, routing_controllers_1.Param)("id")),
     __param(2, (0, routing_controllers_1.Body)()),
@@ -196,7 +204,7 @@ __decorate([
 ], PermissionController.prototype, "assignPermissionsToUser", null);
 __decorate([
     (0, routing_controllers_1.Post)("/assignToRole/:id"),
-    (0, routing_controllers_1.UseBefore)((0, validation_1.createValidationMiddleware)(PermissionController.permissionIdsSchema)),
+    (0, routing_controllers_1.UseBefore)(protectedRoute_1.ProtectRoutesMiddleware, (0, roleOrPermission_1.roleOrPermissionMiddleware)("assignPermissionsToRole"), (0, validation_1.createValidationMiddleware)(PermissionController.permissionIdsSchema)),
     __param(0, (0, routing_controllers_1.Req)()),
     __param(1, (0, routing_controllers_1.Param)("id")),
     __param(2, (0, routing_controllers_1.Body)()),
@@ -207,6 +215,7 @@ __decorate([
 ], PermissionController.prototype, "assignPermissionsToRole", null);
 __decorate([
     (0, routing_controllers_1.Get)("/"),
+    (0, routing_controllers_1.UseBefore)(protectedRoute_1.ProtectRoutesMiddleware, (0, roleOrPermission_1.roleOrPermissionMiddleware)("ListPermissions")),
     __param(0, (0, routing_controllers_1.Req)()),
     __param(1, (0, routing_controllers_1.Res)()),
     __metadata("design:type", Function),
@@ -215,6 +224,7 @@ __decorate([
 ], PermissionController.prototype, "ListPermissions", null);
 __decorate([
     (0, routing_controllers_1.Get)("/user/:id"),
+    (0, routing_controllers_1.UseBefore)(protectedRoute_1.ProtectRoutesMiddleware, (0, roleOrPermission_1.roleOrPermissionMiddleware)("ListUserPermissions")),
     __param(0, (0, routing_controllers_1.Req)()),
     __param(1, (0, routing_controllers_1.Param)("id")),
     __param(2, (0, routing_controllers_1.Res)()),
@@ -224,6 +234,7 @@ __decorate([
 ], PermissionController.prototype, "ListUserPermissions", null);
 __decorate([
     (0, routing_controllers_1.Get)("/role/:id"),
+    (0, routing_controllers_1.UseBefore)(protectedRoute_1.ProtectRoutesMiddleware, (0, roleOrPermission_1.roleOrPermissionMiddleware)("ListRolePermissions")),
     __param(0, (0, routing_controllers_1.Req)()),
     __param(1, (0, routing_controllers_1.Param)("id")),
     __param(2, (0, routing_controllers_1.Res)()),

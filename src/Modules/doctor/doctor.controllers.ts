@@ -25,6 +25,8 @@ import { v4 as uuidv4 } from "uuid";
 import sharp from "sharp";
 import path from "path";
 import ApiFeatures from "../../utils/ApiFeatures";
+import { ProtectRoutesMiddleware } from "../../middlewares/protectedRoute";
+import { roleOrPermissionMiddleware } from "../../middlewares/roleOrPermission";
 
 const prisma = new PrismaClient();
 
@@ -32,6 +34,8 @@ const prisma = new PrismaClient();
 export class doctorControllers {
   @Post("/")
   @UseBefore(
+    ProtectRoutesMiddleware,
+    roleOrPermissionMiddleware("addDoctor"),
     createUploadMiddleware("icon"),
     createValidationMiddleware(addDoctorValidationSchema)
   )
@@ -68,6 +72,8 @@ export class doctorControllers {
 
   @Put("/:id")
   @UseBefore(
+    ProtectRoutesMiddleware,
+    roleOrPermissionMiddleware("updateDoctor"),
     createUploadMiddleware("icon"), // Ensure this middleware works as expected
     createValidationMiddleware(UpdateDoctorValidationSchema)
   )
@@ -132,6 +138,7 @@ export class doctorControllers {
   }
 
   @Get("/")
+  @UseBefore(ProtectRoutesMiddleware, roleOrPermissionMiddleware("listDoctors"))
   async listDoctors(
     @Req() req: any,
     @QueryParams() query: any,
@@ -158,6 +165,10 @@ export class doctorControllers {
   }
 
   @Get("/:id")
+  @UseBefore(
+    ProtectRoutesMiddleware,
+    roleOrPermissionMiddleware("showDoctorDetails")
+  )
   async showDoctorDetails(
     @Req() req: Request,
     @Param("id") id: number,
@@ -173,6 +184,10 @@ export class doctorControllers {
   }
 
   @Patch("/:id")
+  @UseBefore(
+    ProtectRoutesMiddleware,
+    roleOrPermissionMiddleware("DeactiveDoctor")
+  )
   async DeactiveDoctor(
     @Req() req: any,
     @Param("id") id: number,

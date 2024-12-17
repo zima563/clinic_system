@@ -14,6 +14,8 @@ import { permissions } from "./permissions";
 import Joi from "joi";
 import { createValidationMiddleware } from "../../middlewares/validation";
 import ApiError from "../../utils/ApiError";
+import { ProtectRoutesMiddleware } from "../../middlewares/protectedRoute";
+import { roleOrPermissionMiddleware } from "../../middlewares/roleOrPermission";
 const prisma = new PrismaClient();
 
 @JsonController("/api/permissions")
@@ -33,9 +35,14 @@ export class PermissionController {
       }),
   });
   @Post("/seed")
+  @UseBefore()
+  // ProtectRoutesMiddleware,
+  // roleOrPermissionMiddleware("seedPermissions")
   async seedPermissions(@Res() res: Response) {
     await prisma.$transaction(async (tx) => {
-      await tx.permission.deleteMany({});
+      await tx.rolePermission.deleteMany();
+      await tx.userPermission.deleteMany();
+      await tx.permission.deleteMany();
 
       for (const permission of permissions) {
         await tx.permission.upsert({
@@ -54,6 +61,8 @@ export class PermissionController {
 
   @Post("/assignToUser/:id")
   @UseBefore(
+    ProtectRoutesMiddleware,
+    roleOrPermissionMiddleware("assignPermissionsToUser"),
     createValidationMiddleware(PermissionController.permissionIdsSchema)
   )
   async assignPermissionsToUser(
@@ -98,6 +107,8 @@ export class PermissionController {
 
   @Post("/assignToRole/:id")
   @UseBefore(
+    ProtectRoutesMiddleware,
+    roleOrPermissionMiddleware("assignPermissionsToRole"),
     createValidationMiddleware(PermissionController.permissionIdsSchema)
   )
   async assignPermissionsToRole(
@@ -113,7 +124,7 @@ export class PermissionController {
       },
     });
     if (!role) {
-      throw new ApiError("user not found", 404);
+      throw new ApiError("role not found", 404);
     }
 
     const permissions = await prisma.permission.findMany({
@@ -141,6 +152,10 @@ export class PermissionController {
   }
 
   @Get("/")
+  @UseBefore(
+    ProtectRoutesMiddleware,
+    roleOrPermissionMiddleware("ListPermissions")
+  )
   async ListPermissions(@Req() req: Request, @Res() res: Response) {
     let permissions = await prisma.permission.findMany();
     return res.status(200).json({
@@ -150,6 +165,10 @@ export class PermissionController {
   }
 
   @Get("/user/:id")
+  @UseBefore(
+    ProtectRoutesMiddleware,
+    roleOrPermissionMiddleware("ListUserPermissions")
+  )
   async ListUserPermissions(
     @Req() req: Request,
     @Param("id") userId: number,
@@ -170,6 +189,10 @@ export class PermissionController {
     });
   }
   @Get("/role/:id")
+  @UseBefore(
+    ProtectRoutesMiddleware,
+    roleOrPermissionMiddleware("ListRolePermissions")
+  )
   async ListRolePermissions(
     @Req() req: Request,
     @Param("id") roleId: number,

@@ -30,7 +30,7 @@ exports.permissions = [
     { name: "getAllRoleUsers" },
     { name: "updateRole" },
     { name: "deleteRole" },
-    { name: "addSchema" },
+    { name: "addSchedule" },
     { name: "listSchedules" },
     { name: "showScheduleDetails" },
     { name: "updateSchedule" },

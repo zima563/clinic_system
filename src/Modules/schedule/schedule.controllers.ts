@@ -19,13 +19,19 @@ import { Request, Response } from "express";
 import { PrismaClient } from "@prisma/client";
 import ApiFeatures from "../../utils/ApiFeatures";
 import ApiError from "../../utils/ApiError";
+import { ProtectRoutesMiddleware } from "../../middlewares/protectedRoute";
+import { roleOrPermissionMiddleware } from "../../middlewares/roleOrPermission";
 const prisma = new PrismaClient();
 
 @JsonController("/api/schedule")
 export class scheduleControllers {
   @Post("/")
-  @UseBefore(createValidationMiddleware(addscheduleSchema))
-  async addSchema(@Req() req: Request, @Res() res: Response) {
+  @UseBefore(
+    ProtectRoutesMiddleware,
+    roleOrPermissionMiddleware("addSchedule"),
+    createValidationMiddleware(addscheduleSchema)
+  )
+  async addSchedule(@Req() req: Request, @Res() res: Response) {
     const { doctorId, servicesId, price, date, fromTime, toTime } = req.body;
     const schedule = await prisma.schedule.create({
       data: {
@@ -41,6 +47,10 @@ export class scheduleControllers {
   }
 
   @Get("/")
+  @UseBefore(
+    ProtectRoutesMiddleware,
+    roleOrPermissionMiddleware("listSchedules")
+  )
   async listSchedules(
     @Req() req: Request,
     @Res() res: Response,
@@ -75,6 +85,10 @@ export class scheduleControllers {
   }
 
   @Get("/:id")
+  @UseBefore(
+    ProtectRoutesMiddleware,
+    roleOrPermissionMiddleware("showScheduleDetails")
+  )
   async showScheduleDetails(
     @Req() req: Request,
     @Param("id") id: number,
@@ -90,7 +104,11 @@ export class scheduleControllers {
   }
 
   @Put("/:id")
-  @UseBefore(createValidationMiddleware(updateScheduleSchema)) // Optional validation middleware
+  @UseBefore(
+    ProtectRoutesMiddleware,
+    roleOrPermissionMiddleware("updateSchedule"),
+    createValidationMiddleware(updateScheduleSchema)
+  ) // Optional validation middleware
   async updateSchedule(
     @Param("id") id: number,
     @Req() req: Request,
@@ -130,6 +148,10 @@ export class scheduleControllers {
   }
 
   @Delete("/:id")
+  @UseBefore(
+    ProtectRoutesMiddleware,
+    roleOrPermissionMiddleware("deleteSchedule")
+  )
   async deleteSchedule(@Param("id") id: number, @Res() res: Response) {
     // Check if the schedule exists
     const schedule = await prisma.schedule.findUnique({

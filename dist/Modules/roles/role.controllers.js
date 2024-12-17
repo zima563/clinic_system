@@ -31,6 +31,8 @@ const validation_1 = require("../../middlewares/validation");
 const ApiFeatures_1 = __importDefault(require("../../utils/ApiFeatures"));
 const ApiError_1 = __importDefault(require("../../utils/ApiError"));
 const role_validation_1 = require("./role.validation");
+const protectedRoute_1 = require("../../middlewares/protectedRoute");
+const roleOrPermission_1 = require("../../middlewares/roleOrPermission");
 const prisma = new client_1.PrismaClient();
 let roleControllers = class roleControllers {
     createRole(body, res) {
@@ -126,7 +128,7 @@ let roleControllers = class roleControllers {
 exports.roleControllers = roleControllers;
 __decorate([
     (0, routing_controllers_1.Post)("/"),
-    (0, routing_controllers_1.UseBefore)((0, validation_1.createValidationMiddleware)(role_validation_1.createRoleValidation)),
+    (0, routing_controllers_1.UseBefore)(protectedRoute_1.ProtectRoutesMiddleware, (0, roleOrPermission_1.roleOrPermissionMiddleware)("createRole"), (0, validation_1.createValidationMiddleware)(role_validation_1.createRoleValidation)),
     __param(0, (0, routing_controllers_1.Body)()),
     __param(1, (0, routing_controllers_1.Res)()),
     __metadata("design:type", Function),
@@ -135,6 +137,7 @@ __decorate([
 ], roleControllers.prototype, "createRole", null);
 __decorate([
     (0, routing_controllers_1.Get)("/all"),
+    (0, routing_controllers_1.UseBefore)(protectedRoute_1.ProtectRoutesMiddleware, (0, roleOrPermission_1.roleOrPermissionMiddleware)("allRoles")),
     __param(0, (0, routing_controllers_1.QueryParams)()),
     __param(1, (0, routing_controllers_1.Res)()),
     __metadata("design:type", Function),
@@ -143,7 +146,7 @@ __decorate([
 ], roleControllers.prototype, "allRoles", null);
 __decorate([
     (0, routing_controllers_1.Post)("/userRole/:userId"),
-    (0, routing_controllers_1.UseBefore)((0, validation_1.createValidationMiddleware)(role_validation_1.assignRoleToUserValidation)),
+    (0, routing_controllers_1.UseBefore)(protectedRoute_1.ProtectRoutesMiddleware, (0, roleOrPermission_1.roleOrPermissionMiddleware)("assignRoleToUser"), (0, validation_1.createValidationMiddleware)(role_validation_1.assignRoleToUserValidation)),
     __param(0, (0, routing_controllers_1.Param)("userId")),
     __param(1, (0, routing_controllers_1.Body)()),
     __param(2, (0, routing_controllers_1.Res)()),
@@ -153,6 +156,7 @@ __decorate([
 ], roleControllers.prototype, "assignRoleToUser", null);
 __decorate([
     (0, routing_controllers_1.Get)("/userRole/all"),
+    (0, routing_controllers_1.UseBefore)(protectedRoute_1.ProtectRoutesMiddleware, (0, roleOrPermission_1.roleOrPermissionMiddleware)("getAllRoleUsers")),
     __param(0, (0, routing_controllers_1.QueryParams)()),
     __param(1, (0, routing_controllers_1.Res)()),
     __metadata("design:type", Function),
@@ -161,7 +165,7 @@ __decorate([
 ], roleControllers.prototype, "getAllRoleUsers", null);
 __decorate([
     (0, routing_controllers_1.Put)("/:id"),
-    (0, routing_controllers_1.UseBefore)((0, validation_1.createValidationMiddleware)(role_validation_1.updateRoleValidation)),
+    (0, routing_controllers_1.UseBefore)(protectedRoute_1.ProtectRoutesMiddleware, (0, roleOrPermission_1.roleOrPermissionMiddleware)("updateRole"), (0, validation_1.createValidationMiddleware)(role_validation_1.updateRoleValidation)),
     __param(0, (0, routing_controllers_1.Param)("id")),
     __param(1, (0, routing_controllers_1.Body)()),
     __param(2, (0, routing_controllers_1.Res)()),
@@ -171,6 +175,7 @@ __decorate([
 ], roleControllers.prototype, "updateRole", null);
 __decorate([
     (0, routing_controllers_1.Delete)("/:id"),
+    (0, routing_controllers_1.UseBefore)(protectedRoute_1.ProtectRoutesMiddleware, (0, roleOrPermission_1.roleOrPermissionMiddleware)("deleteRole")),
     __param(0, (0, routing_controllers_1.Param)("id")),
     __param(1, (0, routing_controllers_1.Res)()),
     __metadata("design:type", Function),

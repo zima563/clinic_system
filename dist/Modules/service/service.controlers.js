@@ -25,12 +25,14 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.serviceController = void 0;
+const protectedRoute_1 = require("./../../middlewares/protectedRoute");
 const routing_controllers_1 = require("routing-controllers");
 const validation_1 = require("../../middlewares/validation");
 const services_validation_1 = require("./services.validation");
 const client_1 = require("@prisma/client");
 const ApiError_1 = __importDefault(require("../../utils/ApiError"));
 const ApiFeatures_1 = __importDefault(require("../../utils/ApiFeatures"));
+const roleOrPermission_1 = require("../../middlewares/roleOrPermission");
 const prisma = new client_1.PrismaClient();
 let serviceController = class serviceController {
     addService(body, res) {
@@ -110,7 +112,7 @@ let serviceController = class serviceController {
 exports.serviceController = serviceController;
 __decorate([
     (0, routing_controllers_1.Post)("/"),
-    (0, routing_controllers_1.UseBefore)((0, validation_1.createValidationMiddleware)(services_validation_1.addServiceValidation)),
+    (0, routing_controllers_1.UseBefore)(protectedRoute_1.ProtectRoutesMiddleware, (0, roleOrPermission_1.roleOrPermissionMiddleware)("addService"), (0, validation_1.createValidationMiddleware)(services_validation_1.addServiceValidation)),
     __param(0, (0, routing_controllers_1.Body)()),
     __param(1, (0, routing_controllers_1.Res)()),
     __metadata("design:type", Function),
@@ -119,6 +121,7 @@ __decorate([
 ], serviceController.prototype, "addService", null);
 __decorate([
     (0, routing_controllers_1.Get)("/all"),
+    (0, routing_controllers_1.UseBefore)(protectedRoute_1.ProtectRoutesMiddleware, (0, roleOrPermission_1.roleOrPermissionMiddleware)("allServices")),
     __param(0, (0, routing_controllers_1.QueryParams)()),
     __param(1, (0, routing_controllers_1.Res)()),
     __metadata("design:type", Function),
@@ -127,7 +130,7 @@ __decorate([
 ], serviceController.prototype, "allServices", null);
 __decorate([
     (0, routing_controllers_1.Put)("/:id"),
-    (0, routing_controllers_1.UseBefore)((0, validation_1.createValidationMiddleware)(services_validation_1.updateServiceValidation)),
+    (0, routing_controllers_1.UseBefore)(protectedRoute_1.ProtectRoutesMiddleware, (0, roleOrPermission_1.roleOrPermissionMiddleware)("updateService"), (0, validation_1.createValidationMiddleware)(services_validation_1.updateServiceValidation)),
     __param(0, (0, routing_controllers_1.Param)("id")),
     __param(1, (0, routing_controllers_1.Body)()),
     __param(2, (0, routing_controllers_1.Res)()),
@@ -137,7 +140,7 @@ __decorate([
 ], serviceController.prototype, "updateService", null);
 __decorate([
     (0, routing_controllers_1.Get)("/:id"),
-    (0, routing_controllers_1.UseBefore)((0, validation_1.createValidationMiddleware)(services_validation_1.updateServiceValidation)),
+    (0, routing_controllers_1.UseBefore)(protectedRoute_1.ProtectRoutesMiddleware, (0, roleOrPermission_1.roleOrPermissionMiddleware)("getService"), (0, validation_1.createValidationMiddleware)(services_validation_1.updateServiceValidation)),
     __param(0, (0, routing_controllers_1.Param)("id")),
     __param(1, (0, routing_controllers_1.Res)()),
     __metadata("design:type", Function),
@@ -146,6 +149,7 @@ __decorate([
 ], serviceController.prototype, "getService", null);
 __decorate([
     (0, routing_controllers_1.Patch)("/:id"),
+    (0, routing_controllers_1.UseBefore)(protectedRoute_1.ProtectRoutesMiddleware, (0, roleOrPermission_1.roleOrPermissionMiddleware)("deactiveService")),
     __param(0, (0, routing_controllers_1.Param)("id")),
     __param(1, (0, routing_controllers_1.Res)()),
     __metadata("design:type", Function),
