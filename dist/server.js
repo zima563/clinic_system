@@ -23,7 +23,6 @@ const schedule_controllers_1 = require("./Modules/schedule/schedule.controllers"
 const appoientment_controllers_1 = require("./Modules/appointment/appoientment.controllers");
 const visit_controllers_1 = require("./Modules/visit/visit.controllers");
 const seeder_1 = require("./Modules/permission/seeder");
-const permissionMiddleWare_1 = require("./middlewares/permissionMiddleWare");
 const protectedRoute_1 = require("./middlewares/protectedRoute");
 const app = (0, express_1.default)();
 // Add body parser middleware
@@ -52,7 +51,6 @@ app.use((0, cors_1.default)({
     ], // Adjust path to your controllers
     middlewares: [
         protectedRoute_1.ProtectRoutesMiddleware,
-        permissionMiddleWare_1.permissionMiddleware,
         validation_1.createValidationMiddleware,
         ErrorHandler_1.ErrorHandler,
     ],

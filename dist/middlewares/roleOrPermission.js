@@ -18,52 +18,55 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.permissionMiddleware = permissionMiddleware;
+exports.roleOrPermissionMiddleware = roleOrPermissionMiddleware;
 const routing_controllers_1 = require("routing-controllers");
 const ApiError_1 = __importDefault(require("../utils/ApiError"));
 const client_1 = require("@prisma/client");
 const prisma = new client_1.PrismaClient();
-function permissionMiddleware(text) {
-    let CheckUserPermissionMiddleware = class CheckUserPermissionMiddleware {
+function roleOrPermissionMiddleware(permissionName // List of permission names
+) {
+    let CheckRoleOrPermissionMiddleware = class CheckRoleOrPermissionMiddleware {
         use(req, res, next) {
             return __awaiter(this, void 0, void 0, function* () {
                 const { user } = req;
-                const permissionName = text;
-                if (!permissionName) {
-                    return next(new ApiError_1.default("Permission not provided", 400));
-                }
                 if (!user) {
                     return next(new ApiError_1.default("User not authenticated", 401));
                 }
                 try {
-                    // Fetch the permission based on the name
-                    const permission = yield prisma.permission.findUnique({
+                    const permission = yield prisma.permission.findFirst({
                         where: { name: permissionName },
                     });
-                    if (!permission) {
-                        return next(new ApiError_1.default("Permission not found", 404));
-                    }
-                    // Check if the user has the required permission
-                    const userPermission = yield prisma.userPermission.findFirst({
+                    const userHasPermission = yield prisma.userPermission.findFirst({
                         where: {
                             userId: user.id,
-                            permissionId: permission.id,
+                            permissionId: permission === null || permission === void 0 ? void 0 : permission.id,
                         },
                     });
-                    if (!userPermission) {
-                        return next(new ApiError_1.default("User does not have the required permission", 403));
+                    const userRole = yield prisma.userRole.findFirst({
+                        where: {
+                            userId: user.id,
+                        },
+                    });
+                    const roleHasPermission = yield prisma.rolePermission.findFirst({
+                        where: {
+                            roleId: userRole === null || userRole === void 0 ? void 0 : userRole.roleId,
+                            permissionId: permission === null || permission === void 0 ? void 0 : permission.id,
+                        },
+                    });
+                    // Allow access if the user has any role or any permission
+                    if (roleHasPermission || userHasPermission) {
+                        return next();
                     }
-                    // If permission is granted, continue to next handler
-                    next();
+                    return next(new ApiError_1.default("Access denied: insufficient roles or permissions", 403));
                 }
                 catch (error) {
-                    return next(new ApiError_1.default("Error checking permissions", 500));
+                    return next(new ApiError_1.default("Error checking roles or permissions", 500));
                 }
             });
         }
     };
-    CheckUserPermissionMiddleware = __decorate([
+    CheckRoleOrPermissionMiddleware = __decorate([
         (0, routing_controllers_1.Middleware)({ type: "before" })
-    ], CheckUserPermissionMiddleware);
-    return CheckUserPermissionMiddleware;
+    ], CheckRoleOrPermissionMiddleware);
+    return CheckRoleOrPermissionMiddleware;
 }

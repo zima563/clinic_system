@@ -21,7 +21,6 @@ import { Request, Response } from "express";
 import { PrismaClient } from "@prisma/client";
 import ApiError from "../../utils/ApiError";
 import { ProtectRoutesMiddleware } from "../../middlewares/protectedRoute";
-import { permissionMiddleware } from "../../middlewares/permissionMiddleWare";
 const prisma = new PrismaClient();
 
 @JsonController("/api/appointment")
@@ -40,10 +39,7 @@ export class appointmentController {
   }
 
   @Get("/patient")
-  @UseBefore(
-    ProtectRoutesMiddleware,
-    permissionMiddleware("getPatientAppointment")
-  )
+  @UseBefore(ProtectRoutesMiddleware)
   async getPatientAppointment(
     @Req() req: Request,
     @Res() res: Response,
