@@ -108,11 +108,22 @@ let userControllers = class userControllers {
             let user = yield prisma.user.findUnique({ where: { id } });
             if (!user)
                 throw new ApiError_1.default("user not found", 404);
-            yield prisma.user.update({
-                where: { id },
-                data: { isActive: false },
-            });
-            return res.status(201).json({ message: "user Deactivated successfully" });
+            if (user.isActive) {
+                yield prisma.user.update({
+                    where: { id },
+                    data: { isActive: false },
+                });
+            }
+            else {
+                yield prisma.user.update({
+                    where: { id },
+                    data: { isActive: true },
+                });
+            }
+            let updatedUser = yield prisma.user.findUnique({ where: { id } });
+            return res
+                .status(201)
+                .json({ message: "user Deactivated successfully", updatedUser });
         });
     }
     DeleteUser(id, body, res, next) {
@@ -120,11 +131,22 @@ let userControllers = class userControllers {
             let user = yield prisma.user.findUnique({ where: { id } });
             if (!user)
                 throw new ApiError_1.default("user not found", 404);
-            yield prisma.user.update({
-                where: { id },
-                data: { isDeleted: true },
-            });
-            return res.status(201).json({ message: "user Deleted successfully" });
+            if (!user.isDeleted) {
+                yield prisma.user.update({
+                    where: { id },
+                    data: { isDeleted: true },
+                });
+            }
+            else {
+                yield prisma.user.update({
+                    where: { id },
+                    data: { isDeleted: false },
+                });
+            }
+            let updatedUser = yield prisma.user.findUnique({ where: { id } });
+            return res
+                .status(201)
+                .json({ message: "user Deleted successfully", updatedUser });
         });
     }
     login(body, res) {

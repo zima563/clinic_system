@@ -130,12 +130,22 @@ export class userControllers {
   ) {
     let user = await prisma.user.findUnique({ where: { id } });
     if (!user) throw new ApiError("user not found", 404);
-    await prisma.user.update({
-      where: { id },
-      data: { isActive: false },
-    });
+    if (user.isActive) {
+      await prisma.user.update({
+        where: { id },
+        data: { isActive: false },
+      });
+    } else {
+      await prisma.user.update({
+        where: { id },
+        data: { isActive: true },
+      });
+    }
+    let updatedUser = await prisma.user.findUnique({ where: { id } });
 
-    return res.status(201).json({ message: "user Deactivated successfully" });
+    return res
+      .status(201)
+      .json({ message: "user Deactivated successfully", updatedUser });
   }
 
   @Patch("/soft/:id")
@@ -148,12 +158,22 @@ export class userControllers {
   ) {
     let user = await prisma.user.findUnique({ where: { id } });
     if (!user) throw new ApiError("user not found", 404);
-    await prisma.user.update({
-      where: { id },
-      data: { isDeleted: true },
-    });
+    if (!user.isDeleted) {
+      await prisma.user.update({
+        where: { id },
+        data: { isDeleted: true },
+      });
+    } else {
+      await prisma.user.update({
+        where: { id },
+        data: { isDeleted: false },
+      });
+    }
+    let updatedUser = await prisma.user.findUnique({ where: { id } });
 
-    return res.status(201).json({ message: "user Deleted successfully" });
+    return res
+      .status(201)
+      .json({ message: "user Deleted successfully", updatedUser });
   }
 
   @Post("/login")
