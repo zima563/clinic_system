@@ -1,6 +1,7 @@
 import fs from "fs";
 import {
   Body,
+  Delete,
   Get,
   JsonController,
   Param,
@@ -170,5 +171,21 @@ export class specialtyControllers {
       throw new ApiError("specialty not found");
     }
     return res.status(200).json(specialty);
+  }
+  @Delete("/:id")
+  @UseBefore(
+    ProtectRoutesMiddleware,
+    roleOrPermissionMiddleware("getOneSpecialty")
+  )
+  async DeleteSpecialty(@Param("id") id: number, @Res() res: Response) {
+    let specialty = await prisma.specialty.findUnique({ where: { id } });
+    if (!specialty) {
+      throw new ApiError("specialty not found");
+    }
+    await prisma.doctor.deleteMany({ where: { specialtyId: id } });
+    await prisma.specialty.delete({
+      where: { id },
+    });
+    return res.status(200).json({ message: "specialty deleted succesfully" });
   }
 }

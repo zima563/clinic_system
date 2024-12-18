@@ -132,6 +132,19 @@ let specialtyControllers = class specialtyControllers {
             return res.status(200).json(specialty);
         });
     }
+    DeleteSpecialty(id, res) {
+        return __awaiter(this, void 0, void 0, function* () {
+            let specialty = yield prisma.specialty.findUnique({ where: { id } });
+            if (!specialty) {
+                throw new ApiError_1.default("specialty not found");
+            }
+            yield prisma.doctor.deleteMany({ where: { specialtyId: id } });
+            yield prisma.specialty.delete({
+                where: { id },
+            });
+            return res.status(200).json({ message: "specialty deleted succesfully" });
+        });
+    }
 };
 exports.specialtyControllers = specialtyControllers;
 __decorate([
@@ -173,6 +186,15 @@ __decorate([
     __metadata("design:paramtypes", [Number, Object]),
     __metadata("design:returntype", Promise)
 ], specialtyControllers.prototype, "getOneSpecialty", null);
+__decorate([
+    (0, routing_controllers_1.Delete)("/:id"),
+    (0, routing_controllers_1.UseBefore)(protectedRoute_1.ProtectRoutesMiddleware, (0, roleOrPermission_1.roleOrPermissionMiddleware)("getOneSpecialty")),
+    __param(0, (0, routing_controllers_1.Param)("id")),
+    __param(1, (0, routing_controllers_1.Res)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Number, Object]),
+    __metadata("design:returntype", Promise)
+], specialtyControllers.prototype, "DeleteSpecialty", null);
 exports.specialtyControllers = specialtyControllers = __decorate([
     (0, routing_controllers_1.JsonController)("/api/specialist")
 ], specialtyControllers);
