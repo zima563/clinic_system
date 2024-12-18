@@ -120,7 +120,11 @@ export class visitController {
     }
     let VisitDetails = await prisma.visitDetail.findMany({
       where: { visitId: id },
-      include: {},
+      include: {
+        patient: true,
+        schedule: true,
+        visit: true,
+      },
     });
     return res.status(200).json({
       data: VisitDetails,

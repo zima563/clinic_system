@@ -95,7 +95,11 @@ let visitController = class visitController {
             }
             let VisitDetails = yield prisma.visitDetail.findMany({
                 where: { visitId: id },
-                include: {},
+                include: {
+                    patient: true,
+                    schedule: true,
+                    visit: true,
+                },
             });
             return res.status(200).json({
                 data: VisitDetails,
