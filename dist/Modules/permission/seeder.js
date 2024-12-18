@@ -76,7 +76,7 @@ let PermissionController = class PermissionController {
                 throw new ApiError_1.default("One or more permissions not found", 404);
             }
             yield prisma.$transaction((tx) => __awaiter(this, void 0, void 0, function* () {
-                yield prisma.userPermission.deleteMany({ where: { userId: id } });
+                yield tx.userPermission.deleteMany({ where: { userId: id } });
                 const userPermissions = permissions.map((permission) => ({
                     userId: id,
                     permissionId: permission.id,
