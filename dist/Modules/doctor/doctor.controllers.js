@@ -135,14 +135,26 @@ let doctorControllers = class doctorControllers {
     }
     DeactiveDoctor(req, id, res) {
         return __awaiter(this, void 0, void 0, function* () {
-            if (!(yield prisma.doctor.findUnique({ where: { id } }))) {
+            let doctor = yield prisma.doctor.findUnique({ where: { id } });
+            if (!doctor) {
                 throw new ApiError_1.default("doctor not found", 404);
             }
-            yield prisma.doctor.update({
-                where: { id },
-                data: { isActive: false },
-            });
-            return res.status(200).json({ message: "doctor deactiveded successfully" });
+            if (doctor.isActive) {
+                yield prisma.doctor.update({
+                    where: { id },
+                    data: { isActive: false },
+                });
+            }
+            else {
+                yield prisma.doctor.update({
+                    where: { id },
+                    data: { isActive: true },
+                });
+            }
+            let updatedDoctor = yield prisma.doctor.findUnique({ where: { id } });
+            return res
+                .status(200)
+                .json({ message: "doctor deactiveded successfully", updatedDoctor });
         });
     }
 };

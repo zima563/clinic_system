@@ -193,13 +193,26 @@ export class doctorControllers {
     @Param("id") id: number,
     @Res() res: Response
   ) {
-    if (!(await prisma.doctor.findUnique({ where: { id } }))) {
+    let doctor = await prisma.doctor.findUnique({ where: { id } });
+    if (!doctor) {
       throw new ApiError("doctor not found", 404);
     }
-    await prisma.doctor.update({
-      where: { id },
-      data: { isActive: false },
-    });
-    return res.status(200).json({ message: "doctor deactiveded successfully" });
+    if (doctor.isActive) {
+      await prisma.doctor.update({
+        where: { id },
+        data: { isActive: false },
+      });
+    } else {
+      await prisma.doctor.update({
+        where: { id },
+        data: { isActive: true },
+      });
+    }
+
+    let updatedDoctor = await prisma.doctor.findUnique({ where: { id } });
+
+    return res
+      .status(200)
+      .json({ message: "doctor deactiveded successfully", updatedDoctor });
   }
 }
