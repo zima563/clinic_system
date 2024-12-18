@@ -98,20 +98,21 @@ let PermissionController = class PermissionController {
                 },
             });
             if (!role) {
-                throw new ApiError_1.default("role not found", 404);
+                throw new ApiError_1.default("Role not found", 404);
             }
+            // Fetch permissions by name
             const permissions = yield prisma.permission.findMany({
                 where: {
-                    id: { in: body.permissionIds },
+                    name: { in: body.permissionNames },
                 },
             });
-            if (permissions.length !== body.permissionIds.length) {
+            if (permissions.length !== body.permissionNames.length) {
                 throw new ApiError_1.default("One or more permissions not found", 404);
             }
             yield prisma.$transaction((tx) => __awaiter(this, void 0, void 0, function* () {
-                const rolePermissions = body.permissionIds.map((permissionId) => ({
+                const rolePermissions = permissions.map((permission) => ({
                     roleId: id,
-                    permissionId,
+                    permissionId: permission.id,
                 }));
                 yield tx.rolePermission.createMany({
                     data: rolePermissions,

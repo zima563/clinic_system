@@ -123,7 +123,7 @@ export class PermissionController {
   async assignPermissionsToRole(
     @Req() req: Request,
     @Param("id") id: number,
-    @Body() body: { permissionIds: number[] },
+    @Body() body: { permissionNames: string[] },
     @Res() res: Response
   ) {
     const role = await prisma.role.findUnique({
@@ -133,23 +133,24 @@ export class PermissionController {
       },
     });
     if (!role) {
-      throw new ApiError("role not found", 404);
+      throw new ApiError("Role not found", 404);
     }
 
+    // Fetch permissions by name
     const permissions = await prisma.permission.findMany({
       where: {
-        id: { in: body.permissionIds },
+        name: { in: body.permissionNames },
       },
     });
 
-    if (permissions.length !== body.permissionIds.length) {
+    if (permissions.length !== body.permissionNames.length) {
       throw new ApiError("One or more permissions not found", 404);
     }
 
     await prisma.$transaction(async (tx) => {
-      const rolePermissions = body.permissionIds.map((permissionId) => ({
+      const rolePermissions = permissions.map((permission) => ({
         roleId: id,
-        permissionId,
+        permissionId: permission.id,
       }));
       await tx.rolePermission.createMany({
         data: rolePermissions,
