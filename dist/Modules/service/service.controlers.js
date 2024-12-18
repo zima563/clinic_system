@@ -98,14 +98,28 @@ let serviceController = class serviceController {
     }
     deactiveService(id, res) {
         return __awaiter(this, void 0, void 0, function* () {
-            if (!(yield prisma.service.findUnique({ where: { id } }))) {
+            let service = yield prisma.service.findUnique({
+                where: { id },
+            });
+            if (!service) {
                 throw new ApiError_1.default("service not found", 404);
             }
-            let service = yield prisma.service.update({
+            if (service.status) {
+                yield prisma.service.update({
+                    where: { id },
+                    data: { status: false },
+                });
+            }
+            else {
+                yield prisma.service.update({
+                    where: { id },
+                    data: { status: true },
+                });
+            }
+            let updatedService = yield prisma.service.findUnique({
                 where: { id },
-                data: { status: false },
             });
-            return res.status(200).json(service);
+            return res.status(200).json(updatedService);
         });
     }
 };

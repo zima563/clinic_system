@@ -115,13 +115,26 @@ export class serviceController {
     roleOrPermissionMiddleware("deactiveService")
   )
   async deactiveService(@Param("id") id: number, @Res() res: Response) {
-    if (!(await prisma.service.findUnique({ where: { id } }))) {
+    let service = await prisma.service.findUnique({
+      where: { id },
+    });
+    if (!service) {
       throw new ApiError("service not found", 404);
     }
-    let service = await prisma.service.update({
+    if (service.status) {
+      await prisma.service.update({
+        where: { id },
+        data: { status: false },
+      });
+    } else {
+      await prisma.service.update({
+        where: { id },
+        data: { status: true },
+      });
+    }
+    let updatedService = await prisma.service.findUnique({
       where: { id },
-      data: { status: false },
     });
-    return res.status(200).json(service);
+    return res.status(200).json(updatedService);
   }
 }
