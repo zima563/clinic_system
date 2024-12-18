@@ -20,20 +20,28 @@ const prisma = new PrismaClient();
 
 @JsonController("/api/permissions")
 export class PermissionController {
-  private static permissionIdsSchema = Joi.object({
-    id: Joi.string().required(),
-    permissionIds: Joi.array()
-      .items(Joi.number().integer().positive().required())
+  private static permissionSchema = Joi.object({
+    id: Joi.string().required().messages({
+      "string.base": "id should be a string",
+      "string.empty": "id cannot be empty",
+      "any.required": "id is required",
+    }),
+    permissionNames: Joi.array()
+      .items(
+        Joi.string().required().messages({
+          "string.base": "Each permissionName should be a string",
+          "string.empty": "permissionName cannot be empty",
+          "any.required": "permissionName is required",
+        })
+      )
       .min(1)
       .required()
       .messages({
-        "array.base": "permissionIds should be an array",
-        "array.min": "permissionIds should contain at least one element",
-        "number.base": "Each permissionId should be an integer",
-        "number.integer": "Each permissionId should be an integer",
-        "number.positive": "Each permissionId should be a positive integer",
+        "array.base": "permissionNames should be an array",
+        "array.min": "permissionNames should contain at least one element",
       }),
   });
+
   @Post("/seed")
   @UseBefore()
   // ProtectRoutesMiddleware,
@@ -63,12 +71,12 @@ export class PermissionController {
   @UseBefore(
     ProtectRoutesMiddleware,
     roleOrPermissionMiddleware("assignPermissionsToUser"),
-    createValidationMiddleware(PermissionController.permissionIdsSchema)
+    createValidationMiddleware(PermissionController.permissionSchema)
   )
   async assignPermissionsToUser(
     @Req() req: Request,
     @Param("id") id: number,
-    @Body() body: { permissionIds: number[] },
+    @Body() body: { permissionNames: string[] },
     @Res() res: Response
   ) {
     const user = await prisma.user.findUnique({
@@ -78,23 +86,24 @@ export class PermissionController {
       },
     });
     if (!user) {
-      throw new ApiError("user not found", 404);
+      throw new ApiError("User not found", 404);
     }
 
+    // Fetch permissions by name
     const permissions = await prisma.permission.findMany({
       where: {
-        id: { in: body.permissionIds },
+        name: { in: body.permissionNames },
       },
     });
 
-    if (permissions.length !== body.permissionIds.length) {
+    if (permissions.length !== body.permissionNames.length) {
       throw new ApiError("One or more permissions not found", 404);
     }
 
     await prisma.$transaction(async (tx) => {
-      const userPermissions = body.permissionIds.map((permissionId) => ({
+      const userPermissions = permissions.map((permission) => ({
         userId: id,
-        permissionId,
+        permissionId: permission.id,
       }));
       await tx.userPermission.createMany({
         data: userPermissions,
@@ -109,7 +118,7 @@ export class PermissionController {
   @UseBefore(
     ProtectRoutesMiddleware,
     roleOrPermissionMiddleware("assignPermissionsToRole"),
-    createValidationMiddleware(PermissionController.permissionIdsSchema)
+    createValidationMiddleware(PermissionController.permissionSchema)
   )
   async assignPermissionsToRole(
     @Req() req: Request,

@@ -64,20 +64,21 @@ let PermissionController = class PermissionController {
                 },
             });
             if (!user) {
-                throw new ApiError_1.default("user not found", 404);
+                throw new ApiError_1.default("User not found", 404);
             }
+            // Fetch permissions by name
             const permissions = yield prisma.permission.findMany({
                 where: {
-                    id: { in: body.permissionIds },
+                    name: { in: body.permissionNames },
                 },
             });
-            if (permissions.length !== body.permissionIds.length) {
+            if (permissions.length !== body.permissionNames.length) {
                 throw new ApiError_1.default("One or more permissions not found", 404);
             }
             yield prisma.$transaction((tx) => __awaiter(this, void 0, void 0, function* () {
-                const userPermissions = body.permissionIds.map((permissionId) => ({
+                const userPermissions = permissions.map((permission) => ({
                     userId: id,
-                    permissionId,
+                    permissionId: permission.id,
                 }));
                 yield tx.userPermission.createMany({
                     data: userPermissions,
@@ -166,18 +167,23 @@ let PermissionController = class PermissionController {
     }
 };
 exports.PermissionController = PermissionController;
-PermissionController.permissionIdsSchema = joi_1.default.object({
-    id: joi_1.default.string().required(),
-    permissionIds: joi_1.default.array()
-        .items(joi_1.default.number().integer().positive().required())
+PermissionController.permissionSchema = joi_1.default.object({
+    id: joi_1.default.string().required().messages({
+        "string.base": "id should be a string",
+        "string.empty": "id cannot be empty",
+        "any.required": "id is required",
+    }),
+    permissionNames: joi_1.default.array()
+        .items(joi_1.default.string().required().messages({
+        "string.base": "Each permissionName should be a string",
+        "string.empty": "permissionName cannot be empty",
+        "any.required": "permissionName is required",
+    }))
         .min(1)
         .required()
         .messages({
-        "array.base": "permissionIds should be an array",
-        "array.min": "permissionIds should contain at least one element",
-        "number.base": "Each permissionId should be an integer",
-        "number.integer": "Each permissionId should be an integer",
-        "number.positive": "Each permissionId should be a positive integer",
+        "array.base": "permissionNames should be an array",
+        "array.min": "permissionNames should contain at least one element",
     }),
 });
 __decorate([
@@ -193,7 +199,7 @@ __decorate([
 ], PermissionController.prototype, "seedPermissions", null);
 __decorate([
     (0, routing_controllers_1.Post)("/assignToUser/:id"),
-    (0, routing_controllers_1.UseBefore)(protectedRoute_1.ProtectRoutesMiddleware, (0, roleOrPermission_1.roleOrPermissionMiddleware)("assignPermissionsToUser"), (0, validation_1.createValidationMiddleware)(PermissionController.permissionIdsSchema)),
+    (0, routing_controllers_1.UseBefore)(protectedRoute_1.ProtectRoutesMiddleware, (0, roleOrPermission_1.roleOrPermissionMiddleware)("assignPermissionsToUser"), (0, validation_1.createValidationMiddleware)(PermissionController.permissionSchema)),
     __param(0, (0, routing_controllers_1.Req)()),
     __param(1, (0, routing_controllers_1.Param)("id")),
     __param(2, (0, routing_controllers_1.Body)()),
@@ -204,7 +210,7 @@ __decorate([
 ], PermissionController.prototype, "assignPermissionsToUser", null);
 __decorate([
     (0, routing_controllers_1.Post)("/assignToRole/:id"),
-    (0, routing_controllers_1.UseBefore)(protectedRoute_1.ProtectRoutesMiddleware, (0, roleOrPermission_1.roleOrPermissionMiddleware)("assignPermissionsToRole"), (0, validation_1.createValidationMiddleware)(PermissionController.permissionIdsSchema)),
+    (0, routing_controllers_1.UseBefore)(protectedRoute_1.ProtectRoutesMiddleware, (0, roleOrPermission_1.roleOrPermissionMiddleware)("assignPermissionsToRole"), (0, validation_1.createValidationMiddleware)(PermissionController.permissionSchema)),
     __param(0, (0, routing_controllers_1.Req)()),
     __param(1, (0, routing_controllers_1.Param)("id")),
     __param(2, (0, routing_controllers_1.Body)()),
