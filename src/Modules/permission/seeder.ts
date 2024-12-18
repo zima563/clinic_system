@@ -149,7 +149,7 @@ export class PermissionController {
     }
 
     await prisma.$transaction(async (tx) => {
-      await prisma.rolePermission.deleteMany({ where: { roleId: id } });
+      await tx.rolePermission.deleteMany({ where: { roleId: id } });
       const rolePermissions = permissions.map((permission) => ({
         roleId: id,
         permissionId: permission.id,
