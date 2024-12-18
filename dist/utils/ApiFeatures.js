@@ -131,6 +131,12 @@ class ApiFeatures {
                     category: true,
                 };
             }
+            else if (modelName === "user") {
+                this.prismaQuery.include = {
+                    userRoles: true,
+                    userPermissions: true,
+                };
+            }
             const result = yield this.prismaModel.findMany(Object.assign({}, this.prismaQuery));
             return {
                 result,

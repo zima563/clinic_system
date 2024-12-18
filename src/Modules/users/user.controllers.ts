@@ -23,6 +23,7 @@ import { CheckEmailMiddleware } from "../../middlewares/emailExists";
 import ApiFeatures from "../../utils/ApiFeatures";
 import ApiError from "../../utils/ApiError";
 import { roleOrPermissionMiddleware } from "../../middlewares/roleOrPermission";
+import { CheckPhoneMiddleware } from "../../middlewares/phoneExist";
 
 const prisma = new PrismaClient();
 
@@ -35,7 +36,7 @@ export class userControllers {
     roleOrPermissionMiddleware("addUser"),
     createValidationMiddleware(addUser)
   )
-  @UseBefore(CheckEmailMiddleware)
+  @UseBefore(CheckEmailMiddleware, CheckPhoneMiddleware)
   async addUser(@Body() body: any, @Res() res: Response) {
     body.password = bcrypt.hashSync(body.password, 10);
     let user = await prisma.user.create({ data: body });

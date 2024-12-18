@@ -136,6 +136,11 @@ class ApiFeatures {
       this.prismaQuery.include = {
         category: true,
       };
+    } else if (modelName === "user") {
+      this.prismaQuery.include = {
+        userRoles: true,
+        userPermissions: true,
+      };
     }
 
     const result = await this.prismaModel.findMany({
