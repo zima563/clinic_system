@@ -23,8 +23,6 @@ const schedule_controllers_1 = require("./Modules/schedule/schedule.controllers"
 const appoientment_controllers_1 = require("./Modules/appointment/appoientment.controllers");
 const visit_controllers_1 = require("./Modules/visit/visit.controllers");
 const seeder_1 = require("./Modules/permission/seeder");
-const protectedRoute_1 = require("./middlewares/protectedRoute");
-const roleOrPermission_1 = require("./middlewares/roleOrPermission");
 const app = (0, express_1.default)();
 // Add body parser middleware
 app.use(express_1.default.json({ limit: "50mb" })); // Parses application/json request bodies
@@ -51,8 +49,8 @@ app.use((0, cors_1.default)({
         seeder_1.PermissionController,
     ], // Adjust path to your controllers
     middlewares: [
-        protectedRoute_1.ProtectRoutesMiddleware,
-        roleOrPermission_1.roleOrPermissionMiddleware,
+        // ProtectRoutesMiddleware,
+        // roleOrPermissionMiddleware,
         validation_1.createValidationMiddleware,
         ErrorHandler_1.ErrorHandler,
     ],

@@ -69,8 +69,8 @@ export class PermissionController {
 
   @Post("/assignToUser/:id")
   @UseBefore(
-    ProtectRoutesMiddleware,
-    roleOrPermissionMiddleware("assignPermissionsToUser"),
+    // ProtectRoutesMiddleware,
+    // roleOrPermissionMiddleware("assignPermissionsToUser"),
     createValidationMiddleware(PermissionController.permissionSchema)
   )
   async assignPermissionsToUser(

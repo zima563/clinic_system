@@ -64,6 +64,7 @@ let visitController = class visitController {
                 const invoice = yield prisma.invoice.create({
                     data: {
                         total,
+                        ex: true,
                     },
                 });
                 // Link visit and invoice

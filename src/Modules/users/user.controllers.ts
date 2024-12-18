@@ -32,8 +32,8 @@ export class userControllers {
   // Apply CheckEmailMiddleware only for the POST route (user creation)
   @Post("/")
   @UseBefore(
-    ProtectRoutesMiddleware,
-    roleOrPermissionMiddleware("addUser"),
+    // ProtectRoutesMiddleware,
+    // roleOrPermissionMiddleware("addUser"),
     createValidationMiddleware(addUser)
   )
   @UseBefore(CheckEmailMiddleware, CheckPhoneMiddleware)

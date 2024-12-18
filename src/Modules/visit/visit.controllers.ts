@@ -71,6 +71,7 @@ export class visitController {
       const invoice = await prisma.invoice.create({
         data: {
           total,
+          ex: true,
         },
       });
 

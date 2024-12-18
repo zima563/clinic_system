@@ -113,6 +113,7 @@ model Specialty {
 model Invoice {
   id        Int      @id @default(autoincrement())
   rf        String   @unique @default(uuid())
+  ex        Boolean
   total     Decimal  @default(0) @db.Decimal(18, 2)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

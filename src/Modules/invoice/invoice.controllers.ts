@@ -9,6 +9,7 @@ import {
   Param,
   Post,
   Put,
+  QueryParams,
   Req,
   Res,
   UseBefore,
@@ -22,7 +23,7 @@ import {
 } from "./invoive.validation";
 import ApiError from "../../utils/ApiError";
 import { Decimal } from "@prisma/client/runtime/library";
-import { Response } from "express";
+import { Request, Response } from "express";
 import { roleOrPermissionMiddleware } from "../../middlewares/roleOrPermission";
 const prisma = new PrismaClient();
 
@@ -42,6 +43,7 @@ export class invoiceControllers {
     let invoice = await prisma.invoice.create({
       data: {
         total: body.amount,
+        ex: false,
       },
     });
 
@@ -136,6 +138,88 @@ export class invoiceControllers {
     });
 
     return res.json({ message: "invoiceDetail updated Successfully" });
+  }
+  @Get("/summarized-report")
+  async summarized_report(
+    @QueryParams() query: { date?: string; month?: string },
+    @Req() req: Request,
+    @Res() res: Response
+  ) {
+    const { date, month } = query;
+    if (!date && !month) {
+      throw new ApiError(
+        "You must provide either a specific date or a month in the format YYYY-MM."
+      );
+    }
+
+    let startDate: Date = new Date();
+    let endDate: Date = new Date();
+
+    if (date) {
+      // For specific day
+      startDate = new Date(date);
+      endDate = new Date(date);
+      endDate.setDate(endDate.getDate() + 1); // End of the day
+    } else if (month) {
+      // For specific month
+      startDate = new Date(`${month}-01`);
+      endDate = new Date(startDate);
+      endDate.setMonth(endDate.getMonth() + 1); // End of the month
+    }
+
+    const [exTrueTotal, exFalseTotal, invoices] = await Promise.all([
+      prisma.invoice.aggregate({
+        _sum: { total: true },
+        where: {
+          ex: true,
+          createdAt: {
+            gte: startDate,
+            lt: endDate,
+          },
+        },
+      }),
+      prisma.invoice.aggregate({
+        _sum: { total: true },
+        where: {
+          ex: false,
+          createdAt: {
+            gte: startDate,
+            lt: endDate,
+          },
+        },
+      }),
+      prisma.invoice.findMany({
+        where: {
+          createdAt: {
+            gte: startDate,
+            lt: endDate,
+          },
+        },
+        include: {
+          details: true, // Include related invoice details
+        },
+        orderBy: {
+          createdAt: "desc",
+        },
+      }),
+    ]);
+
+    const totalExTrue = exTrueTotal._sum.total
+      ? exTrueTotal._sum.total.toNumber()
+      : 0;
+    const totalExFalse = exFalseTotal._sum.total
+      ? exFalseTotal._sum.total.toNumber()
+      : 0;
+    const profit = totalExTrue - totalExFalse;
+
+    return res.status(200).json({
+      incomes: totalExTrue,
+      expen: totalExFalse,
+      invoiceCount: invoices.length,
+      reportDate: date || month,
+      profit,
+      invoices,
+    });
   }
 
   @Get("/:id")

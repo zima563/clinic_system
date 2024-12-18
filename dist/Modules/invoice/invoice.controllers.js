@@ -41,6 +41,7 @@ let invoiceControllers = class invoiceControllers {
             let invoice = yield prisma.invoice.create({
                 data: {
                     total: body.amount,
+                    ex: false,
                 },
             });
             let invoiceDetails = yield prisma.invoiceDetail.create({
@@ -107,6 +108,79 @@ let invoiceControllers = class invoiceControllers {
                 data: body,
             });
             return res.json({ message: "invoiceDetail updated Successfully" });
+        });
+    }
+    summarized_report(query, req, res) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const { date, month } = query;
+            if (!date && !month) {
+                throw new ApiError_1.default("You must provide either a specific date or a month in the format YYYY-MM.");
+            }
+            let startDate = new Date();
+            let endDate = new Date();
+            if (date) {
+                // For specific day
+                startDate = new Date(date);
+                endDate = new Date(date);
+                endDate.setDate(endDate.getDate() + 1); // End of the day
+            }
+            else if (month) {
+                // For specific month
+                startDate = new Date(`${month}-01`);
+                endDate = new Date(startDate);
+                endDate.setMonth(endDate.getMonth() + 1); // End of the month
+            }
+            const [exTrueTotal, exFalseTotal, invoices] = yield Promise.all([
+                prisma.invoice.aggregate({
+                    _sum: { total: true },
+                    where: {
+                        ex: true,
+                        createdAt: {
+                            gte: startDate,
+                            lt: endDate,
+                        },
+                    },
+                }),
+                prisma.invoice.aggregate({
+                    _sum: { total: true },
+                    where: {
+                        ex: false,
+                        createdAt: {
+                            gte: startDate,
+                            lt: endDate,
+                        },
+                    },
+                }),
+                prisma.invoice.findMany({
+                    where: {
+                        createdAt: {
+                            gte: startDate,
+                            lt: endDate,
+                        },
+                    },
+                    include: {
+                        details: true, // Include related invoice details
+                    },
+                    orderBy: {
+                        createdAt: "desc",
+                    },
+                }),
+            ]);
+            const totalExTrue = exTrueTotal._sum.total
+                ? exTrueTotal._sum.total.toNumber()
+                : 0;
+            const totalExFalse = exFalseTotal._sum.total
+                ? exFalseTotal._sum.total.toNumber()
+                : 0;
+            const profit = totalExTrue - totalExFalse;
+            return res.status(200).json({
+                incomes: totalExTrue,
+                expen: totalExFalse,
+                invoiceCount: invoices.length,
+                reportDate: date || month,
+                profit,
+                invoices,
+            });
         });
     }
     Show_Invoice_Details(req, id, res) {
@@ -237,6 +311,15 @@ __decorate([
     __metadata("design:paramtypes", [Number, Object, Object]),
     __metadata("design:returntype", Promise)
 ], invoiceControllers.prototype, "updateInvoiceDetail", null);
+__decorate([
+    (0, routing_controllers_1.Get)("/summarized-report"),
+    __param(0, (0, routing_controllers_1.QueryParams)()),
+    __param(1, (0, routing_controllers_1.Req)()),
+    __param(2, (0, routing_controllers_1.Res)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, Object, Object]),
+    __metadata("design:returntype", Promise)
+], invoiceControllers.prototype, "summarized_report", null);
 __decorate([
     (0, routing_controllers_1.Get)("/:id"),
     (0, routing_controllers_1.UseBefore)(protectedRoute_1.ProtectRoutesMiddleware, (0, roleOrPermission_1.roleOrPermissionMiddleware)("Show_Invoice_Details")),
