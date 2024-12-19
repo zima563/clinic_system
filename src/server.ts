@@ -21,6 +21,7 @@ import { visitController } from "./Modules/visit/visit.controllers";
 import { PermissionController } from "./Modules/permission/seeder";
 import { ProtectRoutesMiddleware } from "./middlewares/protectedRoute";
 import { roleOrPermissionMiddleware } from "./middlewares/roleOrPermission";
+import { searchControllers } from "./Modules/searchEngine/searchEngine";
 
 const app = express();
 
@@ -50,6 +51,7 @@ useExpressServer(app, {
     appointmentController,
     visitController,
     PermissionController,
+    searchControllers,
   ], // Adjust path to your controllers
   middlewares: [
     // ProtectRoutesMiddleware,
