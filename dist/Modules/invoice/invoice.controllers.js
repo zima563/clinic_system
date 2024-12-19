@@ -293,7 +293,9 @@ let invoiceControllers = class invoiceControllers {
                 .join("")}
                 <tr class="total-row">
                 <td colspan="2">Total</td>
-                <td>${invoice.total}</td>
+        ${invoice.ex
+                ? `<td class="success" >${invoice.total}</td>`
+                : `<td  class="danger">${invoice.total}</td>`}
               </tr>
             </tbody>
           </table>
