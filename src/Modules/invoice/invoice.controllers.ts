@@ -1,6 +1,8 @@
+import fs from "fs";
+
 import { ProtectRoutesMiddleware } from "./../../middlewares/protectedRoute";
 import { PrismaClient } from "@prisma/client";
-
+import pdfCreator from "pdf-creator-node";
 import {
   Body,
   Delete,
@@ -139,6 +141,7 @@ export class invoiceControllers {
 
     return res.json({ message: "invoiceDetail updated Successfully" });
   }
+
   @Get("/summarized-report")
   async summarized_report(
     @QueryParams() query: { date?: string; month?: string },
@@ -220,6 +223,178 @@ export class invoiceControllers {
       profit,
       invoices,
     });
+  }
+
+  @Get("/summarized-report/pdf")
+  async downloadPdf(
+    @QueryParams() query: { date?: string; month?: string },
+    @Req() req: Request,
+    @Res() res: Response
+  ) {
+    const { date, month } = query;
+
+    if (!date && !month) {
+      throw new ApiError(
+        "You must provide either a specific date or a month in the format YYYY-MM."
+      );
+    }
+
+    let startDate: Date = new Date();
+    let endDate: Date = new Date();
+
+    if (date) {
+      startDate = new Date(date);
+      endDate = new Date(date);
+      endDate.setDate(endDate.getDate() + 1);
+    } else if (month) {
+      startDate = new Date(`${month}-01`);
+      endDate = new Date(startDate);
+      endDate.setMonth(endDate.getMonth() + 1);
+    }
+
+    const [exTrueTotal, exFalseTotal, invoices] = await Promise.all([
+      prisma.invoice.aggregate({
+        _sum: { total: true },
+        where: {
+          ex: true,
+          createdAt: {
+            gte: startDate,
+            lt: endDate,
+          },
+        },
+      }),
+      prisma.invoice.aggregate({
+        _sum: { total: true },
+        where: {
+          ex: false,
+          createdAt: {
+            gte: startDate,
+            lt: endDate,
+          },
+        },
+      }),
+      prisma.invoice.findMany({
+        where: {
+          createdAt: {
+            gte: startDate,
+            lt: endDate,
+          },
+        },
+        include: {
+          details: true,
+        },
+        orderBy: {
+          createdAt: "desc",
+        },
+      }),
+    ]);
+
+    const totalExTrue = exTrueTotal._sum.total
+      ? exTrueTotal._sum.total.toNumber()
+      : 0;
+    const totalExFalse = exFalseTotal._sum.total
+      ? exFalseTotal._sum.total.toNumber()
+      : 0;
+    const profit = totalExTrue - totalExFalse;
+
+    // Prepare the HTML content for the PDF
+    const html = `
+  <html>
+    <head>
+      <style>
+        table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+        table, th, td { border: 1px solid black; }
+        th, td { padding: 8px; text-align: left; }
+        h2 { text-align: center; }
+        .success { color: green; font-weight: bold; }
+        .danger { color: red; font-weight: bold; }
+        .total-row { font-weight: bold; text-align: right; background-color: #f0f0f0; }
+      </style>
+    </head>
+    <body>
+      <h1 style="text-align: center;">Invoice Summarized Report</h1>
+      <p>Report Date: ${date || month || "N/A"}</p>
+     <p>Total Income (Ex True): <span class="success">${
+       totalExTrue || 0
+     }</span></p>
+      <p>Total Expense (Ex False): <span class="danger">${
+        totalExFalse || 0
+      }</span></p>
+      <p>Profit: ${
+        profit >= 0
+          ? `<span class="success">${profit}</span>`
+          : `<span class="danger">(${Math.abs(profit)})</span>`
+      }</p>
+      <p>Total Invoices: ${invoices.length || 0}</p>
+      
+      <h2>Invoice Details:</h2>
+      ${invoices
+        .map(
+          (invoice) => `
+          <h3>Invoice ID: ${invoice.id}</h3>
+          <table>
+            <thead>
+              <tr>
+                <th>Date</th>
+                <th>Description</th>
+                <th>Amount</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${invoice.details
+                .map(
+                  (detail) => `
+                  <tr>
+                    <td>${
+                      new Date(invoice.createdAt).toISOString().split("T")[0]
+                    }</td>
+                    <td>${detail.description}</td>
+                    <td>${detail.amount}</td>
+                  </tr>
+                `
+                )
+                .join("")}
+                <tr class="total-row">
+                <td colspan="2">Total</td>
+                <td>${invoice.total}</td>
+              </tr>
+            </tbody>
+          </table>
+        `
+        )
+        .join("")}
+    </body>
+  </html>
+`;
+
+    // Define PDF options
+    const options = {
+      format: "A4",
+      orientation: "portrait",
+      border: "10mm",
+    };
+
+    // Define the PDF document
+    const document = {
+      html,
+      data: {},
+      type: "buffer", // Add any additional data if needed
+    };
+
+    try {
+      // Create the PDF and stream it directly to the response
+      const result = await pdfCreator.create(document, options);
+
+      res.setHeader("Content-Type", "application/pdf");
+      res.setHeader(
+        "Content-Disposition",
+        "attachment; filename=invoice_report.pdf"
+      );
+      return res.end(result);
+    } catch (error) {
+      console.error("Error generating PDF:", error);
+      res.status(500).send("Error generating PDF");
+    }
   }
 
   @Get("/:id")

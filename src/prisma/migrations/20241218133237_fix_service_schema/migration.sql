@@ -1,0 +1,3 @@
+-- AlterTable
+ALTER TABLE `service` MODIFY `title` VARCHAR(191) NOT NULL,
+    MODIFY `desc` VARCHAR(191) NOT NULL;

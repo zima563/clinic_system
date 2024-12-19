@@ -23,6 +23,8 @@
     "express": "^4.21.1",
     "joi": "^17.13.3",
     "jsonwebtoken": "^9.0.2",
+    "pdf-creator-node": "^2.3.5",
+    "pdf-lib": "^1.17.1",
     "prisma": "^5.22.0",
     "reflect-metadata": "^0.2.2",
     "routing-controllers": "^0.10.4",
