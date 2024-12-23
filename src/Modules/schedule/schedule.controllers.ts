@@ -32,15 +32,21 @@ export class scheduleControllers {
     createValidationMiddleware(addscheduleSchema)
   )
   async addSchedule(@Req() req: Request, @Res() res: Response) {
-    const { doctorId, servicesId, price, date, fromTime, toTime } = req.body;
+    const { doctorId, servicesId, price, dates } = req.body;
     const schedule = await prisma.schedule.create({
       data: {
         doctorId,
         servicesId,
         price,
-        date: `${date}T00:00:00.000Z`,
-        fromTime: fromTime,
-        toTime: toTime,
+        dates: {
+          create: dates.map(
+            (date: { day: string; fromTime: string; toTime: string }) => ({
+              day: date.day,
+              fromTime: date.fromTime,
+              toTime: date.toTime,
+            })
+          ),
+        },
       },
     });
     return res.status(200).json(schedule);
@@ -103,49 +109,49 @@ export class scheduleControllers {
     return res.status(200).json(schedule);
   }
 
-  @Put("/:id")
-  @UseBefore(
-    ProtectRoutesMiddleware,
-    roleOrPermissionMiddleware("updateSchedule"),
-    createValidationMiddleware(updateScheduleSchema)
-  ) // Optional validation middleware
-  async updateSchedule(
-    @Param("id") id: number,
-    @Req() req: Request,
-    @Res() res: Response
-  ) {
-    const { doctorId, servicesId, price, date, fromTime, toTime } = req.body;
-    const parsedDate = date ? new Date(date) : undefined;
-    const schedule = await prisma.schedule.findUnique({
-      where: {
-        id: id, // Get the schedule by ID
-      },
-    });
+  // @Put("/:id")
+  // @UseBefore(
+  //   ProtectRoutesMiddleware,
+  //   roleOrPermissionMiddleware("updateSchedule"),
+  //   createValidationMiddleware(updateScheduleSchema)
+  // ) // Optional validation middleware
+  // async updateSchedule(
+  //   @Param("id") id: number,
+  //   @Req() req: Request,
+  //   @Res() res: Response
+  // ) {
+  //   const { doctorId, servicesId, price, date, fromTime, toTime } = req.body;
+  //   const parsedDate = date ? new Date(date) : undefined;
+  //   const schedule = await prisma.schedule.findUnique({
+  //     where: {
+  //       id: id, // Get the schedule by ID
+  //     },
+  //   });
 
-    if (!schedule) {
-      throw new ApiError("schedule not found", 404);
-    }
+  //   if (!schedule) {
+  //     throw new ApiError("schedule not found", 404);
+  //   }
 
-    await prisma.schedule.update({
-      where: {
-        id: id, // Find the schedule by the provided id
-      },
-      data: {
-        doctorId,
-        servicesId,
-        price,
-        date: parsedDate,
-        fromTime,
-        toTime,
-      },
-    });
-    let updatedSchedule = await prisma.schedule.findUnique({
-      where: { id },
-    });
+  //   await prisma.schedule.update({
+  //     where: {
+  //       id: id, // Find the schedule by the provided id
+  //     },
+  //     data: {
+  //       doctorId,
+  //       servicesId,
+  //       price,
+  //       date: parsedDate,
+  //       fromTime,
+  //       toTime,
+  //     },
+  //   });
+  //   let updatedSchedule = await prisma.schedule.findUnique({
+  //     where: { id },
+  //   });
 
-    // Return the updated schedule
-    return res.status(200).json(updatedSchedule);
-  }
+  //   // Return the updated schedule
+  //   return res.status(200).json(updatedSchedule);
+  // }
 
   @Delete("/:id")
   @UseBefore(
