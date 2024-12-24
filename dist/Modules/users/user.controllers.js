@@ -170,7 +170,8 @@ exports.userControllers = userControllers;
 __decorate([
     (0, routing_controllers_1.Post)("/"),
     (0, routing_controllers_1.UseBefore)(protectedRoute_1.ProtectRoutesMiddleware, (0, roleOrPermission_1.roleOrPermissionMiddleware)("addUser"), (0, validation_1.createValidationMiddleware)(user_validations_1.addUser)),
-    (0, routing_controllers_1.UseBefore)(emailExists_1.CheckEmailMiddleware, phoneExist_1.CheckPhoneMiddleware),
+    (0, routing_controllers_1.UseBefore)(emailExists_1.CheckEmailMiddleware),
+    (0, routing_controllers_1.UseBefore)(phoneExist_1.CheckPhoneMiddleware),
     __param(0, (0, routing_controllers_1.Body)()),
     __param(1, (0, routing_controllers_1.Res)()),
     __metadata("design:type", Function),

@@ -54,8 +54,8 @@ useExpressServer(app, {
     searchControllers,
   ], // Adjust path to your controllers
   middlewares: [
-    // ProtectRoutesMiddleware,
-    // roleOrPermissionMiddleware,
+    ProtectRoutesMiddleware,
+    roleOrPermissionMiddleware,
     createValidationMiddleware,
     ErrorHandler,
   ],

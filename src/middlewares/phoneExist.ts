@@ -18,14 +18,14 @@ export class CheckPhoneMiddleware implements ExpressMiddlewareInterface {
       }
 
       // Check if the email already exists in the database
-      const user = await prisma.patient.findUnique({
+      const user = await prisma.user.findUnique({
         where: { phone },
       });
 
       if (user) {
         return res.status(409).json({
           status: "error",
-          message: "patient's phone already exists",
+          message: "user's phone already exists",
         });
       }
 

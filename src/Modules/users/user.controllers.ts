@@ -36,7 +36,8 @@ export class userControllers {
     roleOrPermissionMiddleware("addUser"),
     createValidationMiddleware(addUser)
   )
-  @UseBefore(CheckEmailMiddleware, CheckPhoneMiddleware)
+  @UseBefore(CheckEmailMiddleware)
+  @UseBefore(CheckPhoneMiddleware)
   async addUser(@Body() body: any, @Res() res: Response) {
     body.password = bcrypt.hashSync(body.password, 10);
     let user = await prisma.user.create({ data: body });

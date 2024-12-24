@@ -23,6 +23,8 @@ const schedule_controllers_1 = require("./Modules/schedule/schedule.controllers"
 const appoientment_controllers_1 = require("./Modules/appointment/appoientment.controllers");
 const visit_controllers_1 = require("./Modules/visit/visit.controllers");
 const seeder_1 = require("./Modules/permission/seeder");
+const protectedRoute_1 = require("./middlewares/protectedRoute");
+const roleOrPermission_1 = require("./middlewares/roleOrPermission");
 const searchEngine_1 = require("./Modules/searchEngine/searchEngine");
 const app = (0, express_1.default)();
 // Add body parser middleware
@@ -51,8 +53,8 @@ app.use((0, cors_1.default)({
         searchEngine_1.searchControllers,
     ], // Adjust path to your controllers
     middlewares: [
-        // ProtectRoutesMiddleware,
-        // roleOrPermissionMiddleware,
+        protectedRoute_1.ProtectRoutesMiddleware,
+        roleOrPermission_1.roleOrPermissionMiddleware,
         validation_1.createValidationMiddleware,
         ErrorHandler_1.ErrorHandler,
     ],

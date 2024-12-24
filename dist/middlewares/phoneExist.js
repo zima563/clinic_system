@@ -31,13 +31,13 @@ let CheckPhoneMiddleware = class CheckPhoneMiddleware {
                     });
                 }
                 // Check if the email already exists in the database
-                const user = yield prisma.patient.findUnique({
+                const user = yield prisma.user.findUnique({
                     where: { phone },
                 });
                 if (user) {
                     return res.status(409).json({
                         status: "error",
-                        message: "patient's phone already exists",
+                        message: "user's phone already exists",
                     });
                 }
                 // If email does not exist, proceed to the next middleware or controller
