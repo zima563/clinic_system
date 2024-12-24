@@ -161,6 +161,9 @@ export class appointmentController {
     if (!(await prisma.appointment.findUnique({ where: { id } }))) {
       throw new ApiError("appointment not found", 404);
     }
+    if (body.date) {
+      body.date = new Date(body.date);
+    }
     await prisma.appointment.update({
       where: { id },
       data: body,

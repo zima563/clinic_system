@@ -118,6 +118,9 @@ let appointmentController = class appointmentController {
             if (!(yield prisma.appointment.findUnique({ where: { id } }))) {
                 throw new ApiError_1.default("appointment not found", 404);
             }
+            if (body.date) {
+                body.date = new Date(body.date);
+            }
             yield prisma.appointment.update({
                 where: { id },
                 data: body,
