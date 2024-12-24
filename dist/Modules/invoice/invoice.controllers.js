@@ -461,6 +461,7 @@ __decorate([
 ], invoiceControllers.prototype, "updateInvoiceDetail", null);
 __decorate([
     (0, routing_controllers_1.Get)("/summarized-report"),
+    (0, routing_controllers_1.UseBefore)(protectedRoute_1.ProtectRoutesMiddleware, (0, roleOrPermission_1.roleOrPermissionMiddleware)("summarized_report")),
     __param(0, (0, routing_controllers_1.QueryParams)()),
     __param(1, (0, routing_controllers_1.Req)()),
     __param(2, (0, routing_controllers_1.Res)()),
@@ -470,6 +471,7 @@ __decorate([
 ], invoiceControllers.prototype, "summarized_report", null);
 __decorate([
     (0, routing_controllers_1.Get)("/summarized-report/pdf"),
+    (0, routing_controllers_1.UseBefore)(protectedRoute_1.ProtectRoutesMiddleware, (0, roleOrPermission_1.roleOrPermissionMiddleware)("downloadPdf")),
     __param(0, (0, routing_controllers_1.QueryParams)()),
     __param(1, (0, routing_controllers_1.Req)()),
     __param(2, (0, routing_controllers_1.Res)()),

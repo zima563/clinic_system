@@ -6,13 +6,17 @@ import {
   QueryParams,
   Req,
   Res,
+  UseBefore,
 } from "routing-controllers";
+import { ProtectRoutesMiddleware } from "../../middlewares/protectedRoute";
+import { roleOrPermissionMiddleware } from "../../middlewares/roleOrPermission";
 
 const prisma = new PrismaClient();
 
 @JsonController("/api/search")
 export class searchControllers {
   @Get("/")
+  @UseBefore(ProtectRoutesMiddleware, roleOrPermissionMiddleware("search"))
   async search(
     @Req() req: Request,
     @QueryParams() query: any,

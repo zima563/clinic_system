@@ -56,6 +56,10 @@ exports.permissions = [
     { name: "appendVisitDetails" },
     { name: "removeVisitDetails" },
     { name: "deleteVisit" },
+    { name: "summarized_report" },
+    { name: "downloadPdf" },
+    { name: "listDates" },
+    { name: "search" },
 ];
 [
     "addAppointment",
@@ -112,4 +116,8 @@ exports.permissions = [
     "appendVisitDetails",
     "removeVisitDetails",
     "deleteVisit",
+    "summarized_report",
+    "downloadPdf",
+    "listDates",
+    "search",
 ];

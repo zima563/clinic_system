@@ -24,6 +24,8 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.searchControllers = void 0;
 const client_1 = require("@prisma/client");
 const routing_controllers_1 = require("routing-controllers");
+const protectedRoute_1 = require("../../middlewares/protectedRoute");
+const roleOrPermission_1 = require("../../middlewares/roleOrPermission");
 const prisma = new client_1.PrismaClient();
 let searchControllers = class searchControllers {
     search(req, query, res) {
@@ -61,6 +63,7 @@ let searchControllers = class searchControllers {
 exports.searchControllers = searchControllers;
 __decorate([
     (0, routing_controllers_1.Get)("/"),
+    (0, routing_controllers_1.UseBefore)(protectedRoute_1.ProtectRoutesMiddleware, (0, roleOrPermission_1.roleOrPermissionMiddleware)("search")),
     __param(0, (0, routing_controllers_1.Req)()),
     __param(1, (0, routing_controllers_1.QueryParams)()),
     __param(2, (0, routing_controllers_1.Res)()),

@@ -191,10 +191,7 @@ PermissionController.permissionSchema = joi_1.default.object({
 });
 __decorate([
     (0, routing_controllers_1.Post)("/seed"),
-    (0, routing_controllers_1.UseBefore)()
-    // ProtectRoutesMiddleware,
-    // roleOrPermissionMiddleware("seedPermissions")
-    ,
+    (0, routing_controllers_1.UseBefore)(protectedRoute_1.ProtectRoutesMiddleware, (0, roleOrPermission_1.roleOrPermissionMiddleware)("seedPermissions")),
     __param(0, (0, routing_controllers_1.Res)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [Object]),
@@ -202,10 +199,7 @@ __decorate([
 ], PermissionController.prototype, "seedPermissions", null);
 __decorate([
     (0, routing_controllers_1.Post)("/assignToUser/:id"),
-    (0, routing_controllers_1.UseBefore)(
-    // ProtectRoutesMiddleware,
-    // roleOrPermissionMiddleware("assignPermissionsToUser"),
-    (0, validation_1.createValidationMiddleware)(PermissionController.permissionSchema)),
+    (0, routing_controllers_1.UseBefore)(protectedRoute_1.ProtectRoutesMiddleware, (0, roleOrPermission_1.roleOrPermissionMiddleware)("assignPermissionsToUser"), (0, validation_1.createValidationMiddleware)(PermissionController.permissionSchema)),
     __param(0, (0, routing_controllers_1.Req)()),
     __param(1, (0, routing_controllers_1.Param)("id")),
     __param(2, (0, routing_controllers_1.Body)()),

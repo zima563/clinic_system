@@ -27,8 +27,8 @@ const prisma = new PrismaClient();
 export class scheduleControllers {
   @Post("/")
   @UseBefore(
-    // ProtectRoutesMiddleware,
-    // roleOrPermissionMiddleware("addSchedule"),
+    ProtectRoutesMiddleware,
+    roleOrPermissionMiddleware("addSchedule"),
     createValidationMiddleware(addscheduleSchema)
   )
   async addSchedule(@Req() req: Request, @Res() res: Response) {
@@ -84,6 +84,7 @@ export class scheduleControllers {
   }
 
   @Get("/dates")
+  @UseBefore(ProtectRoutesMiddleware, roleOrPermissionMiddleware("listDates"))
   async listDates(@Req() req: Request, @Res() res: Response) {
     let { scheduleId } = req.body;
     let dates = await prisma.date.findMany({
@@ -115,8 +116,8 @@ export class scheduleControllers {
 
   @Put("/:id")
   @UseBefore(
-    // ProtectRoutesMiddleware,
-    // roleOrPermissionMiddleware("updateSchedule"),
+    ProtectRoutesMiddleware,
+    roleOrPermissionMiddleware("updateSchedule"),
     createValidationMiddleware(updateScheduleSchema)
   )
   async updateSchedule(

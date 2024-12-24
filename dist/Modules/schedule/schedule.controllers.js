@@ -159,10 +159,7 @@ let scheduleControllers = class scheduleControllers {
 exports.scheduleControllers = scheduleControllers;
 __decorate([
     (0, routing_controllers_1.Post)("/"),
-    (0, routing_controllers_1.UseBefore)(
-    // ProtectRoutesMiddleware,
-    // roleOrPermissionMiddleware("addSchedule"),
-    (0, validation_1.createValidationMiddleware)(schedule_validations_1.addscheduleSchema)),
+    (0, routing_controllers_1.UseBefore)(protectedRoute_1.ProtectRoutesMiddleware, (0, roleOrPermission_1.roleOrPermissionMiddleware)("addSchedule"), (0, validation_1.createValidationMiddleware)(schedule_validations_1.addscheduleSchema)),
     __param(0, (0, routing_controllers_1.Req)()),
     __param(1, (0, routing_controllers_1.Res)()),
     __metadata("design:type", Function),
@@ -182,6 +179,7 @@ __decorate([
 ], scheduleControllers.prototype, "listSchedules", null);
 __decorate([
     (0, routing_controllers_1.Get)("/dates"),
+    (0, routing_controllers_1.UseBefore)(protectedRoute_1.ProtectRoutesMiddleware, (0, roleOrPermission_1.roleOrPermissionMiddleware)("listDates")),
     __param(0, (0, routing_controllers_1.Req)()),
     __param(1, (0, routing_controllers_1.Res)()),
     __metadata("design:type", Function),
@@ -200,10 +198,7 @@ __decorate([
 ], scheduleControllers.prototype, "showScheduleDetails", null);
 __decorate([
     (0, routing_controllers_1.Put)("/:id"),
-    (0, routing_controllers_1.UseBefore)(
-    // ProtectRoutesMiddleware,
-    // roleOrPermissionMiddleware("updateSchedule"),
-    (0, validation_1.createValidationMiddleware)(schedule_validations_1.updateScheduleSchema)),
+    (0, routing_controllers_1.UseBefore)(protectedRoute_1.ProtectRoutesMiddleware, (0, roleOrPermission_1.roleOrPermissionMiddleware)("updateSchedule"), (0, validation_1.createValidationMiddleware)(schedule_validations_1.updateScheduleSchema)),
     __param(0, (0, routing_controllers_1.Param)("id")),
     __param(1, (0, routing_controllers_1.Req)()),
     __param(2, (0, routing_controllers_1.Res)()),

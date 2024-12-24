@@ -43,9 +43,10 @@ export class PermissionController {
   });
 
   @Post("/seed")
-  @UseBefore()
-  // ProtectRoutesMiddleware,
-  // roleOrPermissionMiddleware("seedPermissions")
+  @UseBefore(
+    ProtectRoutesMiddleware,
+    roleOrPermissionMiddleware("seedPermissions")
+  )
   async seedPermissions(@Res() res: Response) {
     await prisma.$transaction(async (tx) => {
       await tx.rolePermission.deleteMany();
@@ -69,8 +70,8 @@ export class PermissionController {
 
   @Post("/assignToUser/:id")
   @UseBefore(
-    // ProtectRoutesMiddleware,
-    // roleOrPermissionMiddleware("assignPermissionsToUser"),
+    ProtectRoutesMiddleware,
+    roleOrPermissionMiddleware("assignPermissionsToUser"),
     createValidationMiddleware(PermissionController.permissionSchema)
   )
   async assignPermissionsToUser(

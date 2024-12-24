@@ -143,6 +143,10 @@ export class invoiceControllers {
   }
 
   @Get("/summarized-report")
+  @UseBefore(
+    ProtectRoutesMiddleware,
+    roleOrPermissionMiddleware("summarized_report")
+  )
   async summarized_report(
     @QueryParams() query: { date?: string; month?: string },
     @Req() req: Request,
@@ -226,6 +230,7 @@ export class invoiceControllers {
   }
 
   @Get("/summarized-report/pdf")
+  @UseBefore(ProtectRoutesMiddleware, roleOrPermissionMiddleware("downloadPdf"))
   async downloadPdf(
     @QueryParams() query: { date?: string; month?: string },
     @Req() req: Request,
