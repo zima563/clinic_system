@@ -137,8 +137,8 @@ let invoiceControllers = class invoiceControllers {
                     where: {
                         ex: true,
                         createdAt: {
-                            gte: startDate,
-                            lt: endDate,
+                            gte: startDate.toISOString(),
+                            lt: endDate.toISOString(),
                         },
                     },
                 }),
@@ -147,16 +147,16 @@ let invoiceControllers = class invoiceControllers {
                     where: {
                         ex: false,
                         createdAt: {
-                            gte: startDate,
-                            lt: endDate,
+                            gte: startDate.toISOString(),
+                            lt: endDate.toISOString(),
                         },
                     },
                 }),
                 prisma.invoice.findMany({
                     where: {
                         createdAt: {
-                            gte: startDate,
-                            lt: endDate,
+                            gte: startDate.toISOString(),
+                            lt: endDate.toISOString(),
                         },
                     },
                     include: {
@@ -208,8 +208,8 @@ let invoiceControllers = class invoiceControllers {
                     where: {
                         ex: true,
                         createdAt: {
-                            gte: startDate,
-                            lt: endDate,
+                            gte: startDate.toISOString(),
+                            lt: endDate.toISOString(),
                         },
                     },
                 }),
@@ -218,16 +218,16 @@ let invoiceControllers = class invoiceControllers {
                     where: {
                         ex: false,
                         createdAt: {
-                            gte: startDate,
-                            lt: endDate,
+                            gte: startDate.toISOString(),
+                            lt: endDate.toISOString(),
                         },
                     },
                 }),
                 prisma.invoice.findMany({
                     where: {
                         createdAt: {
-                            gte: startDate,
-                            lt: endDate,
+                            gte: startDate.toISOString(),
+                            lt: endDate.toISOString(),
                         },
                     },
                     include: {
@@ -285,7 +285,9 @@ let invoiceControllers = class invoiceControllers {
               ${invoice.details
                 .map((detail) => `
                   <tr>
-                    <td>${new Date(invoice.createdAt).toISOString().split("T")[0]}</td>
+                    <td>${new Date(invoice.createdAt.day)
+                .toISOString()
+                .split("T")[0]}</td>
                     <td>${detail.description}</td>
                     <td>${detail.amount}</td>
                   </tr>

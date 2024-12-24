@@ -81,9 +81,7 @@ export class appointmentController {
 
     let appointments = await prisma.appointment.findMany({
       where: {
-        schedule: {
-          date: `${normalizedDate}T00:00:00.000Z`,
-        },
+        date: `${normalizedDate}T00:00:00.000Z`,
       },
       include: {
         schedule: true,

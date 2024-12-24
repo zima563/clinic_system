@@ -141,6 +141,10 @@ class ApiFeatures {
         userRoles: true,
         userPermissions: true,
       };
+    } else if (modelName === "schedule") {
+      this.prismaQuery.include = {
+        dates: true,
+      };
     }
 
     const result = await this.prismaModel.findMany({

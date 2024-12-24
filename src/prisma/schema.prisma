@@ -176,6 +176,7 @@ model Patient {
 
 model Appointment {
   id         Int               @id @default(autoincrement())
+  date       DateTime
   patientId  Int
   status     AppointmentStatus @default(pending)
   scheduleId Int

@@ -176,8 +176,8 @@ export class invoiceControllers {
         where: {
           ex: true,
           createdAt: {
-            gte: startDate,
-            lt: endDate,
+            gte: startDate.toISOString(),
+            lt: endDate.toISOString(),
           },
         },
       }),
@@ -186,16 +186,16 @@ export class invoiceControllers {
         where: {
           ex: false,
           createdAt: {
-            gte: startDate,
-            lt: endDate,
+            gte: startDate.toISOString(),
+            lt: endDate.toISOString(),
           },
         },
       }),
       prisma.invoice.findMany({
         where: {
           createdAt: {
-            gte: startDate,
-            lt: endDate,
+            gte: startDate.toISOString(),
+            lt: endDate.toISOString(),
           },
         },
         include: {
@@ -258,8 +258,8 @@ export class invoiceControllers {
         where: {
           ex: true,
           createdAt: {
-            gte: startDate,
-            lt: endDate,
+            gte: startDate.toISOString(),
+            lt: endDate.toISOString(),
           },
         },
       }),
@@ -268,16 +268,16 @@ export class invoiceControllers {
         where: {
           ex: false,
           createdAt: {
-            gte: startDate,
-            lt: endDate,
+            gte: startDate.toISOString(),
+            lt: endDate.toISOString(),
           },
         },
       }),
       prisma.invoice.findMany({
         where: {
           createdAt: {
-            gte: startDate,
-            lt: endDate,
+            gte: startDate.toISOString(),
+            lt: endDate.toISOString(),
           },
         },
         include: {
@@ -346,7 +346,9 @@ export class invoiceControllers {
                   (detail) => `
                   <tr>
                     <td>${
-                      new Date(invoice.createdAt).toISOString().split("T")[0]
+                      new Date(invoice.createdAt.day)
+                        .toISOString()
+                        .split("T")[0]
                     }</td>
                     <td>${detail.description}</td>
                     <td>${detail.amount}</td>

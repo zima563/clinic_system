@@ -66,9 +66,7 @@ let appointmentController = class appointmentController {
             const normalizedDate = today.toISOString().split("T")[0];
             let appointments = yield prisma.appointment.findMany({
                 where: {
-                    schedule: {
-                        date: `${normalizedDate}T00:00:00.000Z`,
-                    },
+                    date: `${normalizedDate}T00:00:00.000Z`,
                 },
                 include: {
                     schedule: true,

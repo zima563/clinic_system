@@ -61,8 +61,7 @@ export class scheduleControllers {
     @Req() req: Request,
     @Res() res: Response,
     @QueryParam("doctorId") doctorId?: string,
-    @QueryParam("servicesId") servicesId?: string,
-    @QueryParam("date") date?: string
+    @QueryParam("servicesId") servicesId?: string
   ) {
     const parsedDoctorId = doctorId ? parseInt(doctorId, 10) : undefined;
     const parsedServicesId = servicesId ? parseInt(servicesId, 10) : undefined;
@@ -72,12 +71,6 @@ export class scheduleControllers {
       doctorId: parsedDoctorId,
       servicesId: parsedServicesId,
     };
-
-    // Add date filtering if the date is provided
-    if (date) {
-      query.date = new Date(date);
-    }
-
     const apiFeatures = new ApiFeatures(prisma.schedule, query);
     await apiFeatures.filter().limitedFields().sort().search("schedule");
     await apiFeatures.paginateWithCount();
