@@ -144,6 +144,11 @@ let scheduleControllers = class scheduleControllers {
             if (!schedule) {
                 throw new ApiError_1.default("schedule not found", 404);
             }
+            yield prisma.date.deleteMany({
+                where: {
+                    scheduleId: id,
+                },
+            });
             yield prisma.schedule.delete({
                 where: { id },
             });

@@ -182,7 +182,11 @@ export class scheduleControllers {
     if (!schedule) {
       throw new ApiError("schedule not found", 404);
     }
-
+    await prisma.date.deleteMany({
+      where: {
+        scheduleId: id,
+      },
+    });
     await prisma.schedule.delete({
       where: { id },
     });
