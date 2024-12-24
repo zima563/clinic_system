@@ -71,6 +71,17 @@ let scheduleControllers = class scheduleControllers {
             });
         });
     }
+    listDates(req, res) {
+        return __awaiter(this, void 0, void 0, function* () {
+            let { scheduleId } = req.body;
+            let dates = yield prisma.date.findMany({
+                where: {
+                    scheduleId,
+                },
+            });
+            return res.status(200).json(dates);
+        });
+    }
     showScheduleDetails(req, id, res) {
         return __awaiter(this, void 0, void 0, function* () {
             let schedule = yield prisma.schedule.findUnique({
@@ -159,6 +170,14 @@ __decorate([
     __metadata("design:paramtypes", [Object, Object, String, String]),
     __metadata("design:returntype", Promise)
 ], scheduleControllers.prototype, "listSchedules", null);
+__decorate([
+    (0, routing_controllers_1.Get)("/dates"),
+    __param(0, (0, routing_controllers_1.Req)()),
+    __param(1, (0, routing_controllers_1.Res)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, Object]),
+    __metadata("design:returntype", Promise)
+], scheduleControllers.prototype, "listDates", null);
 __decorate([
     (0, routing_controllers_1.Get)("/:id"),
     (0, routing_controllers_1.UseBefore)(protectedRoute_1.ProtectRoutesMiddleware, (0, roleOrPermission_1.roleOrPermissionMiddleware)("showScheduleDetails")),

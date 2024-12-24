@@ -83,6 +83,17 @@ export class scheduleControllers {
     });
   }
 
+  @Get("/dates")
+  async listDates(@Req() req: Request, @Res() res: Response) {
+    let { scheduleId } = req.body;
+    let dates = await prisma.date.findMany({
+      where: {
+        scheduleId,
+      },
+    });
+    return res.status(200).json(dates);
+  }
+
   @Get("/:id")
   @UseBefore(
     ProtectRoutesMiddleware,
