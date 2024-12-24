@@ -28,8 +28,8 @@ const prisma = new PrismaClient();
 export class appointmentController {
   @Post("/")
   @UseBefore(
-    ProtectRoutesMiddleware,
-    roleOrPermissionMiddleware("addAppointment"),
+    // ProtectRoutesMiddleware,
+    // roleOrPermissionMiddleware("addAppointment"),
     createValidationMiddleware(addAppointmentValidationSchema)
   )
   async addAppointment(
@@ -37,6 +37,7 @@ export class appointmentController {
     @Body() body: any,
     @Res() res: Response
   ) {
+    body.date = new Date(body.date);
     let appointment = await prisma.appointment.create({
       data: body,
     });

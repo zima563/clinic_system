@@ -1,6 +1,13 @@
 import Joi from "joi";
 
 export const addAppointmentValidationSchema = Joi.object({
+  date: Joi.string()
+    .pattern(/^\d{4}-\d{2}-\d{2}$/)
+    .required()
+    .messages({
+      "string.pattern.base": `"date" must be in the format YYYY-MM-DD`,
+      "any.required": "Date is required.",
+    }),
   patientId: Joi.number().integer().positive().required().messages({
     "number.base": "The patient ID must be a number.",
     "number.integer": "The patient ID must be an integer.",
@@ -34,6 +41,12 @@ export const updateAppointmentStatusSchema = Joi.object({
 
 export const updateAppointmentSchema = Joi.object({
   id: Joi.string().required(),
+  date: Joi.string()
+    .pattern(/^\d{4}-\d{2}-\d{2}$/)
+    .messages({
+      "string.pattern.base": `"date" must be in the format YYYY-MM-DD`,
+      "any.required": "Date is required.",
+    }),
   patientId: Joi.number().integer().positive().messages({
     "number.base": "The patient ID must be a number.",
     "number.integer": "The patient ID must be an integer.",

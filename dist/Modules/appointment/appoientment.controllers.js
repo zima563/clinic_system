@@ -36,6 +36,7 @@ const prisma = new client_1.PrismaClient();
 let appointmentController = class appointmentController {
     addAppointment(req, body, res) {
         return __awaiter(this, void 0, void 0, function* () {
+            body.date = new Date(body.date);
             let appointment = yield prisma.appointment.create({
                 data: body,
             });
@@ -130,7 +131,10 @@ let appointmentController = class appointmentController {
 exports.appointmentController = appointmentController;
 __decorate([
     (0, routing_controllers_1.Post)("/"),
-    (0, routing_controllers_1.UseBefore)(protectedRoute_1.ProtectRoutesMiddleware, (0, roleOrPermission_1.roleOrPermissionMiddleware)("addAppointment"), (0, validation_1.createValidationMiddleware)(appointment_validation_1.addAppointmentValidationSchema)),
+    (0, routing_controllers_1.UseBefore)(
+    // ProtectRoutesMiddleware,
+    // roleOrPermissionMiddleware("addAppointment"),
+    (0, validation_1.createValidationMiddleware)(appointment_validation_1.addAppointmentValidationSchema)),
     __param(0, (0, routing_controllers_1.Req)()),
     __param(1, (0, routing_controllers_1.Body)()),
     __param(2, (0, routing_controllers_1.Res)()),
