@@ -54,17 +54,17 @@ export const addscheduleSchema = Joi.object({
 
 export const updateScheduleSchema = Joi.object({
   id: Joi.string().required(),
-  doctorId: Joi.number().integer().positive().required().messages({
+  doctorId: Joi.number().integer().positive().messages({
     "number.base": "Doctor ID must be a number.",
     "number.positive": "Doctor ID must be a positive number.",
     "any.required": "Doctor ID is required.",
   }),
-  servicesId: Joi.number().integer().positive().required().messages({
+  servicesId: Joi.number().integer().positive().messages({
     "number.base": "Service ID must be a number.",
     "number.positive": "Service ID must be a positive number.",
     "any.required": "Service ID is required.",
   }),
-  price: Joi.number().positive().required().messages({
+  price: Joi.number().positive().messages({
     "number.base": "Price must be a number.",
     "number.positive": "Price must be a positive number.",
     "any.required": "Price is required.",
@@ -97,7 +97,6 @@ export const updateScheduleSchema = Joi.object({
       })
     )
     .min(1)
-    .required()
     .messages({
       "array.base": "Dates must be an array.",
       "array.min": "At least one date object is required.",

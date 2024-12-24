@@ -93,46 +93,48 @@ let scheduleControllers = class scheduleControllers {
             return res.status(200).json(schedule);
         });
     }
-    // @Put("/:id")
-    // @UseBefore(
-    //   ProtectRoutesMiddleware,
-    //   roleOrPermissionMiddleware("updateSchedule"),
-    //   createValidationMiddleware(updateScheduleSchema)
-    // ) // Optional validation middleware
-    // async updateSchedule(
-    //   @Param("id") id: number,
-    //   @Req() req: Request,
-    //   @Res() res: Response
-    // ) {
-    //   const { doctorId, servicesId, price, date, fromTime, toTime } = req.body;
-    //   const parsedDate = date ? new Date(date) : undefined;
-    //   const schedule = await prisma.schedule.findUnique({
-    //     where: {
-    //       id: id, // Get the schedule by ID
-    //     },
-    //   });
-    //   if (!schedule) {
-    //     throw new ApiError("schedule not found", 404);
-    //   }
-    //   await prisma.schedule.update({
-    //     where: {
-    //       id: id, // Find the schedule by the provided id
-    //     },
-    //     data: {
-    //       doctorId,
-    //       servicesId,
-    //       price,
-    //       date: parsedDate,
-    //       fromTime,
-    //       toTime,
-    //     },
-    //   });
-    //   let updatedSchedule = await prisma.schedule.findUnique({
-    //     where: { id },
-    //   });
-    //   // Return the updated schedule
-    //   return res.status(200).json(updatedSchedule);
-    // }
+    updateSchedule(id, req, res) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const { doctorId, servicesId, price, dates } = req.body;
+            const schedule = yield prisma.schedule.findUnique({
+                where: {
+                    id,
+                },
+            });
+            if (dates) {
+                yield prisma.date.deleteMany({
+                    where: {
+                        scheduleId: id,
+                    },
+                });
+            }
+            if (!schedule) {
+                throw new ApiError_1.default("schedule not found", 404);
+            }
+            yield prisma.schedule.update({
+                where: {
+                    id,
+                },
+                data: {
+                    doctorId,
+                    servicesId,
+                    price,
+                    dates: {
+                        create: dates === null || dates === void 0 ? void 0 : dates.map((date) => ({
+                            day: date.day,
+                            fromTime: date.fromTime,
+                            toTime: date.toTime,
+                        })),
+                    },
+                },
+            });
+            let updatedSchedule = yield prisma.schedule.findUnique({
+                where: { id },
+            });
+            // Return the updated schedules
+            return res.status(200).json(updatedSchedule);
+        });
+    }
     deleteSchedule(id, res) {
         return __awaiter(this, void 0, void 0, function* () {
             // Check if the schedule exists
@@ -152,7 +154,10 @@ let scheduleControllers = class scheduleControllers {
 exports.scheduleControllers = scheduleControllers;
 __decorate([
     (0, routing_controllers_1.Post)("/"),
-    (0, routing_controllers_1.UseBefore)(protectedRoute_1.ProtectRoutesMiddleware, (0, roleOrPermission_1.roleOrPermissionMiddleware)("addSchedule"), (0, validation_1.createValidationMiddleware)(schedule_validations_1.addscheduleSchema)),
+    (0, routing_controllers_1.UseBefore)(
+    // ProtectRoutesMiddleware,
+    // roleOrPermissionMiddleware("addSchedule"),
+    (0, validation_1.createValidationMiddleware)(schedule_validations_1.addscheduleSchema)),
     __param(0, (0, routing_controllers_1.Req)()),
     __param(1, (0, routing_controllers_1.Res)()),
     __metadata("design:type", Function),
@@ -188,6 +193,19 @@ __decorate([
     __metadata("design:paramtypes", [Object, Number, Object]),
     __metadata("design:returntype", Promise)
 ], scheduleControllers.prototype, "showScheduleDetails", null);
+__decorate([
+    (0, routing_controllers_1.Put)("/:id"),
+    (0, routing_controllers_1.UseBefore)(
+    // ProtectRoutesMiddleware,
+    // roleOrPermissionMiddleware("updateSchedule"),
+    (0, validation_1.createValidationMiddleware)(schedule_validations_1.updateScheduleSchema)),
+    __param(0, (0, routing_controllers_1.Param)("id")),
+    __param(1, (0, routing_controllers_1.Req)()),
+    __param(2, (0, routing_controllers_1.Res)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Number, Object, Object]),
+    __metadata("design:returntype", Promise)
+], scheduleControllers.prototype, "updateSchedule", null);
 __decorate([
     (0, routing_controllers_1.Delete)("/:id"),
     (0, routing_controllers_1.UseBefore)(protectedRoute_1.ProtectRoutesMiddleware, (0, roleOrPermission_1.roleOrPermissionMiddleware)("deleteSchedule")),
