@@ -20,42 +20,98 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.searchControllers = void 0;
 const client_1 = require("@prisma/client");
 const routing_controllers_1 = require("routing-controllers");
 const protectedRoute_1 = require("../../middlewares/protectedRoute");
 const roleOrPermission_1 = require("../../middlewares/roleOrPermission");
+const meilisearch_1 = __importDefault(require("meilisearch"));
 const prisma = new client_1.PrismaClient();
+const meilisearch = new meilisearch_1.default({
+    host: "http://127.0.0.1:7700", // Replace with your Meilisearch host
+    apiKey: "clinic", // Replace with your API key if applicable
+});
+function indexData() {
+    return __awaiter(this, void 0, void 0, function* () {
+        try {
+            console.log("Fetching data for indexing...");
+            // Fetch data with required fields
+            const doctors = yield prisma.doctor.findMany({
+                select: {
+                    id: true,
+                    name: true,
+                    phone: true,
+                    isActive: true,
+                    specialtyId: true,
+                    createdAt: true,
+                    updatedAt: true,
+                },
+            });
+            console.log(doctors);
+            const patients = yield prisma.patient.findMany({
+                select: {
+                    id: true,
+                    name: true,
+                    phone: true,
+                    gender: true,
+                    birthdate: true,
+                    createdAt: true,
+                    updatedAt: true,
+                },
+            });
+            const services = yield prisma.service.findMany();
+            const specialties = yield prisma.specialty.findMany();
+            console.log("Data fetched. Preparing to index...");
+            // Index data to Meilisearch with unique IDs
+            yield meilisearch
+                .index("doctors")
+                .addDocuments(doctors, { primaryKey: "id" });
+            console.log("Doctors indexed successfully.");
+            yield meilisearch
+                .index("patients")
+                .addDocuments(patients, { primaryKey: "id" });
+            console.log("Patients indexed successfully.");
+            yield meilisearch
+                .index("services")
+                .addDocuments(services, { primaryKey: "id" });
+            console.log("Services indexed successfully.");
+            yield meilisearch
+                .index("specialties")
+                .addDocuments(specialties, { primaryKey: "id" });
+            console.log("Specialties indexed successfully.");
+            console.log("Data indexed successfully.");
+        }
+        catch (error) {
+            console.error("Error indexing data:", error);
+        }
+    });
+}
 let searchControllers = class searchControllers {
     search(req, query, res) {
         return __awaiter(this, void 0, void 0, function* () {
             const { keyword } = query;
-            const doctors = yield prisma.doctor.findMany({
-                where: {
-                    OR: [{ name: { contains: keyword } }, { phone: { contains: keyword } }],
-                },
-            });
-            const patient = yield prisma.patient.findMany({
-                where: {
-                    OR: [{ name: { contains: keyword } }, { phone: { contains: keyword } }],
-                },
-            });
-            const sevices = yield prisma.service.findMany({
-                where: {
-                    OR: [{ title: { contains: keyword } }, { desc: { contains: keyword } }],
-                },
-            });
-            const specialty = yield prisma.specialty.findMany({
-                where: {
-                    OR: [{ title: { contains: keyword } }],
-                },
-            });
+            if (!keyword) {
+                return res
+                    .status(400)
+                    .json({ message: "Keyword is required for search" });
+            }
+            // Ensure data is indexed before searching
+            yield indexData();
+            const results = yield Promise.all([
+                meilisearch.index("doctors").search(keyword),
+                meilisearch.index("patients").search(keyword),
+                meilisearch.index("services").search(keyword),
+                meilisearch.index("specialties").search(keyword),
+            ]);
             return res.status(200).json({
-                doctors,
-                patient,
-                sevices,
-                specialty,
+                doctors: results[0].hits,
+                patients: results[1].hits,
+                services: results[2].hits,
+                specialties: results[3].hits,
             });
         });
     }
