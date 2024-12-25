@@ -185,11 +185,44 @@ export class userControllers {
         OR: [{ phone: body.emailOrPhone }, { email: body.emailOrPhone }],
       },
     });
+
     if (!(user && bcrypt.compareSync(body.password, user.password))) {
       throw new ApiError("email or password incorrect");
     } else {
+      // Generate JWT token
       let token = jwt.sign({ userId: user.id }, process.env.JWT_KEY!);
-      return res.status(200).json(token);
+
+      // Fetch user's direct permissions
+      const userPermissions = await prisma.userPermission.findMany({
+        where: { userId: user.id },
+        include: { permission: true },
+      });
+
+      // Fetch user's role
+      const userRole = await prisma.userRole.findFirst({
+        where: { userId: user.id },
+        include: { role: true },
+      });
+
+      // Fetch permissions related to the user's role
+      const rolePermissions = userRole
+        ? await prisma.rolePermission.findMany({
+            where: { roleId: userRole.roleId },
+            include: { permission: true },
+          })
+        : [];
+
+      // Extract unique permissions for the response
+      const allPermissions = new Set([
+        ...userPermissions.map((up) => up.permission.name),
+        ...rolePermissions.map((rp) => rp.permission.name),
+      ]);
+
+      // Return response with token and combined unique permissions
+      return res.status(200).json({
+        token,
+        permissions: Array.from(allPermissions),
+      });
     }
   }
 }
