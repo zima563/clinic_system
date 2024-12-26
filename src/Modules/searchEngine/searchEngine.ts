@@ -20,65 +20,27 @@ const meilisearch = new MeiliSearch({
 });
 
 async function indexData() {
-  try {
-    console.log("Fetching data for indexing...");
+  const doctors = await prisma.doctor.findMany();
+  const patients = await prisma.patient.findMany();
+  const services = await prisma.service.findMany();
+  const specialties = await prisma.specialty.findMany();
 
-    // Fetch data with required fields
-    const doctors = await prisma.doctor.findMany({
-      select: {
-        id: true,
-        name: true,
-        phone: true,
-        isActive: true,
-        specialtyId: true,
-        createdAt: true,
-        updatedAt: true,
-      },
-    });
-    console.log(doctors);
+  // Index data to Meilisearch with unique IDs
+  await meilisearch
+    .index("doctors")
+    .addDocuments(doctors, { primaryKey: "id" });
 
-    const patients = await prisma.patient.findMany({
-      select: {
-        id: true,
-        name: true,
-        phone: true,
-        gender: true,
-        birthdate: true,
-        createdAt: true,
-        updatedAt: true,
-      },
-    });
+  await meilisearch
+    .index("patients")
+    .addDocuments(patients, { primaryKey: "id" });
 
-    const services = await prisma.service.findMany();
-    const specialties = await prisma.specialty.findMany();
+  await meilisearch
+    .index("services")
+    .addDocuments(services, { primaryKey: "id" });
 
-    console.log("Data fetched. Preparing to index...");
-
-    // Index data to Meilisearch with unique IDs
-    await meilisearch
-      .index("doctors")
-      .addDocuments(doctors, { primaryKey: "id" });
-    console.log("Doctors indexed successfully.");
-
-    await meilisearch
-      .index("patients")
-      .addDocuments(patients, { primaryKey: "id" });
-    console.log("Patients indexed successfully.");
-
-    await meilisearch
-      .index("services")
-      .addDocuments(services, { primaryKey: "id" });
-    console.log("Services indexed successfully.");
-
-    await meilisearch
-      .index("specialties")
-      .addDocuments(specialties, { primaryKey: "id" });
-    console.log("Specialties indexed successfully.");
-
-    console.log("Data indexed successfully.");
-  } catch (error) {
-    console.error("Error indexing data:", error);
-  }
+  await meilisearch
+    .index("specialties")
+    .addDocuments(specialties, { primaryKey: "id" });
 }
 
 @JsonController("/api/search")

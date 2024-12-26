@@ -37,57 +37,23 @@ const meilisearch = new meilisearch_1.default({
 });
 function indexData() {
     return __awaiter(this, void 0, void 0, function* () {
-        try {
-            console.log("Fetching data for indexing...");
-            // Fetch data with required fields
-            const doctors = yield prisma.doctor.findMany({
-                select: {
-                    id: true,
-                    name: true,
-                    phone: true,
-                    isActive: true,
-                    specialtyId: true,
-                    createdAt: true,
-                    updatedAt: true,
-                },
-            });
-            console.log(doctors);
-            const patients = yield prisma.patient.findMany({
-                select: {
-                    id: true,
-                    name: true,
-                    phone: true,
-                    gender: true,
-                    birthdate: true,
-                    createdAt: true,
-                    updatedAt: true,
-                },
-            });
-            const services = yield prisma.service.findMany();
-            const specialties = yield prisma.specialty.findMany();
-            console.log("Data fetched. Preparing to index...");
-            // Index data to Meilisearch with unique IDs
-            yield meilisearch
-                .index("doctors")
-                .addDocuments(doctors, { primaryKey: "id" });
-            console.log("Doctors indexed successfully.");
-            yield meilisearch
-                .index("patients")
-                .addDocuments(patients, { primaryKey: "id" });
-            console.log("Patients indexed successfully.");
-            yield meilisearch
-                .index("services")
-                .addDocuments(services, { primaryKey: "id" });
-            console.log("Services indexed successfully.");
-            yield meilisearch
-                .index("specialties")
-                .addDocuments(specialties, { primaryKey: "id" });
-            console.log("Specialties indexed successfully.");
-            console.log("Data indexed successfully.");
-        }
-        catch (error) {
-            console.error("Error indexing data:", error);
-        }
+        const doctors = yield prisma.doctor.findMany();
+        const patients = yield prisma.patient.findMany();
+        const services = yield prisma.service.findMany();
+        const specialties = yield prisma.specialty.findMany();
+        // Index data to Meilisearch with unique IDs
+        yield meilisearch
+            .index("doctors")
+            .addDocuments(doctors, { primaryKey: "id" });
+        yield meilisearch
+            .index("patients")
+            .addDocuments(patients, { primaryKey: "id" });
+        yield meilisearch
+            .index("services")
+            .addDocuments(services, { primaryKey: "id" });
+        yield meilisearch
+            .index("specialties")
+            .addDocuments(specialties, { primaryKey: "id" });
     });
 }
 let searchControllers = class searchControllers {
