@@ -24,6 +24,7 @@ const appoientment_controllers_1 = require("./Modules/appointment/appoientment.c
 const visit_controllers_1 = require("./Modules/visit/visit.controllers");
 const seeder_1 = require("./Modules/permission/seeder");
 const searchEngine_1 = require("./Modules/searchEngine/searchEngine");
+const ApiError_1 = __importDefault(require("./utils/ApiError"));
 const app = (0, express_1.default)();
 // Add body parser middleware
 app.use(express_1.default.json({ limit: "50mb" })); // Parses application/json request bodies
@@ -58,7 +59,9 @@ app.use((0, cors_1.default)({
     ],
     defaultErrorHandler: false,
 });
-// app.use("/uploads", express.static("uploads")); // Serve static files
+app.use("*", (req, res, next) => {
+    next(new ApiError_1.default(`Not found: ${req.originalUrl}`, 404));
+});
 const port = process.env.PORT || 3000;
 app.listen(port, () => console.log(`App listening on port ${port}!`));
 exports.default = app;

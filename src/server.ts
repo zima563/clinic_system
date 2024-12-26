@@ -22,6 +22,7 @@ import { PermissionController } from "./Modules/permission/seeder";
 import { ProtectRoutesMiddleware } from "./middlewares/protectedRoute";
 import { roleOrPermissionMiddleware } from "./middlewares/roleOrPermission";
 import { searchControllers } from "./Modules/searchEngine/searchEngine";
+import ApiError from "./utils/ApiError";
 
 const app = express();
 
@@ -62,7 +63,9 @@ useExpressServer(app, {
   defaultErrorHandler: false,
 });
 
-// app.use("/uploads", express.static("uploads")); // Serve static files
+app.use("*", (req, res, next) => {
+  next(new ApiError(`Not found: ${req.originalUrl}`, 404));
+});
 
 const port = process.env.PORT || 3000;
 app.listen(port, () => console.log(`App listening on port ${port}!`));
