@@ -38,6 +38,14 @@ const prisma = new client_1.PrismaClient();
 let patientController = class patientController {
     addPatient(req, body, res) {
         return __awaiter(this, void 0, void 0, function* () {
+            if (body.phone) {
+                let patient = yield prisma.patient.findUnique({
+                    where: { phone: body.phone },
+                });
+                if (!patient) {
+                    throw new ApiError_1.default("patient's phone already exist");
+                }
+            }
             // Convert birthdate to ISO 8601 format if it's not already
             if (body.birthdate) {
                 const birthdate = new Date(body.birthdate);

@@ -53,11 +53,7 @@ export class searchControllers {
     @Res() res: Response
   ) {
     const { keyword } = query;
-    if (!keyword) {
-      return res
-        .status(400)
-        .json({ message: "Keyword is required for search" });
-    }
+
     // Ensure data is indexed before searching
     await indexData();
 

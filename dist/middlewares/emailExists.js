@@ -44,7 +44,6 @@ let CheckEmailMiddleware = class CheckEmailMiddleware {
                 next();
             }
             catch (error) {
-                console.error("Error checking email:", error);
                 return res.status(500).json({
                     status: "error",
                     message: "Internal Server Error",

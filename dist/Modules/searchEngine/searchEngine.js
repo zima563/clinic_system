@@ -60,11 +60,6 @@ let searchControllers = class searchControllers {
     search(req, query, res) {
         return __awaiter(this, void 0, void 0, function* () {
             const { keyword } = query;
-            if (!keyword) {
-                return res
-                    .status(400)
-                    .json({ message: "Keyword is required for search" });
-            }
             // Ensure data is indexed before searching
             yield indexData();
             const results = yield Promise.all([

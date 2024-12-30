@@ -1,5 +1,5 @@
 import "reflect-metadata";
-import { createExpressServer, useExpressServer } from "routing-controllers";
+import { useExpressServer } from "routing-controllers";
 import compression from "compression";
 import cors from "cors";
 import dotenv from "dotenv";
@@ -8,7 +8,6 @@ dotenv.config();
 import express from "express";
 import { createValidationMiddleware } from "./middlewares/validation";
 import { userControllers } from "./Modules/users/user.controllers";
-import { CheckEmailMiddleware } from "./middlewares/emailExists";
 import { roleControllers } from "./Modules/roles/role.controllers";
 import { serviceController } from "./Modules/service/service.controlers";
 import { specialtyControllers } from "./Modules/Specialist/specialist.controllers";
@@ -19,10 +18,7 @@ import { scheduleControllers } from "./Modules/schedule/schedule.controllers";
 import { appointmentController } from "./Modules/appointment/appoientment.controllers";
 import { visitController } from "./Modules/visit/visit.controllers";
 import { PermissionController } from "./Modules/permission/seeder";
-import { ProtectRoutesMiddleware } from "./middlewares/protectedRoute";
-import { roleOrPermissionMiddleware } from "./middlewares/roleOrPermission";
 import { searchControllers } from "./Modules/searchEngine/searchEngine";
-import ApiError from "./utils/ApiError";
 
 const app = express();
 
@@ -54,17 +50,8 @@ useExpressServer(app, {
     PermissionController,
     searchControllers,
   ], // Adjust path to your controllers
-  middlewares: [
-    // ProtectRoutesMiddleware,
-    // roleOrPermissionMiddleware,
-    createValidationMiddleware,
-    ErrorHandler,
-  ],
+  middlewares: [createValidationMiddleware, ErrorHandler],
   defaultErrorHandler: false,
-});
-
-app.use("*", (req, res, next) => {
-  next(new ApiError(`Not found: ${req.originalUrl}`, 404));
 });
 
 const port = process.env.PORT || 3000;

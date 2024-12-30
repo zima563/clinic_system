@@ -36,6 +36,14 @@ export class patientController {
     @Body() body: any,
     @Res() res: Response
   ) {
+    if (body.phone) {
+      let patient = await prisma.patient.findUnique({
+        where: { phone: body.phone },
+      });
+      if (!patient) {
+        throw new ApiError("patient's phone already exist");
+      }
+    }
     // Convert birthdate to ISO 8601 format if it's not already
     if (body.birthdate) {
       const birthdate = new Date(body.birthdate);
