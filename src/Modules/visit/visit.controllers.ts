@@ -185,12 +185,11 @@ export class visitController {
       include: {
         patient: true,
         schedule: true,
-        visit: true,
       },
     });
     return res.status(200).json({
       VisitDetails,
-      total: visit.total,
+      visit,
     });
   }
 
@@ -206,15 +205,13 @@ export class visitController {
     @Param("visitId") visitId: number,
     @Res() res: Response
   ) {
-    const { visitDetails } = body;
+    const { visitDetails, patientId } = body;
 
-    // Ensure the visit exists
     const visit = await prisma.visit.findUnique({ where: { id: visitId } });
     if (!visit) {
       throw new ApiError("Visit not found");
     }
 
-    // Check if the visit has an associated invoice
     let visitInvoice = await prisma.visitInvoice.findFirst({
       where: { visitId },
       include: { invoice: true },
@@ -223,43 +220,54 @@ export class visitController {
       throw new ApiError("Visit invoice not found");
     }
 
-    // Start a Prisma transaction to ensure atomic operations
+    const fetchPriceForSchedule = async (scheduleId: number) => {
+      let schedule = await prisma.schedule.findUnique({
+        where: { id: scheduleId },
+      });
+      return schedule?.price;
+    };
+
+    const visitDetailsWithPrices = await Promise.all(
+      visitDetails.map(async (detail: any) => ({
+        ...detail,
+        price: await fetchPriceForSchedule(detail.scheduleId),
+        patientId,
+      }))
+    );
+
+    const totalVisitPrice = visitDetailsWithPrices.reduce(
+      (sum: number, detail: any) => sum + detail.price,
+      0
+    );
+
     const result = await prisma.$transaction(async (prisma) => {
-      // Add the new visit details
       const createdVisitDetails = await prisma.visitDetail.createMany({
-        data: visitDetails.map((detail: any) => ({
+        data: visitDetailsWithPrices.map((detail: any) => ({
           visitId,
           patientId: detail.patientId,
-          status: detail.status,
           price: detail.price,
           scheduleId: detail.scheduleId,
         })),
       });
 
       // Link each InvoiceDetail to the corresponding VisitDetail
-      for (let i = 0; i < visitDetails.length; i++) {
+      for (let i = 0; i < visitDetailsWithPrices.length; i++) {
         const visitDetail = await prisma.visitDetail.findFirst({
-          where: { visitId, scheduleId: visitDetails[i].scheduleId },
+          where: { visitId, scheduleId: visitDetailsWithPrices[i].scheduleId },
         });
 
         // Create invoice detail and link to the visit detail
-        if (visitDetail) {
+        if (visitDetailsWithPrices) {
           await prisma.invoiceDetail.create({
             data: {
               description: `Charge for patient ${visit.rf}`, // Customize description
-              amount: visitDetails[i].price,
+              amount: visitDetailsWithPrices[i].price,
               invoiceId: visitInvoice?.invoiceId,
-              visitDetailsId: visitDetail.id, // Link to the VisitDetail
+              visitDetailsId: visitDetails.id, // Link to the VisitDetail
             },
           });
         }
       }
-
-      // Calculate the total amount to be added
-      const totalVisitPrice = visitDetails.reduce(
-        (sum: number, detail: any) => sum + parseFloat(detail.price),
-        0
-      );
 
       // Use Decimal to ensure precision in financial calculations
       const roundedTotalVisitPrice = new Decimal(totalVisitPrice).toFixed(2);

@@ -158,7 +158,12 @@ class ApiFeatures {
       };
     } else if (modelName === "visit") {
       this.prismaQuery.include = {
-        details: true,
+        details: {
+          include: {
+            patient: true,
+            schedule: true,
+          },
+        },
       };
     }
 

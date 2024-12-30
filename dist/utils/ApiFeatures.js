@@ -153,7 +153,12 @@ class ApiFeatures {
             }
             else if (modelName === "visit") {
                 this.prismaQuery.include = {
-                    details: true,
+                    details: {
+                        include: {
+                            patient: true,
+                            schedule: true,
+                        },
+                    },
                 };
             }
             const result = yield this.prismaModel.findMany(Object.assign({}, this.prismaQuery));

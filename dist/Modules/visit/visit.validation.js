@@ -38,14 +38,28 @@ exports.createVisitSchema = joi_1.default.object({
     }),
 });
 exports.appendVisitSchema = joi_1.default.object({
-    visitId: joi_1.default.string().required(),
+    visitId: joi_1.default.number().integer().required().messages({
+        "any.required": "patientId is required",
+        "number.base": "patientId must be a number",
+        "number.integer": "patientId must be an integer",
+    }),
+    patientId: joi_1.default.number().integer().required().messages({
+        "any.required": "patientId is required",
+        "number.base": "patientId must be a number",
+        "number.integer": "patientId must be an integer",
+    }),
     visitDetails: joi_1.default.array()
         .items(joi_1.default.object({
-        patientId: joi_1.default.number().integer().required(),
-        status: joi_1.default.boolean().required(),
-        price: joi_1.default.number().precision(2).positive().required(),
-        scheduleId: joi_1.default.number().integer().required(),
+        scheduleId: joi_1.default.number().integer().required().messages({
+            "any.required": "scheduleId is required",
+            "number.base": "scheduleId must be a number",
+            "number.integer": "scheduleId must be an integer",
+        }),
     }))
         .min(1)
-        .required(),
+        .required()
+        .messages({
+        "any.required": "visitDetails are required",
+        "array.min": "visitDetails must have at least one entry",
+    }),
 });

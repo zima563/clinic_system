@@ -141,24 +141,21 @@ let visitController = class visitController {
                 include: {
                     patient: true,
                     schedule: true,
-                    visit: true,
                 },
             });
             return res.status(200).json({
                 VisitDetails,
-                total: visit.total,
+                visit,
             });
         });
     }
     appendVisitDetails(req, body, visitId, res) {
         return __awaiter(this, void 0, void 0, function* () {
-            const { visitDetails } = body;
-            // Ensure the visit exists
+            const { visitDetails, patientId } = body;
             const visit = yield prisma.visit.findUnique({ where: { id: visitId } });
             if (!visit) {
                 throw new ApiError_1.default("Visit not found");
             }
-            // Check if the visit has an associated invoice
             let visitInvoice = yield prisma.visitInvoice.findFirst({
                 where: { visitId },
                 include: { invoice: true },
@@ -166,37 +163,42 @@ let visitController = class visitController {
             if (!visitInvoice) {
                 throw new ApiError_1.default("Visit invoice not found");
             }
-            // Start a Prisma transaction to ensure atomic operations
+            const fetchPriceForSchedule = (scheduleId) => __awaiter(this, void 0, void 0, function* () {
+                let schedule = yield prisma.schedule.findUnique({
+                    where: { id: scheduleId },
+                });
+                return schedule === null || schedule === void 0 ? void 0 : schedule.price;
+            });
+            const visitDetailsWithPrices = yield Promise.all(visitDetails.map((detail) => __awaiter(this, void 0, void 0, function* () {
+                return (Object.assign(Object.assign({}, detail), { price: yield fetchPriceForSchedule(detail.scheduleId), patientId }));
+            })));
+            const totalVisitPrice = visitDetailsWithPrices.reduce((sum, detail) => sum + detail.price, 0);
             const result = yield prisma.$transaction((prisma) => __awaiter(this, void 0, void 0, function* () {
-                // Add the new visit details
                 const createdVisitDetails = yield prisma.visitDetail.createMany({
-                    data: visitDetails.map((detail) => ({
+                    data: visitDetailsWithPrices.map((detail) => ({
                         visitId,
                         patientId: detail.patientId,
-                        status: detail.status,
                         price: detail.price,
                         scheduleId: detail.scheduleId,
                     })),
                 });
                 // Link each InvoiceDetail to the corresponding VisitDetail
-                for (let i = 0; i < visitDetails.length; i++) {
+                for (let i = 0; i < visitDetailsWithPrices.length; i++) {
                     const visitDetail = yield prisma.visitDetail.findFirst({
-                        where: { visitId, scheduleId: visitDetails[i].scheduleId },
+                        where: { visitId, scheduleId: visitDetailsWithPrices[i].scheduleId },
                     });
                     // Create invoice detail and link to the visit detail
-                    if (visitDetail) {
+                    if (visitDetailsWithPrices) {
                         yield prisma.invoiceDetail.create({
                             data: {
                                 description: `Charge for patient ${visit.rf}`, // Customize description
-                                amount: visitDetails[i].price,
+                                amount: visitDetailsWithPrices[i].price,
                                 invoiceId: visitInvoice === null || visitInvoice === void 0 ? void 0 : visitInvoice.invoiceId,
-                                visitDetailsId: visitDetail.id, // Link to the VisitDetail
+                                visitDetailsId: visitDetails.id, // Link to the VisitDetail
                             },
                         });
                     }
                 }
-                // Calculate the total amount to be added
-                const totalVisitPrice = visitDetails.reduce((sum, detail) => sum + parseFloat(detail.price), 0);
                 // Use Decimal to ensure precision in financial calculations
                 const roundedTotalVisitPrice = new library_1.Decimal(totalVisitPrice).toFixed(2);
                 // Update the visit's total cost

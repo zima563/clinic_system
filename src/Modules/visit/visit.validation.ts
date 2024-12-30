@@ -37,16 +37,30 @@ export const createVisitSchema = Joi.object({
 });
 
 export const appendVisitSchema = Joi.object({
-  visitId: Joi.string().required(),
+  visitId: Joi.number().integer().required().messages({
+    "any.required": "patientId is required",
+    "number.base": "patientId must be a number",
+    "number.integer": "patientId must be an integer",
+  }),
+  patientId: Joi.number().integer().required().messages({
+    "any.required": "patientId is required",
+    "number.base": "patientId must be a number",
+    "number.integer": "patientId must be an integer",
+  }),
   visitDetails: Joi.array()
     .items(
       Joi.object({
-        patientId: Joi.number().integer().required(),
-        status: Joi.boolean().required(),
-        price: Joi.number().precision(2).positive().required(),
-        scheduleId: Joi.number().integer().required(),
+        scheduleId: Joi.number().integer().required().messages({
+          "any.required": "scheduleId is required",
+          "number.base": "scheduleId must be a number",
+          "number.integer": "scheduleId must be an integer",
+        }),
       })
     )
     .min(1)
-    .required(),
+    .required()
+    .messages({
+      "any.required": "visitDetails are required",
+      "array.min": "visitDetails must have at least one entry",
+    }),
 });
