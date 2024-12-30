@@ -37,24 +37,31 @@ const prisma = new client_1.PrismaClient();
 let visitController = class visitController {
     createVisit(req, body, res) {
         return __awaiter(this, void 0, void 0, function* () {
-            const { visitDetails } = body;
-            // Calculate total from visitDetails
-            const total = visitDetails.reduce((sum, detail) => sum + detail.price, 0);
-            // Use Prisma transaction for atomicity
+            const { patientId, visitDetails, paymentMethod } = body;
+            const fetchPriceForSchedule = (scheduleId) => __awaiter(this, void 0, void 0, function* () {
+                let schedule = yield prisma.schedule.findUnique({
+                    where: { id: scheduleId },
+                });
+                return schedule === null || schedule === void 0 ? void 0 : schedule.price;
+            });
+            const visitDetailsWithPrices = yield Promise.all(visitDetails.map((detail) => __awaiter(this, void 0, void 0, function* () {
+                return (Object.assign(Object.assign({}, detail), { price: yield fetchPriceForSchedule(detail.scheduleId), patientId }));
+            })));
+            const total = visitDetailsWithPrices.reduce((sum, detail) => sum + detail.price, 0);
             const result = yield prisma.$transaction((prisma) => __awaiter(this, void 0, void 0, function* () {
-                // Create visit
+                // Create a Visit record
                 const visit = yield prisma.visit.create({
                     data: {
                         total,
+                        paymentMethod, // Or dynamically set based on request
                     },
                 });
                 // Create visit details
-                const createdVisitDetails = yield Promise.all(visitDetails.map((detail) => __awaiter(this, void 0, void 0, function* () {
+                const createdVisitDetails = yield Promise.all(visitDetailsWithPrices.map((detail) => __awaiter(this, void 0, void 0, function* () {
                     return prisma.visitDetail.create({
                         data: {
                             visitId: visit.id,
                             patientId: detail.patientId,
-                            status: detail.status,
                             price: detail.price,
                             scheduleId: detail.scheduleId,
                         },
@@ -65,6 +72,7 @@ let visitController = class visitController {
                     data: {
                         total,
                         ex: true,
+                        paymentMethod,
                     },
                 });
                 // Link visit and invoice
@@ -85,6 +93,16 @@ let visitController = class visitController {
                 })));
                 return { visit, createdVisitDetails, invoice, createdInvoiceDetails };
             }));
+            if (body.appointmentId) {
+                let appointment = yield prisma.appointment.update({
+                    where: {
+                        id: body.appointmentId,
+                    },
+                    data: {
+                        status: "confirmed",
+                    },
+                });
+            }
             return res.status(201).json(Object.assign({ message: "Visit created successfully with associated invoice details." }, result));
         });
     }

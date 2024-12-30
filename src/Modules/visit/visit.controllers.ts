@@ -35,31 +35,44 @@ export class visitController {
     @Body() body: any,
     @Res() res: Response
   ) {
-    const { visitDetails } = body;
+    const { patientId, visitDetails, paymentMethod } = body;
 
-    // Calculate total from visitDetails
-    const total = visitDetails.reduce(
+    const fetchPriceForSchedule = async (scheduleId: number) => {
+      let schedule = await prisma.schedule.findUnique({
+        where: { id: scheduleId },
+      });
+      return schedule?.price;
+    };
+
+    const visitDetailsWithPrices = await Promise.all(
+      visitDetails.map(async (detail: any) => ({
+        ...detail,
+        price: await fetchPriceForSchedule(detail.scheduleId),
+        patientId, // Ensure patientId is included for each detail
+      }))
+    );
+
+    const total = visitDetailsWithPrices.reduce(
       (sum: number, detail: any) => sum + detail.price,
       0
     );
 
-    // Use Prisma transaction for atomicity
     const result = await prisma.$transaction(async (prisma) => {
-      // Create visit
+      // Create a Visit record
       const visit = await prisma.visit.create({
         data: {
           total,
+          paymentMethod, // Or dynamically set based on request
         },
       });
 
       // Create visit details
       const createdVisitDetails = await Promise.all(
-        visitDetails.map(async (detail: any) =>
+        visitDetailsWithPrices.map(async (detail: any) =>
           prisma.visitDetail.create({
             data: {
               visitId: visit.id,
               patientId: detail.patientId,
-              status: detail.status,
               price: detail.price,
               scheduleId: detail.scheduleId,
             },
@@ -72,6 +85,7 @@ export class visitController {
         data: {
           total,
           ex: true,
+          paymentMethod,
         },
       });
 
@@ -99,6 +113,16 @@ export class visitController {
 
       return { visit, createdVisitDetails, invoice, createdInvoiceDetails };
     });
+    if (body.appointmentId) {
+      let appointment = await prisma.appointment.update({
+        where: {
+          id: body.appointmentId,
+        },
+        data: {
+          status: "confirmed",
+        },
+      });
+    }
     return res.status(201).json({
       message: "Visit created successfully with associated invoice details.",
       ...result,

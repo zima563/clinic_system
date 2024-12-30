@@ -118,12 +118,13 @@ model Specialty {
 }
 
 model Invoice {
-  id        Int      @id @default(autoincrement())
-  rf        String   @unique @default(uuid())
-  ex        Boolean
-  total     Decimal  @default(0) @db.Decimal(18, 2)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id            Int            @id @default(autoincrement())
+  rf            String         @unique @default(uuid())
+  ex            Boolean
+  paymentMethod payment_Method @default(Cash)
+  total         Decimal        @default(0) @db.Decimal(18, 2)
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
 
   details      InvoiceDetail[]
   patient      Patient?
@@ -186,11 +187,12 @@ model Appointment {
 }
 
 model Visit {
-  id        Int      @id @default(autoincrement())
-  rf        String   @unique @default(uuid())
-  total     Decimal  @db.Decimal(18, 2)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id            Int            @id @default(autoincrement())
+  rf            String         @unique @default(uuid())
+  total         Decimal        @db.Decimal(18, 2)
+  paymentMethod payment_Method @default(Cash)
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
 
   details      VisitDetail[]
   VisitInvoice VisitInvoice[]
@@ -200,7 +202,6 @@ model VisitDetail {
   id         Int     @id @default(autoincrement())
   visitId    Int
   patientId  Int
-  status     Boolean
   price      Decimal @db.Decimal(18, 2)
   scheduleId Int
 
@@ -229,4 +230,13 @@ enum AppointmentStatus {
   pending
   confirmed
   canceled
+}
+
+enum payment_Method {
+  Cash
+  Visa
+  instaPay
+  Wallet
+  payPal
+  CreditCard
 }
