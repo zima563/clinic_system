@@ -121,7 +121,7 @@ let visitController = class visitController {
                 },
             });
             return res.status(200).json({
-                data: VisitDetails,
+                VisitDetails,
                 total: visit.total,
             });
         });
