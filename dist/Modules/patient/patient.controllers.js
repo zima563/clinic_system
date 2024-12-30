@@ -42,7 +42,7 @@ let patientController = class patientController {
                 let patient = yield prisma.patient.findUnique({
                     where: { phone: body.phone },
                 });
-                if (!patient) {
+                if (patient) {
                     throw new ApiError_1.default("patient's phone already exist");
                 }
             }
@@ -59,6 +59,14 @@ let patientController = class patientController {
     }
     updatePatient(req, id, body, res) {
         return __awaiter(this, void 0, void 0, function* () {
+            if (body.phone) {
+                let patient = yield prisma.patient.findUnique({
+                    where: { phone: body.phone, NOT: { id } },
+                });
+                if (patient) {
+                    throw new ApiError_1.default("patient's phone already exist");
+                }
+            }
             if (body.birthdate) {
                 const birthdate = new Date(body.birthdate);
                 body.birthdate = birthdate.toISOString(); // Ensure it’s in ISO 8601 format
