@@ -1,6 +1,7 @@
 import { ProtectRoutesMiddleware } from "./../../middlewares/protectedRoute";
 import {
   Body,
+  Delete,
   Get,
   JsonController,
   Param,
@@ -133,5 +134,31 @@ export class patientController {
       throw new ApiError("patient not found", 404);
     }
     return res.status(200).json(patient);
+  }
+
+  @Delete("/:id")
+  async deletePatient(
+    @Req() req: Request,
+    @Param("id") id: number,
+    @Res() res: Response
+  ) {
+    let patient = await prisma.patient.findUnique({
+      where: { id },
+    });
+
+    if (!patient) {
+      throw new ApiError("patient not found", 404);
+    }
+    await prisma.appointment.deleteMany({
+      where: {
+        patientId: id,
+      },
+    });
+    await prisma.patient.delete({
+      where: {
+        id,
+      },
+    });
+    return res.status(200).json({ message: "patient deleted successfully!" });
   }
 }

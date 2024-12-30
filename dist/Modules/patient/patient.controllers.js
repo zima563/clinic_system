@@ -112,6 +112,27 @@ let patientController = class patientController {
             return res.status(200).json(patient);
         });
     }
+    deletePatient(req, id, res) {
+        return __awaiter(this, void 0, void 0, function* () {
+            let patient = yield prisma.patient.findUnique({
+                where: { id },
+            });
+            if (!patient) {
+                throw new ApiError_1.default("patient not found", 404);
+            }
+            yield prisma.appointment.deleteMany({
+                where: {
+                    patientId: id,
+                },
+            });
+            yield prisma.patient.delete({
+                where: {
+                    id,
+                },
+            });
+            return res.status(200).json({ message: "patient deleted successfully!" });
+        });
+    }
 };
 exports.patientController = patientController;
 __decorate([
@@ -156,6 +177,15 @@ __decorate([
     __metadata("design:paramtypes", [Object, Number, Object]),
     __metadata("design:returntype", Promise)
 ], patientController.prototype, "getPatient", null);
+__decorate([
+    (0, routing_controllers_1.Delete)("/:id"),
+    __param(0, (0, routing_controllers_1.Req)()),
+    __param(1, (0, routing_controllers_1.Param)("id")),
+    __param(2, (0, routing_controllers_1.Res)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, Number, Object]),
+    __metadata("design:returntype", Promise)
+], patientController.prototype, "deletePatient", null);
 exports.patientController = patientController = __decorate([
     (0, routing_controllers_1.JsonController)("/api/patients")
 ], patientController);
