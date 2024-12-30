@@ -30,6 +30,14 @@ class ApiFeatures {
       delete filterObj[val];
     });
 
+    if (this.searchQuery.patientId) {
+      this.prismaQuery.where.details = {
+        some: {
+          patientId: this.searchQuery.patientId, // Correct filter on VisitDetail for patientId
+        },
+      };
+      delete filterObj.patientId;
+    }
     // Filter by specific day (YYYY-MM-DD)
     if (this.searchQuery.day) {
       const date = new Date(this.searchQuery.day);
@@ -100,9 +108,12 @@ class ApiFeatures {
     const limit = this.searchQuery.limit * 1 || 50;
     const skip = (page - 1) * limit;
     const endIndex = page * limit;
+
+    // Correct where condition for the count query
     const countDocuments = await this.prismaModel.count({
-      where: this.prismaQuery.where,
+      where: this.prismaQuery.where, // This should now contain the correct where clause
     });
+
     this.paginationResult = {
       currentPage: page,
       limit,
@@ -144,6 +155,10 @@ class ApiFeatures {
     } else if (modelName === "schedule") {
       this.prismaQuery.include = {
         dates: true,
+      };
+    } else if (modelName === "visit") {
+      this.prismaQuery.include = {
+        details: true,
       };
     }
 

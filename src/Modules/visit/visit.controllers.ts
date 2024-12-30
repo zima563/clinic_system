@@ -8,6 +8,7 @@ import {
   Param,
   Post,
   QueryParam,
+  QueryParams,
   Req,
   Res,
   UseBefore,
@@ -20,6 +21,7 @@ import { PrismaClient } from "@prisma/client";
 import ApiError from "../../utils/ApiError";
 import { Decimal } from "@prisma/client/runtime/library";
 import { roleOrPermissionMiddleware } from "../../middlewares/roleOrPermission";
+import ApiFeatures from "../../utils/ApiFeatures";
 const prisma = new PrismaClient();
 
 @JsonController("/api/visit")
@@ -129,6 +131,41 @@ export class visitController {
     });
   }
 
+  @Get("/")
+  @UseBefore(
+    ProtectRoutesMiddleware,
+    roleOrPermissionMiddleware("getAllVisits")
+  )
+  async getAllVisits(
+    @Req() req: Request,
+    @Res() res: Response,
+    @QueryParams() query: any
+  ) {
+    if (query.patientId) {
+      query.patientId = parseInt(query.patientId, 10);
+    }
+
+    const apiFeatures = new ApiFeatures(prisma.visit, query);
+
+    // Apply the filter for visits
+    await apiFeatures
+      .filter()
+      .sort()
+      .limitedFields()
+      .search("visit")
+      .paginateWithCount();
+
+    // Use the correct query to get the result and pagination data
+    const { result, pagination } = await apiFeatures.exec("visit");
+
+    // Return the response
+    return res.status(200).json({
+      visits: result,
+      pagination,
+      count: result.length,
+    });
+  }
+
   @Get("/:id")
   @UseBefore(
     ProtectRoutesMiddleware,
@@ -154,38 +191,6 @@ export class visitController {
     return res.status(200).json({
       VisitDetails,
       total: visit.total,
-    });
-  }
-
-  @Get("/")
-  @UseBefore(
-    ProtectRoutesMiddleware,
-    roleOrPermissionMiddleware("getAllVisits")
-  )
-  async getAllVisits(
-    @Req() req: Request,
-    @Res() res: Response,
-    @QueryParam("patientId") patientId?: number
-  ) {
-    let filter: any = {};
-    if (patientId) {
-      filter.patientId = patientId;
-    }
-    let visits = await prisma.visit.findMany({
-      where: {
-        details: {
-          some: {
-            patientId,
-          },
-        },
-      },
-      include: {
-        details: true,
-      },
-    });
-    return res.status(200).json({
-      data: visits,
-      count: visits.length,
     });
   }
 

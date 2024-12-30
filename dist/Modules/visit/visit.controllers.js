@@ -33,6 +33,7 @@ const client_1 = require("@prisma/client");
 const ApiError_1 = __importDefault(require("../../utils/ApiError"));
 const library_1 = require("@prisma/client/runtime/library");
 const roleOrPermission_1 = require("../../middlewares/roleOrPermission");
+const ApiFeatures_1 = __importDefault(require("../../utils/ApiFeatures"));
 const prisma = new client_1.PrismaClient();
 let visitController = class visitController {
     createVisit(req, body, res) {
@@ -106,6 +107,29 @@ let visitController = class visitController {
             return res.status(201).json(Object.assign({ message: "Visit created successfully with associated invoice details." }, result));
         });
     }
+    getAllVisits(req, res, query) {
+        return __awaiter(this, void 0, void 0, function* () {
+            if (query.patientId) {
+                query.patientId = parseInt(query.patientId, 10);
+            }
+            const apiFeatures = new ApiFeatures_1.default(prisma.visit, query);
+            // Apply the filter for visits
+            yield apiFeatures
+                .filter()
+                .sort()
+                .limitedFields()
+                .search("visit")
+                .paginateWithCount();
+            // Use the correct query to get the result and pagination data
+            const { result, pagination } = yield apiFeatures.exec("visit");
+            // Return the response
+            return res.status(200).json({
+                visits: result,
+                pagination,
+                count: result.length,
+            });
+        });
+    }
     showVisitDetails(req, id, res) {
         return __awaiter(this, void 0, void 0, function* () {
             let visit = yield prisma.visit.findUnique({ where: { id } });
@@ -123,30 +147,6 @@ let visitController = class visitController {
             return res.status(200).json({
                 VisitDetails,
                 total: visit.total,
-            });
-        });
-    }
-    getAllVisits(req, res, patientId) {
-        return __awaiter(this, void 0, void 0, function* () {
-            let filter = {};
-            if (patientId) {
-                filter.patientId = patientId;
-            }
-            let visits = yield prisma.visit.findMany({
-                where: {
-                    details: {
-                        some: {
-                            patientId,
-                        },
-                    },
-                },
-                include: {
-                    details: true,
-                },
-            });
-            return res.status(200).json({
-                data: visits,
-                count: visits.length,
             });
         });
     }
@@ -320,6 +320,16 @@ __decorate([
     __metadata("design:returntype", Promise)
 ], visitController.prototype, "createVisit", null);
 __decorate([
+    (0, routing_controllers_1.Get)("/"),
+    (0, routing_controllers_1.UseBefore)(protectedRoute_1.ProtectRoutesMiddleware, (0, roleOrPermission_1.roleOrPermissionMiddleware)("getAllVisits")),
+    __param(0, (0, routing_controllers_1.Req)()),
+    __param(1, (0, routing_controllers_1.Res)()),
+    __param(2, (0, routing_controllers_1.QueryParams)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, Object, Object]),
+    __metadata("design:returntype", Promise)
+], visitController.prototype, "getAllVisits", null);
+__decorate([
     (0, routing_controllers_1.Get)("/:id"),
     (0, routing_controllers_1.UseBefore)(protectedRoute_1.ProtectRoutesMiddleware, (0, roleOrPermission_1.roleOrPermissionMiddleware)("showVisitDetails")),
     __param(0, (0, routing_controllers_1.Req)()),
@@ -329,16 +339,6 @@ __decorate([
     __metadata("design:paramtypes", [Object, Number, Object]),
     __metadata("design:returntype", Promise)
 ], visitController.prototype, "showVisitDetails", null);
-__decorate([
-    (0, routing_controllers_1.Get)("/"),
-    (0, routing_controllers_1.UseBefore)(protectedRoute_1.ProtectRoutesMiddleware, (0, roleOrPermission_1.roleOrPermissionMiddleware)("getAllVisits")),
-    __param(0, (0, routing_controllers_1.Req)()),
-    __param(1, (0, routing_controllers_1.Res)()),
-    __param(2, (0, routing_controllers_1.QueryParam)("patientId")),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Object, Object, Number]),
-    __metadata("design:returntype", Promise)
-], visitController.prototype, "getAllVisits", null);
 __decorate([
     (0, routing_controllers_1.Post)("/:visitId/details"),
     (0, routing_controllers_1.UseBefore)(protectedRoute_1.ProtectRoutesMiddleware, (0, roleOrPermission_1.roleOrPermissionMiddleware)("appendVisitDetails"), (0, validation_1.createValidationMiddleware)(visit_validation_1.appendVisitSchema)),
