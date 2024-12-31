@@ -153,6 +153,10 @@ export class specialtyControllers {
     // Execute the query and get the results along with pagination info
     const { result, pagination } = await apiFeatures.exec("specialty");
 
+    result.map((doc: any) => {
+      doc.img = process.env.base_url + doc.img;
+    });
+
     return res.status(200).json({
       data: result,
       pagination: pagination,
@@ -170,8 +174,10 @@ export class specialtyControllers {
     if (!specialty) {
       throw new ApiError("specialty not found");
     }
+    specialty.icon = process.env.base_url + specialty.icon;
     return res.status(200).json(specialty);
   }
+
   @Delete("/:id")
   @UseBefore(
     ProtectRoutesMiddleware,

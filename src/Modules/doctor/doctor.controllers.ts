@@ -155,7 +155,9 @@ export class doctorControllers {
 
     // Execute the query and get the result and pagination
     const { result, pagination } = await apiFeatures.exec("doctor");
-
+    result.map((doc: any) => {
+      doc.img = process.env.base_url + doc.img;
+    });
     // Return the result along with pagination information
     return res.status(200).json({
       data: result,
@@ -180,6 +182,7 @@ export class doctorControllers {
     if (!doctor) {
       throw new ApiError("doctor not found", 404);
     }
+    doctor.image = process.env.base_url + doctor.image;
     return res.status(200).json(doctor);
   }
 

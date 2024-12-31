@@ -84,6 +84,9 @@ let serviceController = class serviceController {
                     .search("service");
                 yield apiFeatures.paginateWithCount();
                 const { result, pagination } = yield apiFeatures.exec("service");
+                result.map((doc) => {
+                    doc.img = process.env.base_url + doc.img;
+                });
                 return res.status(200).json({
                     data: result,
                     pagination: pagination,
@@ -146,6 +149,7 @@ let serviceController = class serviceController {
             if (!service) {
                 throw new ApiError_1.default("service not found", 404);
             }
+            service.img = process.env.base_url + service.img;
             return res.status(200).json(service);
         });
     }

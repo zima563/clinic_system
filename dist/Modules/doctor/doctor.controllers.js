@@ -114,6 +114,9 @@ let doctorControllers = class doctorControllers {
             yield apiFeatures.paginateWithCount();
             // Execute the query and get the result and pagination
             const { result, pagination } = yield apiFeatures.exec("doctor");
+            result.map((doc) => {
+                doc.img = process.env.base_url + doc.img;
+            });
             // Return the result along with pagination information
             return res.status(200).json({
                 data: result,
@@ -130,6 +133,7 @@ let doctorControllers = class doctorControllers {
             if (!doctor) {
                 throw new ApiError_1.default("doctor not found", 404);
             }
+            doctor.image = process.env.base_url + doctor.image;
             return res.status(200).json(doctor);
         });
     }

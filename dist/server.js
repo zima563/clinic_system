@@ -53,6 +53,7 @@ app.use((0, cors_1.default)({
     middlewares: [validation_1.createValidationMiddleware, ErrorHandler_1.ErrorHandler],
     defaultErrorHandler: false,
 });
+app.use("/", express_1.default.static("uploads"));
 const port = process.env.PORT || 3000;
 app.listen(port, () => console.log(`App listening on port ${port}!`));
 exports.default = app;

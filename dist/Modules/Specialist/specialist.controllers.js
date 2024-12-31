@@ -116,6 +116,9 @@ let specialtyControllers = class specialtyControllers {
             yield apiFeatures.paginateWithCount();
             // Execute the query and get the results along with pagination info
             const { result, pagination } = yield apiFeatures.exec("specialty");
+            result.map((doc) => {
+                doc.img = process.env.base_url + doc.img;
+            });
             return res.status(200).json({
                 data: result,
                 pagination: pagination,
@@ -129,6 +132,7 @@ let specialtyControllers = class specialtyControllers {
             if (!specialty) {
                 throw new ApiError_1.default("specialty not found");
             }
+            specialty.icon = process.env.base_url + specialty.icon;
             return res.status(200).json(specialty);
         });
     }

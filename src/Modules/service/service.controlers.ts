@@ -92,6 +92,10 @@ export class serviceController {
       await apiFeatures.paginateWithCount();
       const { result, pagination } = await apiFeatures.exec("service");
 
+      result.map((doc: any) => {
+        doc.img = process.env.base_url + doc.img;
+      });
+
       return res.status(200).json({
         data: result,
         pagination: pagination,
@@ -178,6 +182,7 @@ export class serviceController {
     if (!service) {
       throw new ApiError("service not found", 404);
     }
+    service.img = process.env.base_url + service.img;
     return res.status(200).json(service);
   }
 
