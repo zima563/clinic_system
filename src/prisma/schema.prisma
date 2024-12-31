@@ -75,6 +75,7 @@ model Service {
   id        Int      @id @default(autoincrement())
   title     String
   desc      String
+  img       String
   status    Boolean  @default(true)
   isDeleted Boolean  @default(false)
   createdAt DateTime @default(now())

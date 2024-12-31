@@ -25,6 +25,8 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.serviceController = void 0;
+const fs_1 = __importDefault(require("fs"));
+const path_1 = __importDefault(require("path"));
 const protectedRoute_1 = require("./../../middlewares/protectedRoute");
 const routing_controllers_1 = require("routing-controllers");
 const validation_1 = require("../../middlewares/validation");
@@ -33,15 +35,37 @@ const client_1 = require("@prisma/client");
 const ApiError_1 = __importDefault(require("../../utils/ApiError"));
 const ApiFeatures_1 = __importDefault(require("../../utils/ApiFeatures"));
 const roleOrPermission_1 = require("../../middlewares/roleOrPermission");
+const uploadFile_1 = __importDefault(require("../../middlewares/uploadFile"));
+const sharp_1 = __importDefault(require("sharp"));
+const uuid_1 = require("uuid");
 const prisma = new client_1.PrismaClient();
 let serviceController = class serviceController {
-    addService(body, res) {
+    addService(req, body, res) {
         return __awaiter(this, void 0, void 0, function* () {
+            if (!req.file) {
+                return res.status(400).json({ error: "image file is required." });
+            }
             if (yield prisma.service.findFirst({ where: { title: body.title } })) {
                 throw new ApiError_1.default("service title already exists", 409);
             }
+            const cleanedFilename = req.file.originalname
+                .replace(/\s+/g, "_")
+                .replace(/[^a-zA-Z0-9_.]/g, "");
+            // Generate a unique filename
+            const iconFilename = `icon-${(0, uuid_1.v4)()}-${encodeURIComponent(cleanedFilename)}`;
+            const iconPath = path_1.default.join("uploads", iconFilename);
+            // Resize and save the icon using sharp
+            yield (0, sharp_1.default)(req.file.buffer)
+                .resize(100, 100)
+                .png({ quality: 80 })
+                .toFile(iconPath);
+            body.icon = iconFilename !== null && iconFilename !== void 0 ? iconFilename : "";
             let service = yield prisma.service.create({
-                data: body,
+                data: {
+                    title: body.title,
+                    desc: body.desc,
+                    img: body.icon,
+                },
             });
             return res.status(200).json(service);
         });
@@ -73,16 +97,45 @@ let serviceController = class serviceController {
             }
         });
     }
-    updateService(id, body, res) {
+    updateService(req, id, body, res) {
         return __awaiter(this, void 0, void 0, function* () {
-            if (yield prisma.service.findFirst({ where: { title: body.title } })) {
+            let service = yield prisma.service.findUnique({ where: { id } });
+            if (yield prisma.service.findFirst({
+                where: { title: body.title, NOT: { id } },
+            })) {
                 throw new ApiError_1.default("service title already exists", 409);
             }
-            let service = yield prisma.service.update({
+            let fileName;
+            // Process image if provided
+            if (req.file) {
+                const cleanedFilename = req.file.originalname
+                    .replace(/\s+/g, "_")
+                    .replace(/[^a-zA-Z0-9_.]/g, "");
+                const newFilename = `img-${(0, uuid_1.v4)()}-${encodeURIComponent(cleanedFilename)}`;
+                const imgPath = path_1.default.join("uploads", newFilename);
+                // Resize and save the image
+                yield (0, sharp_1.default)(req.file.buffer)
+                    .resize(100, 100)
+                    .png({ quality: 80 })
+                    .toFile(imgPath);
+                // Delete old image if it exists
+                if (service === null || service === void 0 ? void 0 : service.img) {
+                    const oldImagePath = path_1.default.join("uploads", service === null || service === void 0 ? void 0 : service.img);
+                    if (fs_1.default.existsSync(oldImagePath)) {
+                        fs_1.default.unlinkSync(oldImagePath);
+                    }
+                }
+                fileName = newFilename;
+            }
+            yield prisma.service.update({
                 where: { id },
-                data: body,
+                data: {
+                    title: body.title || (service === null || service === void 0 ? void 0 : service.title),
+                    desc: body.desc || (service === null || service === void 0 ? void 0 : service.desc),
+                    img: fileName || (service === null || service === void 0 ? void 0 : service.img),
+                },
             });
-            return res.status(200).json(service);
+            return res.status(200).json({ message: "service updated successfully" });
         });
     }
     getService(id, res) {
@@ -126,11 +179,12 @@ let serviceController = class serviceController {
 exports.serviceController = serviceController;
 __decorate([
     (0, routing_controllers_1.Post)("/"),
-    (0, routing_controllers_1.UseBefore)(protectedRoute_1.ProtectRoutesMiddleware, (0, roleOrPermission_1.roleOrPermissionMiddleware)("addService"), (0, validation_1.createValidationMiddleware)(services_validation_1.addServiceValidation)),
-    __param(0, (0, routing_controllers_1.Body)()),
-    __param(1, (0, routing_controllers_1.Res)()),
+    (0, routing_controllers_1.UseBefore)(protectedRoute_1.ProtectRoutesMiddleware, (0, roleOrPermission_1.roleOrPermissionMiddleware)("addService"), (0, uploadFile_1.default)("icon"), (0, validation_1.createValidationMiddleware)(services_validation_1.addServiceValidation)),
+    __param(0, (0, routing_controllers_1.Req)()),
+    __param(1, (0, routing_controllers_1.Body)()),
+    __param(2, (0, routing_controllers_1.Res)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Object, Object]),
+    __metadata("design:paramtypes", [Object, Object, Object]),
     __metadata("design:returntype", Promise)
 ], serviceController.prototype, "addService", null);
 __decorate([
@@ -144,12 +198,13 @@ __decorate([
 ], serviceController.prototype, "allServices", null);
 __decorate([
     (0, routing_controllers_1.Put)("/:id"),
-    (0, routing_controllers_1.UseBefore)(protectedRoute_1.ProtectRoutesMiddleware, (0, roleOrPermission_1.roleOrPermissionMiddleware)("updateService"), (0, validation_1.createValidationMiddleware)(services_validation_1.updateServiceValidation)),
-    __param(0, (0, routing_controllers_1.Param)("id")),
-    __param(1, (0, routing_controllers_1.Body)()),
-    __param(2, (0, routing_controllers_1.Res)()),
+    (0, routing_controllers_1.UseBefore)(protectedRoute_1.ProtectRoutesMiddleware, (0, roleOrPermission_1.roleOrPermissionMiddleware)("updateService"), (0, uploadFile_1.default)("icon"), (0, validation_1.createValidationMiddleware)(services_validation_1.updateServiceValidation)),
+    __param(0, (0, routing_controllers_1.Req)()),
+    __param(1, (0, routing_controllers_1.Param)("id")),
+    __param(2, (0, routing_controllers_1.Body)()),
+    __param(3, (0, routing_controllers_1.Res)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Number, Object, Object]),
+    __metadata("design:paramtypes", [Object, Number, Object, Object]),
     __metadata("design:returntype", Promise)
 ], serviceController.prototype, "updateService", null);
 __decorate([
