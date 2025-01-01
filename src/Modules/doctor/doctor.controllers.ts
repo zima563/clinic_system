@@ -45,6 +45,11 @@ export class doctorControllers {
     @Body() body: any,
     @Res() res: Response
   ) {
+    if (body.phone) {
+      if (await prisma.doctor.findFirst({ where: { phone: body.phone } })) {
+        throw new ApiError("doctor with this phone already exists");
+      }
+    }
     if (!req.file) {
       return res.status(400).json({ error: "image file is required." });
     }

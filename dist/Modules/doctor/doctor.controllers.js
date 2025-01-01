@@ -42,6 +42,11 @@ const prisma = new client_1.PrismaClient();
 let doctorControllers = class doctorControllers {
     addDoctor(req, body, res) {
         return __awaiter(this, void 0, void 0, function* () {
+            if (body.phone) {
+                if (yield prisma.doctor.findFirst({ where: { phone: body.phone } })) {
+                    throw new ApiError_1.default("doctor with this phone already exists");
+                }
+            }
             if (!req.file) {
                 return res.status(400).json({ error: "image file is required." });
             }
