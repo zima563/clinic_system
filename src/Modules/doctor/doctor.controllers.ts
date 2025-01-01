@@ -1,6 +1,7 @@
 import fs from "fs";
 import {
   Body,
+  Delete,
   Get,
   JsonController,
   Param,
@@ -149,14 +150,14 @@ export class doctorControllers {
     const apiFeatures = new ApiFeatures(prisma.doctor, query);
 
     // Apply filters, sorting, field selection, search, and pagination
-    await apiFeatures.filter().sort().limitedFields().search("user"); // Specify the model name, 'user' in this case
+    await apiFeatures.filter().sort().limitedFields().search("doctor"); // Specify the model name, 'user' in this case
 
     await apiFeatures.paginateWithCount();
 
     // Execute the query and get the result and pagination
     const { result, pagination } = await apiFeatures.exec("doctor");
     result.map((doc: any) => {
-      doc.img = process.env.base_url + doc.img;
+      doc.image = process.env.base_url + doc.image;
     });
     // Return the result along with pagination information
     return res.status(200).json({

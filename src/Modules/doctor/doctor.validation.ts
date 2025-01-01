@@ -29,6 +29,10 @@ export const addDoctorValidationSchema = Joi.object({
     "number.positive": "Specialty ID must be a positive number",
     "any.required": "Specialty ID is required",
   }),
+  info: Joi.string().max(1000).optional().messages({
+    "string.base": "Info must be a string.",
+    "string.max": "Info must not exceed 1000 characters.",
+  }),
 });
 
 export const UpdateDoctorValidationSchema = Joi.object({
@@ -59,5 +63,9 @@ export const UpdateDoctorValidationSchema = Joi.object({
     "number.base": "Specialty ID must be a number",
     "number.integer": "Specialty ID must be an integer",
     "number.positive": "Specialty ID must be a positive number",
+  }),
+  info: Joi.string().max(1000).optional().messages({
+    "string.base": "Info must be a string.",
+    "string.max": "Info must not exceed 1000 characters.",
   }),
 });

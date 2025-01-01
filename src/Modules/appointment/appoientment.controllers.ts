@@ -37,7 +37,14 @@ export class appointmentController {
     @Body() body: any,
     @Res() res: Response
   ) {
-    body.date = new Date(body.date);
+    let { date, patientId, scheduleId } = body;
+    if (!(await prisma.patient.findUnique({ where: { id: patientId } }))) {
+      throw new ApiError("patient not found with this patientId");
+    }
+    if (!(await prisma.schedule.findUnique({ where: { id: scheduleId } }))) {
+      throw new ApiError("schedule not found with this scheduleId");
+    }
+    date = new Date(date);
     let appointment = await prisma.appointment.create({
       data: body,
     });
@@ -158,11 +165,22 @@ export class appointmentController {
     @Body() body: any,
     @Res() res: Response
   ) {
+    let { date, patientId, scheduleId } = body;
+    if (patientId) {
+      if (!(await prisma.patient.findUnique({ where: { id: patientId } }))) {
+        throw new ApiError("patient not found with this patientId");
+      }
+    }
+    if (scheduleId) {
+      if (!(await prisma.schedule.findUnique({ where: { id: scheduleId } }))) {
+        throw new ApiError("patient not found with this scheduleId");
+      }
+    }
     if (!(await prisma.appointment.findUnique({ where: { id } }))) {
       throw new ApiError("appointment not found", 404);
     }
-    if (body.date) {
-      body.date = new Date(body.date);
+    if (date) {
+      date = new Date(date);
     }
     await prisma.appointment.update({
       where: { id },

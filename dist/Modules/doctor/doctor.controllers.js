@@ -110,12 +110,12 @@ let doctorControllers = class doctorControllers {
             // Initialize ApiFeatures with the Prisma model and the search query
             const apiFeatures = new ApiFeatures_1.default(prisma.doctor, query);
             // Apply filters, sorting, field selection, search, and pagination
-            yield apiFeatures.filter().sort().limitedFields().search("user"); // Specify the model name, 'user' in this case
+            yield apiFeatures.filter().sort().limitedFields().search("doctor"); // Specify the model name, 'user' in this case
             yield apiFeatures.paginateWithCount();
             // Execute the query and get the result and pagination
             const { result, pagination } = yield apiFeatures.exec("doctor");
             result.map((doc) => {
-                doc.img = process.env.base_url + doc.img;
+                doc.image = process.env.base_url + doc.image;
             });
             // Return the result along with pagination information
             return res.status(200).json({

@@ -36,7 +36,14 @@ const prisma = new client_1.PrismaClient();
 let appointmentController = class appointmentController {
     addAppointment(req, body, res) {
         return __awaiter(this, void 0, void 0, function* () {
-            body.date = new Date(body.date);
+            let { date, patientId, scheduleId } = body;
+            if (!(yield prisma.patient.findUnique({ where: { id: patientId } }))) {
+                throw new ApiError_1.default("patient not found with this patientId");
+            }
+            if (!(yield prisma.schedule.findUnique({ where: { id: scheduleId } }))) {
+                throw new ApiError_1.default("schedule not found with this scheduleId");
+            }
+            date = new Date(date);
             let appointment = yield prisma.appointment.create({
                 data: body,
             });
@@ -115,11 +122,22 @@ let appointmentController = class appointmentController {
     }
     updateAppointment(req, id, body, res) {
         return __awaiter(this, void 0, void 0, function* () {
+            let { date, patientId, scheduleId } = body;
+            if (patientId) {
+                if (!(yield prisma.patient.findUnique({ where: { id: patientId } }))) {
+                    throw new ApiError_1.default("patient not found with this patientId");
+                }
+            }
+            if (scheduleId) {
+                if (!(yield prisma.schedule.findUnique({ where: { id: scheduleId } }))) {
+                    throw new ApiError_1.default("patient not found with this scheduleId");
+                }
+            }
             if (!(yield prisma.appointment.findUnique({ where: { id } }))) {
                 throw new ApiError_1.default("appointment not found", 404);
             }
-            if (body.date) {
-                body.date = new Date(body.date);
+            if (date) {
+                date = new Date(date);
             }
             yield prisma.appointment.update({
                 where: { id },

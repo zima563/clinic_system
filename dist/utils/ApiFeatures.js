@@ -92,6 +92,18 @@ class ApiFeatures {
                     ].filter(Boolean), // إزالة القيم undefined
                 };
             }
+            else if (modelName === "doctor") {
+                this.prismaQuery.where = {
+                    OR: [
+                        keyword
+                            ? { name: { contains: keyword, mode: "insensitive" } }
+                            : undefined,
+                        keyword
+                            ? { phone: { contains: keyword, mode: "insensitive" } }
+                            : undefined,
+                    ].filter(Boolean),
+                };
+            }
             else {
                 this.prismaQuery.where = Object.assign(Object.assign({}, this.prismaQuery.where), (keyword && { name: { contains: keyword, mode: "insensitive" } }));
             }
@@ -159,6 +171,11 @@ class ApiFeatures {
                             schedule: true,
                         },
                     },
+                };
+            }
+            else if (modelName === "doctor") {
+                this.prismaQuery.include = {
+                    specialty: true,
                 };
             }
             const result = yield this.prismaModel.findMany(Object.assign({}, this.prismaQuery));

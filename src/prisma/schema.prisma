@@ -152,6 +152,7 @@ model Doctor {
   image       String
   isActive    Boolean  @default(true)
   specialtyId Int
+  info        String
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 

@@ -34,6 +34,10 @@ exports.addDoctorValidationSchema = joi_1.default.object({
         "number.positive": "Specialty ID must be a positive number",
         "any.required": "Specialty ID is required",
     }),
+    info: joi_1.default.string().max(1000).optional().messages({
+        "string.base": "Info must be a string.",
+        "string.max": "Info must not exceed 1000 characters.",
+    }),
 });
 exports.UpdateDoctorValidationSchema = joi_1.default.object({
     id: joi_1.default.string().required(),
@@ -63,5 +67,9 @@ exports.UpdateDoctorValidationSchema = joi_1.default.object({
         "number.base": "Specialty ID must be a number",
         "number.integer": "Specialty ID must be an integer",
         "number.positive": "Specialty ID must be a positive number",
+    }),
+    info: joi_1.default.string().max(1000).optional().messages({
+        "string.base": "Info must be a string.",
+        "string.max": "Info must not exceed 1000 characters.",
     }),
 });

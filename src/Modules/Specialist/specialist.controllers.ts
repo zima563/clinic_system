@@ -64,7 +64,7 @@ export class specialtyControllers {
 
     // Resize and save the icon using sharp
     await sharp(req.file.buffer)
-      .resize(100, 100)
+      .resize(160, 160)
       .png({ quality: 80 })
       .toFile(iconPath);
 
@@ -112,7 +112,7 @@ export class specialtyControllers {
 
       // Resize and save the image
       await sharp(req.file.buffer)
-        .resize(100, 100)
+        .resize(160, 160)
         .png({ quality: 80 })
         .toFile(imgPath);
 
@@ -154,7 +154,7 @@ export class specialtyControllers {
     const { result, pagination } = await apiFeatures.exec("specialty");
 
     result.map((doc: any) => {
-      doc.img = process.env.base_url + doc.img;
+      doc.icon = process.env.base_url + doc.icon;
     });
 
     return res.status(200).json({
@@ -189,6 +189,12 @@ export class specialtyControllers {
       throw new ApiError("specialty not found");
     }
     await prisma.doctor.deleteMany({ where: { specialtyId: id } });
+    if (specialty.icon) {
+      const oldImagePath = path.join("uploads", specialty.icon);
+      if (fs.existsSync(oldImagePath)) {
+        fs.unlinkSync(oldImagePath);
+      }
+    }
     await prisma.specialty.delete({
       where: { id },
     });

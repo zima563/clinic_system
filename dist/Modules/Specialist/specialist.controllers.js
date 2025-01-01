@@ -57,7 +57,7 @@ let specialtyControllers = class specialtyControllers {
             const iconPath = path_1.default.join("uploads", iconFilename);
             // Resize and save the icon using sharp
             yield (0, sharp_1.default)(req.file.buffer)
-                .resize(100, 100)
+                .resize(160, 160)
                 .png({ quality: 80 })
                 .toFile(iconPath);
             // Save the specialty to the database
@@ -89,7 +89,7 @@ let specialtyControllers = class specialtyControllers {
                 const imgPath = path_1.default.join("uploads", newFilename);
                 // Resize and save the image
                 yield (0, sharp_1.default)(req.file.buffer)
-                    .resize(100, 100)
+                    .resize(160, 160)
                     .png({ quality: 80 })
                     .toFile(imgPath);
                 // Delete old image if it exists
@@ -117,7 +117,7 @@ let specialtyControllers = class specialtyControllers {
             // Execute the query and get the results along with pagination info
             const { result, pagination } = yield apiFeatures.exec("specialty");
             result.map((doc) => {
-                doc.img = process.env.base_url + doc.img;
+                doc.icon = process.env.base_url + doc.icon;
             });
             return res.status(200).json({
                 data: result,
@@ -143,6 +143,12 @@ let specialtyControllers = class specialtyControllers {
                 throw new ApiError_1.default("specialty not found");
             }
             yield prisma.doctor.deleteMany({ where: { specialtyId: id } });
+            if (specialty.icon) {
+                const oldImagePath = path_1.default.join("uploads", specialty.icon);
+                if (fs_1.default.existsSync(oldImagePath)) {
+                    fs_1.default.unlinkSync(oldImagePath);
+                }
+            }
             yield prisma.specialty.delete({
                 where: { id },
             });
