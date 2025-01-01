@@ -97,6 +97,15 @@ export class doctorControllers {
       throw new ApiError("Doctor not found", 404);
     }
 
+    if (body.phone) {
+      if (
+        await prisma.doctor.findFirst({
+          where: { phone: body.phone, NOT: { id } },
+        })
+      ) {
+        throw new ApiError("doctor with this phone already exists");
+      }
+    }
     // Initialize fileName to preserve existing image if no new image is uploaded
     let fileName = doctor.image;
 
