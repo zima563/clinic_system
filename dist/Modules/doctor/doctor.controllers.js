@@ -47,6 +47,13 @@ let doctorControllers = class doctorControllers {
                     throw new ApiError_1.default("doctor with this phone already exists");
                 }
             }
+            if (body.specialtyId) {
+                if (!(yield prisma.specialty.findUnique({
+                    where: { id: body.specialtyId },
+                }))) {
+                    throw new ApiError_1.default("specialtyId not found");
+                }
+            }
             if (!req.file) {
                 return res.status(400).json({ error: "image file is required." });
             }
