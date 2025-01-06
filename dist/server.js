@@ -31,7 +31,7 @@ app.use(express_1.default.urlencoded({ extended: true })); // Parses application
 app.use((0, compression_1.default)()); // Add GZIP compression
 app.use((0, cors_1.default)({
     origin: "*", // adjust this to fit your use case
-    methods: ["GET", "POST", "PUT", "DELETE"],
+    methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
     allowedHeaders: ["Content-Type", "Authorization"],
 })); // Add CORS
 // Set up routing-controllers

@@ -29,7 +29,7 @@ app.use(compression()); // Add GZIP compression
 app.use(
   cors({
     origin: "*", // adjust this to fit your use case
-    methods: ["GET", "POST", "PUT", "DELETE"],
+    methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
     allowedHeaders: ["Content-Type", "Authorization"],
   })
 ); // Add CORS

@@ -161,6 +161,8 @@ class ApiFeatures {
             else if (modelName === "schedule") {
                 this.prismaQuery.include = {
                     dates: true,
+                    doctor: true,
+                    service: true,
                 };
             }
             else if (modelName === "visit") {

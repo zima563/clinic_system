@@ -59,8 +59,8 @@ export class serviceController {
 
     // Resize and save the icon using sharp
     await sharp(req.file.buffer)
-      .resize(100, 100)
-      .png({ quality: 80 })
+      .resize({ width: 100, height: 100, fit: "cover" })
+      .png({ quality: 70, compressionLevel: 9 })
       .toFile(iconPath);
     body.icon = iconFilename ?? "";
 
@@ -143,8 +143,8 @@ export class serviceController {
 
       // Resize and save the image
       await sharp(req.file.buffer)
-        .resize(100, 100)
-        .png({ quality: 80 })
+        .resize({ width: 100, height: 100, fit: "cover" })
+        .png({ quality: 70, compressionLevel: 9 })
         .toFile(imgPath);
 
       // Delete old image if it exists

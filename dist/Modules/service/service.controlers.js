@@ -56,8 +56,8 @@ let serviceController = class serviceController {
             const iconPath = path_1.default.join("uploads", iconFilename);
             // Resize and save the icon using sharp
             yield (0, sharp_1.default)(req.file.buffer)
-                .resize(100, 100)
-                .png({ quality: 80 })
+                .resize({ width: 100, height: 100, fit: "cover" })
+                .png({ quality: 70, compressionLevel: 9 })
                 .toFile(iconPath);
             body.icon = iconFilename !== null && iconFilename !== void 0 ? iconFilename : "";
             let service = yield prisma.service.create({
@@ -118,8 +118,8 @@ let serviceController = class serviceController {
                 const imgPath = path_1.default.join("uploads", newFilename);
                 // Resize and save the image
                 yield (0, sharp_1.default)(req.file.buffer)
-                    .resize(100, 100)
-                    .png({ quality: 80 })
+                    .resize({ width: 100, height: 100, fit: "cover" })
+                    .png({ quality: 70, compressionLevel: 9 })
                     .toFile(imgPath);
                 // Delete old image if it exists
                 if (service === null || service === void 0 ? void 0 : service.img) {
