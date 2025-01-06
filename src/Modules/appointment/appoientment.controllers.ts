@@ -22,6 +22,8 @@ import { PrismaClient } from "@prisma/client";
 import ApiError from "../../utils/ApiError";
 import { ProtectRoutesMiddleware } from "../../middlewares/protectedRoute";
 import { roleOrPermissionMiddleware } from "../../middlewares/roleOrPermission";
+import { checkPatientMiddleware } from "../../middlewares/patientExist";
+import { checkScheduleMiddleware } from "../../middlewares/scheduleExist";
 const prisma = new PrismaClient();
 
 @JsonController("/api/appointment")
@@ -30,6 +32,8 @@ export class appointmentController {
   @UseBefore(
     ProtectRoutesMiddleware,
     roleOrPermissionMiddleware("addAppointment"),
+    checkPatientMiddleware,
+    checkScheduleMiddleware,
     createValidationMiddleware(addAppointmentValidationSchema)
   )
   async addAppointment(
@@ -37,13 +41,8 @@ export class appointmentController {
     @Body() body: any,
     @Res() res: Response
   ) {
-    let { date, patientId, scheduleId } = body;
-    if (!(await prisma.patient.findUnique({ where: { id: patientId } }))) {
-      throw new ApiError("patient not found with this patientId");
-    }
-    if (!(await prisma.schedule.findUnique({ where: { id: scheduleId } }))) {
-      throw new ApiError("schedule not found with this scheduleId");
-    }
+    let { date } = body;
+
     date = new Date(date);
     let appointment = await prisma.appointment.create({
       data: body,

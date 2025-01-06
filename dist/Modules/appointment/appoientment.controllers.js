@@ -32,17 +32,13 @@ const client_1 = require("@prisma/client");
 const ApiError_1 = __importDefault(require("../../utils/ApiError"));
 const protectedRoute_1 = require("../../middlewares/protectedRoute");
 const roleOrPermission_1 = require("../../middlewares/roleOrPermission");
+const patientExist_1 = require("../../middlewares/patientExist");
+const scheduleExist_1 = require("../../middlewares/scheduleExist");
 const prisma = new client_1.PrismaClient();
 let appointmentController = class appointmentController {
     addAppointment(req, body, res) {
         return __awaiter(this, void 0, void 0, function* () {
-            let { date, patientId, scheduleId } = body;
-            if (!(yield prisma.patient.findUnique({ where: { id: patientId } }))) {
-                throw new ApiError_1.default("patient not found with this patientId");
-            }
-            if (!(yield prisma.schedule.findUnique({ where: { id: scheduleId } }))) {
-                throw new ApiError_1.default("schedule not found with this scheduleId");
-            }
+            let { date } = body;
             date = new Date(date);
             let appointment = yield prisma.appointment.create({
                 data: body,
@@ -152,7 +148,7 @@ let appointmentController = class appointmentController {
 exports.appointmentController = appointmentController;
 __decorate([
     (0, routing_controllers_1.Post)("/"),
-    (0, routing_controllers_1.UseBefore)(protectedRoute_1.ProtectRoutesMiddleware, (0, roleOrPermission_1.roleOrPermissionMiddleware)("addAppointment"), (0, validation_1.createValidationMiddleware)(appointment_validation_1.addAppointmentValidationSchema)),
+    (0, routing_controllers_1.UseBefore)(protectedRoute_1.ProtectRoutesMiddleware, (0, roleOrPermission_1.roleOrPermissionMiddleware)("addAppointment"), patientExist_1.checkPatientMiddleware, scheduleExist_1.checkScheduleMiddleware, (0, validation_1.createValidationMiddleware)(appointment_validation_1.addAppointmentValidationSchema)),
     __param(0, (0, routing_controllers_1.Req)()),
     __param(1, (0, routing_controllers_1.Body)()),
     __param(2, (0, routing_controllers_1.Res)()),
