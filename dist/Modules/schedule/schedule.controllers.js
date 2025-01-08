@@ -64,6 +64,9 @@ let scheduleControllers = class scheduleControllers {
             yield apiFeatures.filter().limitedFields().sort().search("schedule");
             yield apiFeatures.paginateWithCount();
             const { result, pagination } = yield apiFeatures.exec("schedule");
+            result.map((result) => {
+                result.doctor.image = process.env.base_url + result.doctor.image;
+            });
             return res.status(200).json({
                 data: result,
                 pagination,

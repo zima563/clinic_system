@@ -76,6 +76,9 @@ export class scheduleControllers {
     await apiFeatures.paginateWithCount();
 
     const { result, pagination } = await apiFeatures.exec("schedule");
+    result.map((result: any) => {
+      result.doctor.image = process.env.base_url + result.doctor.image;
+    });
     return res.status(200).json({
       data: result,
       pagination,

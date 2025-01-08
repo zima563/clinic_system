@@ -53,7 +53,7 @@ export class doctorControllers {
     if (body.specialtyId) {
       if (
         !(await prisma.specialty.findUnique({
-          where: { id: body.specialtyId },
+          where: { id: parseInt(body.specialtyId, 10) },
         }))
       ) {
         throw new ApiError("specialtyId not found");
