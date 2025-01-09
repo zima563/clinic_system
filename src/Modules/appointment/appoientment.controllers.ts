@@ -41,12 +41,10 @@ export class appointmentController {
     @Body() body: any,
     @Res() res: Response
   ) {
-    let { date } = body;
-
     let appointment = await prisma.appointment.create({
       data: {
         ...body,
-        date: new Date(body.date).toISOString(),
+        dateTime: new Date(body.dateTime).toISOString(),
       },
     });
     return res.status(200).json(appointment);
@@ -97,9 +95,9 @@ export class appointmentController {
           include: {
             service: true,
             doctor: true,
-            dates: true,
           },
         },
+        date: true,
         patient: true,
       },
     });

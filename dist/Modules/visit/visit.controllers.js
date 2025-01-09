@@ -65,6 +65,7 @@ let visitController = class visitController {
                             patientId: detail.patientId,
                             price: detail.price,
                             scheduleId: detail.scheduleId,
+                            dateId: detail.dateId,
                         },
                     });
                 })));
@@ -180,6 +181,7 @@ let visitController = class visitController {
                         patientId: detail.patientId,
                         price: detail.price,
                         scheduleId: detail.scheduleId,
+                        dateId: detail.dateId,
                     })),
                 });
                 // Link each InvoiceDetail to the corresponding VisitDetail

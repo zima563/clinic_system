@@ -1,7 +1,7 @@
 import Joi from "joi";
 
 export const addAppointmentValidationSchema = Joi.object({
-  date: Joi.string()
+  dateTime: Joi.string()
     .pattern(/^\d{4}-\d{2}-\d{2}$/)
     .required()
     .messages({
@@ -19,6 +19,12 @@ export const addAppointmentValidationSchema = Joi.object({
     "number.integer": "The schedule ID must be an integer.",
     "number.positive": "The schedule ID must be a positive number.",
     "any.required": "The schedule ID is required.",
+  }),
+  dateId: Joi.number().integer().positive().required().messages({
+    "number.base": "The date ID must be a number.",
+    "number.integer": "The date ID must be an integer.",
+    "number.positive": "The date ID must be a positive number.",
+    "any.required": "The date ID is required.",
   }),
 });
 

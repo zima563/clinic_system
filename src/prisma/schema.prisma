@@ -100,12 +100,14 @@ model Schedule {
 }
 
 model Date {
-  id         Int      @id @default(autoincrement())
-  day        String
-  fromTime   String
-  toTime     String
-  scheduleId Int
-  schedule   Schedule @relation(fields: [scheduleId], references: [id])
+  id          Int           @id @default(autoincrement())
+  day         String
+  fromTime    String
+  toTime      String
+  scheduleId  Int
+  schedule    Schedule      @relation(fields: [scheduleId], references: [id])
+  Appointment Appointment[]
+  VisitDetail VisitDetail[]
 }
 
 model Specialty {
@@ -179,13 +181,15 @@ model Patient {
 
 model Appointment {
   id         Int               @id @default(autoincrement())
-  date       DateTime
+  dateTime   DateTime
   patientId  Int
   status     AppointmentStatus @default(pending)
   scheduleId Int
+  dateId     Int
 
   patient  Patient  @relation(fields: [patientId], references: [id])
   schedule Schedule @relation(fields: [scheduleId], references: [id])
+  date     Date     @relation(fields: [dateId], references: [id])
 }
 
 model Visit {
@@ -206,10 +210,12 @@ model VisitDetail {
   patientId  Int
   price      Decimal @db.Decimal(18, 2)
   scheduleId Int
+  dateId     Int
 
   visit         Visit           @relation(fields: [visitId], references: [id])
   patient       Patient         @relation(fields: [patientId], references: [id])
   schedule      Schedule        @relation(fields: [scheduleId], references: [id])
+  date          Date            @relation(fields: [dateId], references: [id])
   invoiceDetail InvoiceDetail[]
 }
 

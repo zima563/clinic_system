@@ -14,6 +14,12 @@ export const createVisitSchema = Joi.object({
           "number.base": "scheduleId must be a number",
           "number.integer": "scheduleId must be an integer",
         }),
+        dateId: Joi.number().integer().positive().required().messages({
+          "number.base": "The date ID must be a number.",
+          "number.integer": "The date ID must be an integer.",
+          "number.positive": "The date ID must be a positive number.",
+          "any.required": "The date ID is required.",
+        }),
       })
     )
     .min(1)
@@ -54,6 +60,12 @@ export const appendVisitSchema = Joi.object({
           "any.required": "scheduleId is required",
           "number.base": "scheduleId must be a number",
           "number.integer": "scheduleId must be an integer",
+        }),
+        dateId: Joi.number().integer().positive().required().messages({
+          "number.base": "The date ID must be a number.",
+          "number.integer": "The date ID must be an integer.",
+          "number.positive": "The date ID must be a positive number.",
+          "any.required": "The date ID is required.",
         }),
       })
     )

@@ -77,6 +77,7 @@ export class visitController {
               patientId: detail.patientId,
               price: detail.price,
               scheduleId: detail.scheduleId,
+              dateId: detail.dateId,
             },
           })
         )
@@ -247,6 +248,7 @@ export class visitController {
           patientId: detail.patientId,
           price: detail.price,
           scheduleId: detail.scheduleId,
+          dateId: detail.dateId,
         })),
       });
 

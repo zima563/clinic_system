@@ -6,7 +6,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.updateAppointmentSchema = exports.updateAppointmentStatusSchema = exports.addAppointmentValidationSchema = void 0;
 const joi_1 = __importDefault(require("joi"));
 exports.addAppointmentValidationSchema = joi_1.default.object({
-    date: joi_1.default.string()
+    dateTime: joi_1.default.string()
         .pattern(/^\d{4}-\d{2}-\d{2}$/)
         .required()
         .messages({
@@ -24,6 +24,12 @@ exports.addAppointmentValidationSchema = joi_1.default.object({
         "number.integer": "The schedule ID must be an integer.",
         "number.positive": "The schedule ID must be a positive number.",
         "any.required": "The schedule ID is required.",
+    }),
+    dateId: joi_1.default.number().integer().positive().required().messages({
+        "number.base": "The date ID must be a number.",
+        "number.integer": "The date ID must be an integer.",
+        "number.positive": "The date ID must be a positive number.",
+        "any.required": "The date ID is required.",
     }),
 });
 var AppointmentStatus;

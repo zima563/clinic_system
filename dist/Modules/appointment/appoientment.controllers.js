@@ -38,9 +38,8 @@ const prisma = new client_1.PrismaClient();
 let appointmentController = class appointmentController {
     addAppointment(req, body, res) {
         return __awaiter(this, void 0, void 0, function* () {
-            let { date } = body;
             let appointment = yield prisma.appointment.create({
-                data: Object.assign(Object.assign({}, body), { date: new Date(body.date).toISOString() }),
+                data: Object.assign(Object.assign({}, body), { dateTime: new Date(body.dateTime).toISOString() }),
             });
             return res.status(200).json(appointment);
         });
@@ -76,9 +75,9 @@ let appointmentController = class appointmentController {
                         include: {
                             service: true,
                             doctor: true,
-                            dates: true,
                         },
                     },
+                    date: true,
                     patient: true,
                 },
             });

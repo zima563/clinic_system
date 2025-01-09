@@ -18,6 +18,12 @@ exports.createVisitSchema = joi_1.default.object({
             "number.base": "scheduleId must be a number",
             "number.integer": "scheduleId must be an integer",
         }),
+        dateId: joi_1.default.number().integer().positive().required().messages({
+            "number.base": "The date ID must be a number.",
+            "number.integer": "The date ID must be an integer.",
+            "number.positive": "The date ID must be a positive number.",
+            "any.required": "The date ID is required.",
+        }),
     }))
         .min(1)
         .required()
@@ -54,6 +60,12 @@ exports.appendVisitSchema = joi_1.default.object({
             "any.required": "scheduleId is required",
             "number.base": "scheduleId must be a number",
             "number.integer": "scheduleId must be an integer",
+        }),
+        dateId: joi_1.default.number().integer().positive().required().messages({
+            "number.base": "The date ID must be a number.",
+            "number.integer": "The date ID must be an integer.",
+            "number.positive": "The date ID must be a positive number.",
+            "any.required": "The date ID is required.",
         }),
     }))
         .min(1)
