@@ -170,7 +170,13 @@ class ApiFeatures {
                     details: {
                         include: {
                             patient: true,
-                            schedule: true,
+                            schedule: {
+                                include: {
+                                    service: true,
+                                    doctor: true,
+                                    dates: true,
+                                },
+                            },
                         },
                     },
                 };

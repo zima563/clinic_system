@@ -43,9 +43,11 @@ export class appointmentController {
   ) {
     let { date } = body;
 
-    date = new Date(date);
     let appointment = await prisma.appointment.create({
-      data: body,
+      data: {
+        ...body,
+        date: new Date(body.date).toISOString(),
+      },
     });
     return res.status(200).json(appointment);
   }
@@ -88,12 +90,22 @@ export class appointmentController {
 
     let appointments = await prisma.appointment.findMany({
       where: {
-        date: `${normalizedDate}T00:00:00.000Z`,
+        // date: `${normalizedDate}T00:00:00.000Z`,
       },
       include: {
-        schedule: true,
+        schedule: {
+          include: {
+            service: true,
+            doctor: true,
+            dates: true,
+          },
+        },
         patient: true,
       },
+    });
+    appointments.map((app: any) => {
+      app.schedule.doctor.image =
+        process.env.base_url + app.schedule.doctor.image;
     });
     return res.status(200).json({
       data: appointments,

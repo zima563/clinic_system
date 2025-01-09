@@ -39,9 +39,8 @@ let appointmentController = class appointmentController {
     addAppointment(req, body, res) {
         return __awaiter(this, void 0, void 0, function* () {
             let { date } = body;
-            date = new Date(date);
             let appointment = yield prisma.appointment.create({
-                data: body,
+                data: Object.assign(Object.assign({}, body), { date: new Date(body.date).toISOString() }),
             });
             return res.status(200).json(appointment);
         });
@@ -70,12 +69,22 @@ let appointmentController = class appointmentController {
             const normalizedDate = today.toISOString().split("T")[0];
             let appointments = yield prisma.appointment.findMany({
                 where: {
-                    date: `${normalizedDate}T00:00:00.000Z`,
+                // date: `${normalizedDate}T00:00:00.000Z`,
                 },
                 include: {
-                    schedule: true,
+                    schedule: {
+                        include: {
+                            service: true,
+                            doctor: true,
+                            dates: true,
+                        },
+                    },
                     patient: true,
                 },
+            });
+            appointments.map((app) => {
+                app.schedule.doctor.image =
+                    process.env.base_url + app.schedule.doctor.image;
             });
             return res.status(200).json({
                 data: appointments,

@@ -56,7 +56,7 @@ let specialtyControllers = class specialtyControllers {
             const iconFilename = `icon-${(0, uuid_1.v4)()}-${encodeURIComponent(cleanedFilename)}`;
             const iconPath = path_1.default.join("uploads", iconFilename);
             // Resize and save the icon using sharp
-            yield (0, sharp_1.default)(req.file.buffer)
+            (0, sharp_1.default)(req.file.buffer)
                 .resize(160, 160)
                 .png({ quality: 80 })
                 .toFile(iconPath);

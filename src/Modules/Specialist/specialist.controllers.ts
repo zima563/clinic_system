@@ -63,7 +63,7 @@ export class specialtyControllers {
     const iconPath = path.join("uploads", iconFilename);
 
     // Resize and save the icon using sharp
-    await sharp(req.file.buffer)
+    sharp(req.file.buffer)
       .resize(160, 160)
       .png({ quality: 80 })
       .toFile(iconPath);
