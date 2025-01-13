@@ -51,9 +51,40 @@ let appointmentController = class appointmentController {
             }
             let appointments = yield prisma.appointment.findMany({
                 where: { patientId },
-                include: {
-                    schedule: true,
-                    patient: true,
+                select: {
+                    id: true,
+                    dateTime: true,
+                    status: true,
+                    schedule: {
+                        select: {
+                            id: true,
+                            service: {
+                                select: {
+                                    id: true,
+                                    title: true,
+                                },
+                            },
+                            doctor: {
+                                select: {
+                                    id: true,
+                                    name: true,
+                                },
+                            },
+                        },
+                    },
+                    patient: {
+                        select: {
+                            id: true,
+                            name: true,
+                        },
+                    },
+                    date: {
+                        select: {
+                            id: true,
+                            fromTime: true,
+                            toTime: true,
+                        },
+                    },
                 },
             });
             return res.status(200).json({
@@ -70,15 +101,38 @@ let appointmentController = class appointmentController {
                 where: {
                 // date: `${normalizedDate}T00:00:00.000Z`,
                 },
-                include: {
+                select: {
+                    id: true,
+                    dateTime: true,
+                    status: true,
                     schedule: {
-                        include: {
-                            service: true,
-                            doctor: true,
+                        select: {
+                            price: true,
+                            service: {
+                                select: {
+                                    id: true,
+                                    title: true,
+                                },
+                            },
+                            doctor: {
+                                select: {
+                                    id: true,
+                                    name: true,
+                                },
+                            },
                         },
                     },
-                    date: true,
-                    patient: true,
+                    date: {
+                        select: {
+                            fromTime: true,
+                            toTime: true,
+                        },
+                    },
+                    patient: {
+                        select: {
+                            name: true,
+                        },
+                    },
                 },
             });
             appointments.map((app) => {
@@ -97,9 +151,38 @@ let appointmentController = class appointmentController {
                 where: {
                     id,
                 },
-                include: {
-                    schedule: true,
-                    patient: true,
+                select: {
+                    id: true,
+                    dateTime: true,
+                    status: true,
+                    schedule: {
+                        select: {
+                            price: true,
+                            service: {
+                                select: {
+                                    id: true,
+                                    title: true,
+                                },
+                            },
+                            doctor: {
+                                select: {
+                                    id: true,
+                                    name: true,
+                                },
+                            },
+                        },
+                    },
+                    date: {
+                        select: {
+                            fromTime: true,
+                            toTime: true,
+                        },
+                    },
+                    patient: {
+                        select: {
+                            name: true,
+                        },
+                    },
                 },
             });
             if (!appointment) {

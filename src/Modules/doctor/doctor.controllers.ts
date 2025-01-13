@@ -28,9 +28,19 @@ import path from "path";
 import ApiFeatures from "../../utils/ApiFeatures";
 import { ProtectRoutesMiddleware } from "../../middlewares/protectedRoute";
 import { roleOrPermissionMiddleware } from "../../middlewares/roleOrPermission";
+import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
+import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 
 const prisma = new PrismaClient();
 
+const minioClient = new S3Client({
+  region: "us-east-1",
+  endpoint: "http://127.0.0.1:9000",
+  credentials: {
+    accessKeyId: "admin",
+    secretAccessKey: "admin123",
+  },
+});
 @JsonController("/api/doctors")
 export class doctorControllers {
   @Post("/")
@@ -68,16 +78,33 @@ export class doctorControllers {
       .replace(/[^a-zA-Z0-9_.]/g, "");
 
     const Filename = `img-${uuidv4()}-${encodeURIComponent(cleanedFilename)}`;
-    const imgPath = path.join("uploads", Filename);
 
-    await sharp(req.file.buffer)
+    const resizedImageBuffer = await sharp(req.file.buffer)
       .resize(100, 100)
       .png({ quality: 80 })
-      .toFile(imgPath);
+      .toBuffer();
+    const bucketName = "uploads";
+
+    await minioClient.send(
+      new PutObjectCommand({
+        Bucket: bucketName,
+        Key: Filename,
+        Body: resizedImageBuffer,
+        ContentType: "image/png",
+      })
+    );
+    const imageUrl = await getSignedUrl(
+      minioClient,
+      new PutObjectCommand({
+        Bucket: bucketName,
+        Key: Filename,
+      }),
+      { expiresIn: 3600 } // URL valid for 1 hour
+    );
 
     const doctor = await prisma.doctor.create({
       data: {
-        image: Filename ?? "",
+        image: imageUrl ?? "",
         ...body,
       },
     });

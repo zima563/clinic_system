@@ -186,7 +186,12 @@ class ApiFeatures {
       };
     } else if (modelName === "doctor") {
       this.prismaQuery.include = {
-        specialty: true,
+        specialty: {
+          select: {
+            title: true,
+            icon: true,
+          },
+        },
       };
     }
 

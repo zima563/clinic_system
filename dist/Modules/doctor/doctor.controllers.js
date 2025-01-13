@@ -38,7 +38,17 @@ const path_1 = __importDefault(require("path"));
 const ApiFeatures_1 = __importDefault(require("../../utils/ApiFeatures"));
 const protectedRoute_1 = require("../../middlewares/protectedRoute");
 const roleOrPermission_1 = require("../../middlewares/roleOrPermission");
+const client_s3_1 = require("@aws-sdk/client-s3");
+const s3_request_presigner_1 = require("@aws-sdk/s3-request-presigner");
 const prisma = new client_1.PrismaClient();
+const minioClient = new client_s3_1.S3Client({
+    region: "us-east-1",
+    endpoint: "http://127.0.0.1:9000",
+    credentials: {
+        accessKeyId: "admin",
+        secretAccessKey: "admin123",
+    },
+});
 let doctorControllers = class doctorControllers {
     addDoctor(req, body, res) {
         return __awaiter(this, void 0, void 0, function* () {
@@ -62,13 +72,24 @@ let doctorControllers = class doctorControllers {
                 .replace(/\s+/g, "_")
                 .replace(/[^a-zA-Z0-9_.]/g, "");
             const Filename = `img-${(0, uuid_1.v4)()}-${encodeURIComponent(cleanedFilename)}`;
-            const imgPath = path_1.default.join("uploads", Filename);
-            yield (0, sharp_1.default)(req.file.buffer)
+            const resizedImageBuffer = yield (0, sharp_1.default)(req.file.buffer)
                 .resize(100, 100)
                 .png({ quality: 80 })
-                .toFile(imgPath);
+                .toBuffer();
+            const bucketName = "uploads";
+            yield minioClient.send(new client_s3_1.PutObjectCommand({
+                Bucket: bucketName,
+                Key: Filename,
+                Body: resizedImageBuffer,
+                ContentType: "image/png",
+            }));
+            const imageUrl = yield (0, s3_request_presigner_1.getSignedUrl)(minioClient, new client_s3_1.PutObjectCommand({
+                Bucket: bucketName,
+                Key: Filename,
+            }), { expiresIn: 3600 } // URL valid for 1 hour
+            );
             const doctor = yield prisma.doctor.create({
-                data: Object.assign({ image: Filename !== null && Filename !== void 0 ? Filename : "" }, body),
+                data: Object.assign({ image: imageUrl !== null && imageUrl !== void 0 ? imageUrl : "" }, body),
             });
             return res.status(200).json(doctor);
         });
