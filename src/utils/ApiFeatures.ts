@@ -164,9 +164,27 @@ class ApiFeatures {
       };
     } else if (modelName === "schedule") {
       this.prismaQuery.include = {
-        dates: true,
-        doctor: true,
-        service: true,
+        doctorId: false,
+        servicesId: false,
+        dates: {
+          select: {
+            id: true,
+            fromTime: true,
+            toTime: true,
+          },
+        },
+        doctor: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+        service: {
+          select: {
+            id: true,
+            title: true,
+          },
+        },
       };
     } else if (modelName === "visit") {
       this.prismaQuery.include = {

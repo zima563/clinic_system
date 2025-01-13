@@ -89,6 +89,33 @@ let scheduleControllers = class scheduleControllers {
         return __awaiter(this, void 0, void 0, function* () {
             let schedule = yield prisma.schedule.findUnique({
                 where: { id },
+                select: {
+                    id: true,
+                    price: true,
+                    doctorId: false,
+                    servicesId: false,
+                    createdAt: true,
+                    updatedAt: true,
+                    dates: {
+                        select: {
+                            id: true,
+                            fromTime: true,
+                            toTime: true,
+                        },
+                    },
+                    doctor: {
+                        select: {
+                            id: true,
+                            name: true,
+                        },
+                    },
+                    service: {
+                        select: {
+                            id: true,
+                            title: true,
+                        },
+                    },
+                },
             });
             if (!schedule) {
                 throw new ApiError_1.default("schedule not found", 404);
