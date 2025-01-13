@@ -85,6 +85,18 @@ let userControllers = class userControllers {
         return __awaiter(this, void 0, void 0, function* () {
             let user = yield prisma.user.findUnique({
                 where: { id },
+                include: {
+                    userRoles: {
+                        select: {
+                            role: true,
+                        },
+                    },
+                    userPermissions: {
+                        select: {
+                            permission: true,
+                        },
+                    },
+                },
             });
             if (!user)
                 throw new ApiError_1.default("user not found", 404);

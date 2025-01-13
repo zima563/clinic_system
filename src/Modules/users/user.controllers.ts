@@ -91,6 +91,18 @@ export class userControllers {
   ) {
     let user = await prisma.user.findUnique({
       where: { id },
+      include: {
+        userRoles: {
+          select: {
+            role: true,
+          },
+        },
+        userPermissions: {
+          select: {
+            permission: true,
+          },
+        },
+      },
     });
     if (!user) throw new ApiError("user not found", 404);
     return res.status(201).json(user);

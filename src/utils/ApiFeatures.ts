@@ -149,19 +149,18 @@ class ApiFeatures {
       delete this.prismaQuery.select;
     }
 
-    // Adjust where conditions based on the model
-    if (modelName === "category") {
+    if (modelName === "user") {
       this.prismaQuery.include = {
-        parentCategory: true,
-      };
-    } else if (modelName === "product") {
-      this.prismaQuery.include = {
-        category: true,
-      };
-    } else if (modelName === "user") {
-      this.prismaQuery.include = {
-        userRoles: true,
-        userPermissions: true,
+        userRoles: {
+          select: {
+            role: true,
+          },
+        },
+        userPermissions: {
+          select: {
+            permission: true,
+          },
+        },
       };
     } else if (modelName === "schedule") {
       this.prismaQuery.include = {
