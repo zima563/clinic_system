@@ -183,9 +183,41 @@ export class visitController {
     }
     let VisitDetails = await prisma.visitDetail.findMany({
       where: { visitId: id },
-      include: {
-        patient: true,
-        schedule: true,
+      select: {
+        id: true,
+        price: true,
+        patient: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+        schedule: {
+          select: {
+            id: true,
+            price: true,
+            service: {
+              select: {
+                id: true,
+                title: true,
+              },
+            },
+            doctor: {
+              select: {
+                id: true,
+                name: true,
+                image: true,
+              },
+            },
+          },
+        },
+        date: {
+          select: {
+            id: true,
+            fromTime: true,
+            toTime: true,
+          },
+        },
       },
     });
     return res.status(200).json({

@@ -183,13 +183,39 @@ class ApiFeatures {
             else if (modelName === "visit") {
                 this.prismaQuery.include = {
                     details: {
-                        include: {
-                            patient: true,
+                        select: {
+                            id: true,
+                            price: true,
+                            patient: {
+                                select: {
+                                    id: true,
+                                    name: true,
+                                },
+                            },
                             schedule: {
-                                include: {
-                                    service: true,
-                                    doctor: true,
-                                    dates: true,
+                                select: {
+                                    id: true,
+                                    price: true,
+                                    service: {
+                                        select: {
+                                            id: true,
+                                            title: true,
+                                        },
+                                    },
+                                    doctor: {
+                                        select: {
+                                            id: true,
+                                            name: true,
+                                            image: true,
+                                        },
+                                    },
+                                },
+                            },
+                            date: {
+                                select: {
+                                    id: true,
+                                    fromTime: true,
+                                    toTime: true,
                                 },
                             },
                         },
