@@ -338,7 +338,42 @@ let invoiceControllers = class invoiceControllers {
                     id,
                 },
                 include: {
-                    details: true,
+                    details: {
+                        select: {
+                            description: true,
+                            amount: true,
+                            visitDetail: {
+                                select: {
+                                    patient: {
+                                        select: {
+                                            name: true,
+                                        },
+                                    },
+                                    schedule: {
+                                        select: {
+                                            doctor: {
+                                                select: {
+                                                    name: true,
+                                                },
+                                            },
+                                            service: {
+                                                select: {
+                                                    title: true,
+                                                },
+                                            },
+                                        },
+                                    },
+                                    date: {
+                                        select: {
+                                            day: true,
+                                            fromTime: true,
+                                            toTime: true,
+                                        },
+                                    },
+                                },
+                            },
+                        },
+                    },
                 },
             });
             if (!Invoice) {

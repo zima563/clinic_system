@@ -86,13 +86,16 @@ export class scheduleControllers {
     });
   }
 
-  @Get("/dates")
+  @Get("/dates/:id")
   @UseBefore(ProtectRoutesMiddleware, roleOrPermissionMiddleware("listDates"))
-  async listDates(@Req() req: Request, @Res() res: Response) {
-    let { scheduleId } = req.body;
+  async listDates(
+    @Req() req: Request,
+    @Param("id") id: number,
+    @Res() res: Response
+  ) {
     let dates = await prisma.date.findMany({
       where: {
-        scheduleId,
+        scheduleId: id,
       },
     });
     return res.status(200).json(dates);

@@ -30,6 +30,22 @@ class ApiFeatures {
       delete filterObj[val];
     });
 
+    if (this.searchQuery.createdAt) {
+      const date = new Date(this.searchQuery.createdAt);
+      const startOfDay = new Date(date.setUTCHours(0, 0, 0, 0));
+      const endOfDay = new Date(date.setUTCHours(23, 59, 59, 999));
+      this.prismaQuery.where.createdAt = {
+        gte: startOfDay,
+        lte: endOfDay,
+      };
+      delete filterObj.createdAt;
+    }
+
+    if (this.searchQuery.ex !== undefined) {
+      this.prismaQuery.where.ex = this.searchQuery.ex === "1";
+      delete filterObj.ex;
+    }
+
     if (this.searchQuery.patientId) {
       this.prismaQuery.where.details = {
         some: {
@@ -171,6 +187,7 @@ class ApiFeatures {
             id: true,
             fromTime: true,
             toTime: true,
+            day: true,
           },
         },
         doctor: {
@@ -233,6 +250,31 @@ class ApiFeatures {
           select: {
             title: true,
             icon: true,
+          },
+        },
+      };
+    } else if (modelName === "invoice") {
+      this.prismaQuery.include = {
+        VisitInvoice: {
+          select: {
+            visit: {
+              select: {
+                details: {
+                  select: {
+                    patient: {
+                      select: {
+                        name: true,
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+        details: {
+          select: {
+            description: true,
           },
         },
       };
