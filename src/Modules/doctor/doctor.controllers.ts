@@ -19,19 +19,21 @@ import {
   UpdateDoctorValidationSchema,
 } from "./doctor.validation";
 import createUploadMiddleware from "../../middlewares/uploadFile";
-import { query, Request, Response } from "express";
-import { PrismaClient } from "@prisma/client";
+import { Request, Response } from "express";
 import ApiError from "../../utils/ApiError";
 import { v4 as uuidv4 } from "uuid";
 import sharp from "sharp";
 import path from "path";
-import ApiFeatures from "../../utils/ApiFeatures";
-import { ProtectRoutesMiddleware } from "../../middlewares/protectedRoute";
-import { roleOrPermissionMiddleware } from "../../middlewares/roleOrPermission";
 import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
-
-const prisma = new PrismaClient();
+import { secureRouteWithPermissions } from "../../middlewares/secureRoutesMiddleware";
+import {
+  validateDoctor,
+  validateDoctorById,
+  validatePhone,
+  validateSpecialty,
+} from "./validators";
+import * as doctorServices from "./doctor.service";
 
 const minioClient = new S3Client({
   region: "us-east-1",
@@ -45,8 +47,7 @@ const minioClient = new S3Client({
 export class doctorControllers {
   @Post("/")
   @UseBefore(
-    ProtectRoutesMiddleware,
-    roleOrPermissionMiddleware("addDoctor"),
+    ...secureRouteWithPermissions("addDoctor"),
     createUploadMiddleware("icon"),
     createValidationMiddleware(addDoctorValidationSchema)
   )
@@ -55,23 +56,9 @@ export class doctorControllers {
     @Body() body: any,
     @Res() res: Response
   ) {
-    if (body.phone) {
-      if (await prisma.doctor.findFirst({ where: { phone: body.phone } })) {
-        throw new ApiError("doctor with this phone already exists");
-      }
-    }
-    if (body.specialtyId) {
-      if (
-        !(await prisma.specialty.findUnique({
-          where: { id: parseInt(body.specialtyId, 10) },
-        }))
-      ) {
-        throw new ApiError("specialtyId not found");
-      }
-    }
-    if (!req.file) {
-      return res.status(400).json({ error: "image file is required." });
-    }
+    await validateDoctor(body.phone);
+    await validateSpecialty(body.specialtyId);
+    if (!req.file) throw new ApiError("image file is required.", 404);
     body.specialtyId = parseInt(body.specialtyId, 10);
     const cleanedFilename = req.file.originalname
       .replace(/\s+/g, "_")
@@ -102,20 +89,14 @@ export class doctorControllers {
       { expiresIn: 3600 } // URL valid for 1 hour
     );
 
-    const doctor = await prisma.doctor.create({
-      data: {
-        image: imageUrl ?? "",
-        ...body,
-      },
-    });
+    const doctor = await doctorServices.addDoctor(body, imageUrl);
 
     return res.status(200).json(doctor);
   }
 
   @Put("/:id")
   @UseBefore(
-    ProtectRoutesMiddleware,
-    roleOrPermissionMiddleware("updateDoctor"),
+    ...secureRouteWithPermissions("updateDoctor"),
     createUploadMiddleware("icon"), // Ensure this middleware works as expected
     createValidationMiddleware(UpdateDoctorValidationSchema)
   )
@@ -125,25 +106,13 @@ export class doctorControllers {
     @Param("id") id: number,
     @Res() res: Response
   ) {
+    const doctor = await doctorServices.getDoctor(id);
     // Check if the doctor exists
-    const doctor = await prisma.doctor.findUnique({
-      where: { id },
-    });
-    if (!doctor) {
-      throw new ApiError("Doctor not found", 404);
-    }
+    await validateDoctorById(id);
+    await validatePhone(body.phone, id);
 
-    if (body.phone) {
-      if (
-        await prisma.doctor.findFirst({
-          where: { phone: body.phone, NOT: { id } },
-        })
-      ) {
-        throw new ApiError("doctor with this phone already exists");
-      }
-    }
     // Initialize fileName to preserve existing image if no new image is uploaded
-    let fileName = doctor.image;
+    let fileName = doctor?.image;
 
     // Process image if provided
     if (req.file) {
@@ -162,7 +131,7 @@ export class doctorControllers {
         .toFile(imgPath);
 
       // Delete old image if it exists
-      if (doctor.image) {
+      if (doctor?.image) {
         const oldImagePath = path.join("uploads", doctor.image);
         if (fs.existsSync(oldImagePath)) {
           fs.unlinkSync(oldImagePath);
@@ -173,13 +142,7 @@ export class doctorControllers {
     }
 
     // Update the doctor record
-    const updatedDoctor = await prisma.doctor.update({
-      where: { id },
-      data: {
-        image: fileName,
-        ...body,
-      },
-    });
+    const updatedDoctor = await doctorServices.updateDoctor(id, fileName, body);
 
     // Return success response
     return res.status(200).json({
@@ -189,47 +152,30 @@ export class doctorControllers {
   }
 
   @Get("/")
-  @UseBefore(ProtectRoutesMiddleware, roleOrPermissionMiddleware("listDoctors"))
+  @UseBefore(...secureRouteWithPermissions("listDoctors"))
   async listDoctors(
     @Req() req: any,
     @QueryParams() query: any,
     @Body() body: any,
     @Res() res: any
   ) {
-    // Initialize ApiFeatures with the Prisma model and the search query
-    const apiFeatures = new ApiFeatures(prisma.doctor, query);
-
-    // Apply filters, sorting, field selection, search, and pagination
-    await apiFeatures.filter().sort().limitedFields().search("doctor"); // Specify the model name, 'user' in this case
-
-    await apiFeatures.paginateWithCount();
-
-    // Execute the query and get the result and pagination
-    const { result, pagination } = await apiFeatures.exec("doctor");
-    result.map((doc: any) => {
-      doc.image = process.env.base_url + doc.image;
-    });
+    const doctors = await doctorServices.getDoctors(query);
     // Return the result along with pagination information
     return res.status(200).json({
-      data: result,
-      pagination: pagination, // Use the pagination here
-      count: result.length,
+      data: doctors.result,
+      pagination: doctors.pagination, // Use the pagination here
+      count: doctors.result.length,
     });
   }
 
   @Get("/:id")
-  @UseBefore(
-    ProtectRoutesMiddleware,
-    roleOrPermissionMiddleware("showDoctorDetails")
-  )
+  @UseBefore(...secureRouteWithPermissions("showDoctorDetails"))
   async showDoctorDetails(
     @Req() req: Request,
     @Param("id") id: number,
     @Res() res: Response
   ) {
-    let doctor = await prisma.doctor.findUnique({
-      where: { id },
-    });
+    let doctor = await doctorServices.getDoctor(id);
     if (!doctor) {
       throw new ApiError("doctor not found", 404);
     }
@@ -238,32 +184,18 @@ export class doctorControllers {
   }
 
   @Patch("/:id")
-  @UseBefore(
-    ProtectRoutesMiddleware,
-    roleOrPermissionMiddleware("DeactiveDoctor")
-  )
+  @UseBefore(...secureRouteWithPermissions("DeactiveDoctor"))
   async DeactiveDoctor(
     @Req() req: any,
     @Param("id") id: number,
     @Res() res: Response
   ) {
-    let doctor = await prisma.doctor.findUnique({ where: { id } });
-    if (!doctor) {
-      throw new ApiError("doctor not found", 404);
-    }
-    if (doctor.isActive) {
-      await prisma.doctor.update({
-        where: { id },
-        data: { isActive: false },
-      });
-    } else {
-      await prisma.doctor.update({
-        where: { id },
-        data: { isActive: true },
-      });
-    }
+    let doctor = await doctorServices.getDoctor(id);
+    if (!doctor) throw new ApiError("doctor not found", 404);
 
-    let updatedDoctor = await prisma.doctor.findUnique({ where: { id } });
+    await doctorServices.deactiveOrActive(doctor, id);
+
+    let updatedDoctor = await doctorServices.getDoctor(id);
 
     return res
       .status(200)

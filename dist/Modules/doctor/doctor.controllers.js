@@ -1,10 +1,43 @@
 "use strict";
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
     if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
     else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
     return c > 3 && r && Object.defineProperty(target, key, r), r;
 };
+var __importStar = (this && this.__importStar) || (function () {
+    var ownKeys = function(o) {
+        ownKeys = Object.getOwnPropertyNames || function (o) {
+            var ar = [];
+            for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
+            return ar;
+        };
+        return ownKeys(o);
+    };
+    return function (mod) {
+        if (mod && mod.__esModule) return mod;
+        var result = {};
+        if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
+        __setModuleDefault(result, mod);
+        return result;
+    };
+})();
 var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
@@ -30,17 +63,15 @@ const routing_controllers_1 = require("routing-controllers");
 const validation_1 = require("../../middlewares/validation");
 const doctor_validation_1 = require("./doctor.validation");
 const uploadFile_1 = __importDefault(require("../../middlewares/uploadFile"));
-const client_1 = require("@prisma/client");
 const ApiError_1 = __importDefault(require("../../utils/ApiError"));
 const uuid_1 = require("uuid");
 const sharp_1 = __importDefault(require("sharp"));
 const path_1 = __importDefault(require("path"));
-const ApiFeatures_1 = __importDefault(require("../../utils/ApiFeatures"));
-const protectedRoute_1 = require("../../middlewares/protectedRoute");
-const roleOrPermission_1 = require("../../middlewares/roleOrPermission");
 const client_s3_1 = require("@aws-sdk/client-s3");
 const s3_request_presigner_1 = require("@aws-sdk/s3-request-presigner");
-const prisma = new client_1.PrismaClient();
+const secureRoutesMiddleware_1 = require("../../middlewares/secureRoutesMiddleware");
+const validators_1 = require("./validators");
+const doctorServices = __importStar(require("./doctor.service"));
 const minioClient = new client_s3_1.S3Client({
     region: "us-east-1",
     endpoint: "http://127.0.0.1:9000",
@@ -52,21 +83,10 @@ const minioClient = new client_s3_1.S3Client({
 let doctorControllers = class doctorControllers {
     addDoctor(req, body, res) {
         return __awaiter(this, void 0, void 0, function* () {
-            if (body.phone) {
-                if (yield prisma.doctor.findFirst({ where: { phone: body.phone } })) {
-                    throw new ApiError_1.default("doctor with this phone already exists");
-                }
-            }
-            if (body.specialtyId) {
-                if (!(yield prisma.specialty.findUnique({
-                    where: { id: parseInt(body.specialtyId, 10) },
-                }))) {
-                    throw new ApiError_1.default("specialtyId not found");
-                }
-            }
-            if (!req.file) {
-                return res.status(400).json({ error: "image file is required." });
-            }
+            yield (0, validators_1.validateDoctor)(body.phone);
+            yield (0, validators_1.validateSpecialty)(body.specialtyId);
+            if (!req.file)
+                throw new ApiError_1.default("image file is required.", 404);
             body.specialtyId = parseInt(body.specialtyId, 10);
             const cleanedFilename = req.file.originalname
                 .replace(/\s+/g, "_")
@@ -88,30 +108,18 @@ let doctorControllers = class doctorControllers {
                 Key: Filename,
             }), { expiresIn: 3600 } // URL valid for 1 hour
             );
-            const doctor = yield prisma.doctor.create({
-                data: Object.assign({ image: imageUrl !== null && imageUrl !== void 0 ? imageUrl : "" }, body),
-            });
+            const doctor = yield doctorServices.addDoctor(body, imageUrl);
             return res.status(200).json(doctor);
         });
     }
     updateDoctor(req, body, id, res) {
         return __awaiter(this, void 0, void 0, function* () {
+            const doctor = yield doctorServices.getDoctor(id);
             // Check if the doctor exists
-            const doctor = yield prisma.doctor.findUnique({
-                where: { id },
-            });
-            if (!doctor) {
-                throw new ApiError_1.default("Doctor not found", 404);
-            }
-            if (body.phone) {
-                if (yield prisma.doctor.findFirst({
-                    where: { phone: body.phone, NOT: { id } },
-                })) {
-                    throw new ApiError_1.default("doctor with this phone already exists");
-                }
-            }
+            yield (0, validators_1.validateDoctorById)(id);
+            yield (0, validators_1.validatePhone)(body.phone, id);
             // Initialize fileName to preserve existing image if no new image is uploaded
-            let fileName = doctor.image;
+            let fileName = doctor === null || doctor === void 0 ? void 0 : doctor.image;
             // Process image if provided
             if (req.file) {
                 const cleanedFilename = req.file.originalname
@@ -125,7 +133,7 @@ let doctorControllers = class doctorControllers {
                     .png({ quality: 80 })
                     .toFile(imgPath);
                 // Delete old image if it exists
-                if (doctor.image) {
+                if (doctor === null || doctor === void 0 ? void 0 : doctor.image) {
                     const oldImagePath = path_1.default.join("uploads", doctor.image);
                     if (fs_1.default.existsSync(oldImagePath)) {
                         fs_1.default.unlinkSync(oldImagePath);
@@ -134,10 +142,7 @@ let doctorControllers = class doctorControllers {
                 fileName = newFilename;
             }
             // Update the doctor record
-            const updatedDoctor = yield prisma.doctor.update({
-                where: { id },
-                data: Object.assign({ image: fileName }, body),
-            });
+            const updatedDoctor = yield doctorServices.updateDoctor(id, fileName, body);
             // Return success response
             return res.status(200).json({
                 message: "Doctor updated successfully",
@@ -147,29 +152,18 @@ let doctorControllers = class doctorControllers {
     }
     listDoctors(req, query, body, res) {
         return __awaiter(this, void 0, void 0, function* () {
-            // Initialize ApiFeatures with the Prisma model and the search query
-            const apiFeatures = new ApiFeatures_1.default(prisma.doctor, query);
-            // Apply filters, sorting, field selection, search, and pagination
-            yield apiFeatures.filter().sort().limitedFields().search("doctor"); // Specify the model name, 'user' in this case
-            yield apiFeatures.paginateWithCount();
-            // Execute the query and get the result and pagination
-            const { result, pagination } = yield apiFeatures.exec("doctor");
-            result.map((doc) => {
-                doc.image = process.env.base_url + doc.image;
-            });
+            const doctors = yield doctorServices.getDoctors(query);
             // Return the result along with pagination information
             return res.status(200).json({
-                data: result,
-                pagination: pagination, // Use the pagination here
-                count: result.length,
+                data: doctors.result,
+                pagination: doctors.pagination, // Use the pagination here
+                count: doctors.result.length,
             });
         });
     }
     showDoctorDetails(req, id, res) {
         return __awaiter(this, void 0, void 0, function* () {
-            let doctor = yield prisma.doctor.findUnique({
-                where: { id },
-            });
+            let doctor = yield doctorServices.getDoctor(id);
             if (!doctor) {
                 throw new ApiError_1.default("doctor not found", 404);
             }
@@ -179,23 +173,11 @@ let doctorControllers = class doctorControllers {
     }
     DeactiveDoctor(req, id, res) {
         return __awaiter(this, void 0, void 0, function* () {
-            let doctor = yield prisma.doctor.findUnique({ where: { id } });
-            if (!doctor) {
+            let doctor = yield doctorServices.getDoctor(id);
+            if (!doctor)
                 throw new ApiError_1.default("doctor not found", 404);
-            }
-            if (doctor.isActive) {
-                yield prisma.doctor.update({
-                    where: { id },
-                    data: { isActive: false },
-                });
-            }
-            else {
-                yield prisma.doctor.update({
-                    where: { id },
-                    data: { isActive: true },
-                });
-            }
-            let updatedDoctor = yield prisma.doctor.findUnique({ where: { id } });
+            yield doctorServices.deactiveOrActive(doctor, id);
+            let updatedDoctor = yield doctorServices.getDoctor(id);
             return res
                 .status(200)
                 .json({ message: "doctor deactiveded successfully", updatedDoctor });
@@ -205,7 +187,7 @@ let doctorControllers = class doctorControllers {
 exports.doctorControllers = doctorControllers;
 __decorate([
     (0, routing_controllers_1.Post)("/"),
-    (0, routing_controllers_1.UseBefore)(protectedRoute_1.ProtectRoutesMiddleware, (0, roleOrPermission_1.roleOrPermissionMiddleware)("addDoctor"), (0, uploadFile_1.default)("icon"), (0, validation_1.createValidationMiddleware)(doctor_validation_1.addDoctorValidationSchema)),
+    (0, routing_controllers_1.UseBefore)(...(0, secureRoutesMiddleware_1.secureRouteWithPermissions)("addDoctor"), (0, uploadFile_1.default)("icon"), (0, validation_1.createValidationMiddleware)(doctor_validation_1.addDoctorValidationSchema)),
     __param(0, (0, routing_controllers_1.Req)()),
     __param(1, (0, routing_controllers_1.Body)()),
     __param(2, (0, routing_controllers_1.Res)()),
@@ -215,7 +197,7 @@ __decorate([
 ], doctorControllers.prototype, "addDoctor", null);
 __decorate([
     (0, routing_controllers_1.Put)("/:id"),
-    (0, routing_controllers_1.UseBefore)(protectedRoute_1.ProtectRoutesMiddleware, (0, roleOrPermission_1.roleOrPermissionMiddleware)("updateDoctor"), (0, uploadFile_1.default)("icon"), // Ensure this middleware works as expected
+    (0, routing_controllers_1.UseBefore)(...(0, secureRoutesMiddleware_1.secureRouteWithPermissions)("updateDoctor"), (0, uploadFile_1.default)("icon"), // Ensure this middleware works as expected
     (0, validation_1.createValidationMiddleware)(doctor_validation_1.UpdateDoctorValidationSchema)),
     __param(0, (0, routing_controllers_1.Req)()),
     __param(1, (0, routing_controllers_1.Body)()),
@@ -227,7 +209,7 @@ __decorate([
 ], doctorControllers.prototype, "updateDoctor", null);
 __decorate([
     (0, routing_controllers_1.Get)("/"),
-    (0, routing_controllers_1.UseBefore)(protectedRoute_1.ProtectRoutesMiddleware, (0, roleOrPermission_1.roleOrPermissionMiddleware)("listDoctors")),
+    (0, routing_controllers_1.UseBefore)(...(0, secureRoutesMiddleware_1.secureRouteWithPermissions)("listDoctors")),
     __param(0, (0, routing_controllers_1.Req)()),
     __param(1, (0, routing_controllers_1.QueryParams)()),
     __param(2, (0, routing_controllers_1.Body)()),
@@ -238,7 +220,7 @@ __decorate([
 ], doctorControllers.prototype, "listDoctors", null);
 __decorate([
     (0, routing_controllers_1.Get)("/:id"),
-    (0, routing_controllers_1.UseBefore)(protectedRoute_1.ProtectRoutesMiddleware, (0, roleOrPermission_1.roleOrPermissionMiddleware)("showDoctorDetails")),
+    (0, routing_controllers_1.UseBefore)(...(0, secureRoutesMiddleware_1.secureRouteWithPermissions)("showDoctorDetails")),
     __param(0, (0, routing_controllers_1.Req)()),
     __param(1, (0, routing_controllers_1.Param)("id")),
     __param(2, (0, routing_controllers_1.Res)()),
@@ -248,7 +230,7 @@ __decorate([
 ], doctorControllers.prototype, "showDoctorDetails", null);
 __decorate([
     (0, routing_controllers_1.Patch)("/:id"),
-    (0, routing_controllers_1.UseBefore)(protectedRoute_1.ProtectRoutesMiddleware, (0, roleOrPermission_1.roleOrPermissionMiddleware)("DeactiveDoctor")),
+    (0, routing_controllers_1.UseBefore)(...(0, secureRoutesMiddleware_1.secureRouteWithPermissions)("DeactiveDoctor")),
     __param(0, (0, routing_controllers_1.Req)()),
     __param(1, (0, routing_controllers_1.Param)("id")),
     __param(2, (0, routing_controllers_1.Res)()),

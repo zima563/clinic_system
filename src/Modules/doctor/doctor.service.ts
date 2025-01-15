@@ -1,0 +1,63 @@
+import { prisma } from "../../prismaClient";
+import ApiFeatures from "../../utils/ApiFeatures";
+
+export const addDoctor = async (body: any, imageUrl: string) => {
+  return prisma.doctor.create({
+    data: {
+      image: imageUrl ?? "",
+      ...body,
+    },
+  });
+};
+
+export const updateDoctor = async (
+  id: number,
+  fileName: string | undefined,
+  body: any
+) => {
+  return prisma.doctor.update({
+    where: { id },
+    data: {
+      image: fileName,
+      ...body,
+    },
+  });
+};
+
+export const getDoctors = async (query: any) => {
+  // Initialize ApiFeatures with the Prisma model and the search query
+  const apiFeatures = new ApiFeatures(prisma.doctor, query);
+
+  // Apply filters, sorting, field selection, search, and pagination
+  await apiFeatures.filter().sort().limitedFields().search("doctor"); // Specify the model name, 'user' in this case
+
+  await apiFeatures.paginateWithCount();
+
+  // Execute the query and get the result and pagination
+  const { result, pagination } = await apiFeatures.exec("doctor");
+  result.map((doc: any) => {
+    doc.image = process.env.base_url + doc.image;
+  });
+
+  return { result, pagination };
+};
+
+export const getDoctor = async (id: number) => {
+  return prisma.doctor.findUnique({
+    where: { id },
+  });
+};
+
+export const deactiveOrActive = async (doctor: any, id: number) => {
+  if (doctor.isActive) {
+    await prisma.doctor.update({
+      where: { id },
+      data: { isActive: false },
+    });
+  } else {
+    await prisma.doctor.update({
+      where: { id },
+      data: { isActive: true },
+    });
+  }
+};
