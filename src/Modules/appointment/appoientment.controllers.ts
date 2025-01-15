@@ -18,22 +18,20 @@ import {
   updateAppointmentStatusSchema,
 } from "./appointment.validation";
 import { Request, Response } from "express";
-import { PrismaClient } from "@prisma/client";
 import ApiError from "../../utils/ApiError";
-import { ProtectRoutesMiddleware } from "../../middlewares/protectedRoute";
-import { roleOrPermissionMiddleware } from "../../middlewares/roleOrPermission";
-import { checkPatientMiddleware } from "../../middlewares/patientExist";
-import { checkScheduleMiddleware } from "../../middlewares/scheduleExist";
-const prisma = new PrismaClient();
+import { secureRouteWithPermissions } from "../../middlewares/secureRoutesMiddleware";
+import {
+  validateAppoientment,
+  validatePatient,
+  validateSchedule,
+} from "./validators";
+import * as appointmentService from "./appoientment.service";
 
 @JsonController("/api/appointment")
 export class appointmentController {
   @Post("/")
   @UseBefore(
-    ProtectRoutesMiddleware,
-    roleOrPermissionMiddleware("addAppointment"),
-    checkPatientMiddleware,
-    checkScheduleMiddleware,
+    ...secureRouteWithPermissions("addAppointment"),
     createValidationMiddleware(addAppointmentValidationSchema)
   )
   async addAppointment(
@@ -41,66 +39,27 @@ export class appointmentController {
     @Body() body: any,
     @Res() res: Response
   ) {
-    let appointment = await prisma.appointment.create({
-      data: {
-        ...body,
-        dateTime: new Date(body.dateTime).toISOString(),
-      },
+    await validatePatient(body.patientId);
+    await validateSchedule(body.scheduleId);
+    let appointment = await appointmentService.createAppointment({
+      ...body,
+      dateTime: new Date(body.dateTime).toISOString(),
     });
     return res.status(200).json(appointment);
   }
 
   @Get("/patient")
-  @UseBefore(
-    ProtectRoutesMiddleware,
-    roleOrPermissionMiddleware("getPatientAppointment")
-  )
+  @UseBefore(...secureRouteWithPermissions("getPatientAppointment"))
   async getPatientAppointment(
     @Req() req: Request,
     @Res() res: Response,
     @QueryParam("patientId") patientId?: number
   ) {
-    if (!patientId) {
-      throw new ApiError("patientId must exist", 401);
-    }
-    let appointments = await prisma.appointment.findMany({
-      where: { patientId },
-      select: {
-        id: true,
-        dateTime: true,
-        status: true,
-        schedule: {
-          select: {
-            id: true,
-            service: {
-              select: {
-                id: true,
-                title: true,
-              },
-            },
-            doctor: {
-              select: {
-                id: true,
-                name: true,
-              },
-            },
-          },
-        },
-        patient: {
-          select: {
-            id: true,
-            name: true,
-          },
-        },
-        date: {
-          select: {
-            id: true,
-            fromTime: true,
-            toTime: true,
-          },
-        },
-      },
-    });
+    if (!patientId) throw new ApiError("patientId must exist", 401);
+
+    let appointments = await appointmentService.getAllAppoientmentPatient(
+      patientId
+    );
     return res.status(200).json({
       data: appointments,
       count: appointments.length,
@@ -108,53 +67,9 @@ export class appointmentController {
   }
 
   @Get("/")
-  @UseBefore(
-    ProtectRoutesMiddleware,
-    roleOrPermissionMiddleware("getAppointment")
-  )
+  @UseBefore(...secureRouteWithPermissions("getAppointment"))
   async getAppointment(@Req() req: Request, @Res() res: Response) {
-    const today = new Date();
-
-    const normalizedDate = today.toISOString().split("T")[0];
-
-    let appointments = await prisma.appointment.findMany({
-      where: {
-        // date: `${normalizedDate}T00:00:00.000Z`,
-      },
-      select: {
-        id: true,
-        dateTime: true,
-        status: true,
-        schedule: {
-          select: {
-            price: true,
-            service: {
-              select: {
-                id: true,
-                title: true,
-              },
-            },
-            doctor: {
-              select: {
-                id: true,
-                name: true,
-              },
-            },
-          },
-        },
-        date: {
-          select: {
-            fromTime: true,
-            toTime: true,
-          },
-        },
-        patient: {
-          select: {
-            name: true,
-          },
-        },
-      },
-    });
+    let appointments = await appointmentService.getAppointments();
     appointments.map((app: any) => {
       app.schedule.doctor.image =
         process.env.base_url + app.schedule.doctor.image;
@@ -166,53 +81,13 @@ export class appointmentController {
   }
 
   @Get("/:id")
-  @UseBefore(
-    ProtectRoutesMiddleware,
-    roleOrPermissionMiddleware("showAppointmnetDetail")
-  )
+  @UseBefore(...secureRouteWithPermissions("showAppointmnetDetail"))
   async showAppointmnetDetail(
     @Req() req: Request,
     @Param("id") id: number,
     @Res() res: Response
   ) {
-    let appointment = await prisma.appointment.findUnique({
-      where: {
-        id,
-      },
-      select: {
-        id: true,
-        dateTime: true,
-        status: true,
-        schedule: {
-          select: {
-            price: true,
-            service: {
-              select: {
-                id: true,
-                title: true,
-              },
-            },
-            doctor: {
-              select: {
-                id: true,
-                name: true,
-              },
-            },
-          },
-        },
-        date: {
-          select: {
-            fromTime: true,
-            toTime: true,
-          },
-        },
-        patient: {
-          select: {
-            name: true,
-          },
-        },
-      },
-    });
+    let appointment = await appointmentService.showAppointmnetDetail(id);
     if (!appointment) {
       throw new ApiError("appointment not found", 404);
     }
@@ -221,8 +96,7 @@ export class appointmentController {
 
   @Patch("/:id")
   @UseBefore(
-    ProtectRoutesMiddleware,
-    roleOrPermissionMiddleware("updateStatus"),
+    ...secureRouteWithPermissions("updateStatus"),
     createValidationMiddleware(updateAppointmentStatusSchema)
   )
   async updateStatus(
@@ -231,15 +105,8 @@ export class appointmentController {
     @Body() body: any,
     @Res() res: Response
   ) {
-    if (!(await prisma.appointment.findUnique({ where: { id } }))) {
-      throw new ApiError("appointment not found", 404);
-    }
-    await prisma.appointment.update({
-      where: { id },
-      data: {
-        status: body.status,
-      },
-    });
+    await validateAppoientment(id);
+    await appointmentService.updateStatus(id, body);
     return res
       .status(200)
       .json({ message: `appointment updated successfully to ${body.status}` });
@@ -247,8 +114,7 @@ export class appointmentController {
 
   @Put("/:id")
   @UseBefore(
-    ProtectRoutesMiddleware,
-    roleOrPermissionMiddleware("updateAppointment"),
+    ...secureRouteWithPermissions("updateAppointment"),
     createValidationMiddleware(updateAppointmentSchema)
   )
   async updateAppointment(
@@ -257,27 +123,13 @@ export class appointmentController {
     @Body() body: any,
     @Res() res: Response
   ) {
-    let { date, patientId, scheduleId } = body;
-    if (patientId) {
-      if (!(await prisma.patient.findUnique({ where: { id: patientId } }))) {
-        throw new ApiError("patient not found with this patientId");
-      }
+    await validatePatient(body.patientId);
+    await validateSchedule(body.scheduleId);
+    await validateAppoientment(id);
+    if (body.date) {
+      body.date = new Date(body.date);
     }
-    if (scheduleId) {
-      if (!(await prisma.schedule.findUnique({ where: { id: scheduleId } }))) {
-        throw new ApiError("patient not found with this scheduleId");
-      }
-    }
-    if (!(await prisma.appointment.findUnique({ where: { id } }))) {
-      throw new ApiError("appointment not found", 404);
-    }
-    if (date) {
-      date = new Date(date);
-    }
-    await prisma.appointment.update({
-      where: { id },
-      data: body,
-    });
+    await appointmentService.updateAppointment(id, body);
     return res
       .status(200)
       .json({ message: `appointment updated successfully` });

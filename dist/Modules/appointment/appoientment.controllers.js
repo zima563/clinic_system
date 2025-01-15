@@ -1,10 +1,43 @@
 "use strict";
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
     if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
     else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
     return c > 3 && r && Object.defineProperty(target, key, r), r;
 };
+var __importStar = (this && this.__importStar) || (function () {
+    var ownKeys = function(o) {
+        ownKeys = Object.getOwnPropertyNames || function (o) {
+            var ar = [];
+            for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
+            return ar;
+        };
+        return ownKeys(o);
+    };
+    return function (mod) {
+        if (mod && mod.__esModule) return mod;
+        var result = {};
+        if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
+        __setModuleDefault(result, mod);
+        return result;
+    };
+})();
 var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
@@ -28,65 +61,24 @@ exports.appointmentController = void 0;
 const routing_controllers_1 = require("routing-controllers");
 const validation_1 = require("../../middlewares/validation");
 const appointment_validation_1 = require("./appointment.validation");
-const client_1 = require("@prisma/client");
 const ApiError_1 = __importDefault(require("../../utils/ApiError"));
-const protectedRoute_1 = require("../../middlewares/protectedRoute");
-const roleOrPermission_1 = require("../../middlewares/roleOrPermission");
-const patientExist_1 = require("../../middlewares/patientExist");
-const scheduleExist_1 = require("../../middlewares/scheduleExist");
-const prisma = new client_1.PrismaClient();
+const secureRoutesMiddleware_1 = require("../../middlewares/secureRoutesMiddleware");
+const validators_1 = require("./validators");
+const appointmentService = __importStar(require("./appoientment.service"));
 let appointmentController = class appointmentController {
     addAppointment(req, body, res) {
         return __awaiter(this, void 0, void 0, function* () {
-            let appointment = yield prisma.appointment.create({
-                data: Object.assign(Object.assign({}, body), { dateTime: new Date(body.dateTime).toISOString() }),
-            });
+            yield (0, validators_1.validatePatient)(body.patientId);
+            yield (0, validators_1.validateSchedule)(body.scheduleId);
+            let appointment = yield appointmentService.createAppointment(Object.assign(Object.assign({}, body), { dateTime: new Date(body.dateTime).toISOString() }));
             return res.status(200).json(appointment);
         });
     }
     getPatientAppointment(req, res, patientId) {
         return __awaiter(this, void 0, void 0, function* () {
-            if (!patientId) {
+            if (!patientId)
                 throw new ApiError_1.default("patientId must exist", 401);
-            }
-            let appointments = yield prisma.appointment.findMany({
-                where: { patientId },
-                select: {
-                    id: true,
-                    dateTime: true,
-                    status: true,
-                    schedule: {
-                        select: {
-                            id: true,
-                            service: {
-                                select: {
-                                    id: true,
-                                    title: true,
-                                },
-                            },
-                            doctor: {
-                                select: {
-                                    id: true,
-                                    name: true,
-                                },
-                            },
-                        },
-                    },
-                    patient: {
-                        select: {
-                            id: true,
-                            name: true,
-                        },
-                    },
-                    date: {
-                        select: {
-                            id: true,
-                            fromTime: true,
-                            toTime: true,
-                        },
-                    },
-                },
-            });
+            let appointments = yield appointmentService.getAllAppoientmentPatient(patientId);
             return res.status(200).json({
                 data: appointments,
                 count: appointments.length,
@@ -95,46 +87,7 @@ let appointmentController = class appointmentController {
     }
     getAppointment(req, res) {
         return __awaiter(this, void 0, void 0, function* () {
-            const today = new Date();
-            const normalizedDate = today.toISOString().split("T")[0];
-            let appointments = yield prisma.appointment.findMany({
-                where: {
-                // date: `${normalizedDate}T00:00:00.000Z`,
-                },
-                select: {
-                    id: true,
-                    dateTime: true,
-                    status: true,
-                    schedule: {
-                        select: {
-                            price: true,
-                            service: {
-                                select: {
-                                    id: true,
-                                    title: true,
-                                },
-                            },
-                            doctor: {
-                                select: {
-                                    id: true,
-                                    name: true,
-                                },
-                            },
-                        },
-                    },
-                    date: {
-                        select: {
-                            fromTime: true,
-                            toTime: true,
-                        },
-                    },
-                    patient: {
-                        select: {
-                            name: true,
-                        },
-                    },
-                },
-            });
+            let appointments = yield appointmentService.getAppointments();
             appointments.map((app) => {
                 app.schedule.doctor.image =
                     process.env.base_url + app.schedule.doctor.image;
@@ -147,44 +100,7 @@ let appointmentController = class appointmentController {
     }
     showAppointmnetDetail(req, id, res) {
         return __awaiter(this, void 0, void 0, function* () {
-            let appointment = yield prisma.appointment.findUnique({
-                where: {
-                    id,
-                },
-                select: {
-                    id: true,
-                    dateTime: true,
-                    status: true,
-                    schedule: {
-                        select: {
-                            price: true,
-                            service: {
-                                select: {
-                                    id: true,
-                                    title: true,
-                                },
-                            },
-                            doctor: {
-                                select: {
-                                    id: true,
-                                    name: true,
-                                },
-                            },
-                        },
-                    },
-                    date: {
-                        select: {
-                            fromTime: true,
-                            toTime: true,
-                        },
-                    },
-                    patient: {
-                        select: {
-                            name: true,
-                        },
-                    },
-                },
-            });
+            let appointment = yield appointmentService.showAppointmnetDetail(id);
             if (!appointment) {
                 throw new ApiError_1.default("appointment not found", 404);
             }
@@ -193,15 +109,8 @@ let appointmentController = class appointmentController {
     }
     updateStatus(req, id, body, res) {
         return __awaiter(this, void 0, void 0, function* () {
-            if (!(yield prisma.appointment.findUnique({ where: { id } }))) {
-                throw new ApiError_1.default("appointment not found", 404);
-            }
-            yield prisma.appointment.update({
-                where: { id },
-                data: {
-                    status: body.status,
-                },
-            });
+            yield (0, validators_1.validateAppoientment)(id);
+            yield appointmentService.updateStatus(id, body);
             return res
                 .status(200)
                 .json({ message: `appointment updated successfully to ${body.status}` });
@@ -209,27 +118,13 @@ let appointmentController = class appointmentController {
     }
     updateAppointment(req, id, body, res) {
         return __awaiter(this, void 0, void 0, function* () {
-            let { date, patientId, scheduleId } = body;
-            if (patientId) {
-                if (!(yield prisma.patient.findUnique({ where: { id: patientId } }))) {
-                    throw new ApiError_1.default("patient not found with this patientId");
-                }
+            yield (0, validators_1.validatePatient)(body.patientId);
+            yield (0, validators_1.validateSchedule)(body.scheduleId);
+            yield (0, validators_1.validateAppoientment)(id);
+            if (body.date) {
+                body.date = new Date(body.date);
             }
-            if (scheduleId) {
-                if (!(yield prisma.schedule.findUnique({ where: { id: scheduleId } }))) {
-                    throw new ApiError_1.default("patient not found with this scheduleId");
-                }
-            }
-            if (!(yield prisma.appointment.findUnique({ where: { id } }))) {
-                throw new ApiError_1.default("appointment not found", 404);
-            }
-            if (date) {
-                date = new Date(date);
-            }
-            yield prisma.appointment.update({
-                where: { id },
-                data: body,
-            });
+            yield appointmentService.updateAppointment(id, body);
             return res
                 .status(200)
                 .json({ message: `appointment updated successfully` });
@@ -239,7 +134,7 @@ let appointmentController = class appointmentController {
 exports.appointmentController = appointmentController;
 __decorate([
     (0, routing_controllers_1.Post)("/"),
-    (0, routing_controllers_1.UseBefore)(protectedRoute_1.ProtectRoutesMiddleware, (0, roleOrPermission_1.roleOrPermissionMiddleware)("addAppointment"), patientExist_1.checkPatientMiddleware, scheduleExist_1.checkScheduleMiddleware, (0, validation_1.createValidationMiddleware)(appointment_validation_1.addAppointmentValidationSchema)),
+    (0, routing_controllers_1.UseBefore)(...(0, secureRoutesMiddleware_1.secureRouteWithPermissions)("addAppointment"), (0, validation_1.createValidationMiddleware)(appointment_validation_1.addAppointmentValidationSchema)),
     __param(0, (0, routing_controllers_1.Req)()),
     __param(1, (0, routing_controllers_1.Body)()),
     __param(2, (0, routing_controllers_1.Res)()),
@@ -249,7 +144,7 @@ __decorate([
 ], appointmentController.prototype, "addAppointment", null);
 __decorate([
     (0, routing_controllers_1.Get)("/patient"),
-    (0, routing_controllers_1.UseBefore)(protectedRoute_1.ProtectRoutesMiddleware, (0, roleOrPermission_1.roleOrPermissionMiddleware)("getPatientAppointment")),
+    (0, routing_controllers_1.UseBefore)(...(0, secureRoutesMiddleware_1.secureRouteWithPermissions)("getPatientAppointment")),
     __param(0, (0, routing_controllers_1.Req)()),
     __param(1, (0, routing_controllers_1.Res)()),
     __param(2, (0, routing_controllers_1.QueryParam)("patientId")),
@@ -259,7 +154,7 @@ __decorate([
 ], appointmentController.prototype, "getPatientAppointment", null);
 __decorate([
     (0, routing_controllers_1.Get)("/"),
-    (0, routing_controllers_1.UseBefore)(protectedRoute_1.ProtectRoutesMiddleware, (0, roleOrPermission_1.roleOrPermissionMiddleware)("getAppointment")),
+    (0, routing_controllers_1.UseBefore)(...(0, secureRoutesMiddleware_1.secureRouteWithPermissions)("getAppointment")),
     __param(0, (0, routing_controllers_1.Req)()),
     __param(1, (0, routing_controllers_1.Res)()),
     __metadata("design:type", Function),
@@ -268,7 +163,7 @@ __decorate([
 ], appointmentController.prototype, "getAppointment", null);
 __decorate([
     (0, routing_controllers_1.Get)("/:id"),
-    (0, routing_controllers_1.UseBefore)(protectedRoute_1.ProtectRoutesMiddleware, (0, roleOrPermission_1.roleOrPermissionMiddleware)("showAppointmnetDetail")),
+    (0, routing_controllers_1.UseBefore)(...(0, secureRoutesMiddleware_1.secureRouteWithPermissions)("showAppointmnetDetail")),
     __param(0, (0, routing_controllers_1.Req)()),
     __param(1, (0, routing_controllers_1.Param)("id")),
     __param(2, (0, routing_controllers_1.Res)()),
@@ -278,7 +173,7 @@ __decorate([
 ], appointmentController.prototype, "showAppointmnetDetail", null);
 __decorate([
     (0, routing_controllers_1.Patch)("/:id"),
-    (0, routing_controllers_1.UseBefore)(protectedRoute_1.ProtectRoutesMiddleware, (0, roleOrPermission_1.roleOrPermissionMiddleware)("updateStatus"), (0, validation_1.createValidationMiddleware)(appointment_validation_1.updateAppointmentStatusSchema)),
+    (0, routing_controllers_1.UseBefore)(...(0, secureRoutesMiddleware_1.secureRouteWithPermissions)("updateStatus"), (0, validation_1.createValidationMiddleware)(appointment_validation_1.updateAppointmentStatusSchema)),
     __param(0, (0, routing_controllers_1.Req)()),
     __param(1, (0, routing_controllers_1.Param)("id")),
     __param(2, (0, routing_controllers_1.Body)()),
@@ -289,7 +184,7 @@ __decorate([
 ], appointmentController.prototype, "updateStatus", null);
 __decorate([
     (0, routing_controllers_1.Put)("/:id"),
-    (0, routing_controllers_1.UseBefore)(protectedRoute_1.ProtectRoutesMiddleware, (0, roleOrPermission_1.roleOrPermissionMiddleware)("updateAppointment"), (0, validation_1.createValidationMiddleware)(appointment_validation_1.updateAppointmentSchema)),
+    (0, routing_controllers_1.UseBefore)(...(0, secureRoutesMiddleware_1.secureRouteWithPermissions)("updateAppointment"), (0, validation_1.createValidationMiddleware)(appointment_validation_1.updateAppointmentSchema)),
     __param(0, (0, routing_controllers_1.Req)()),
     __param(1, (0, routing_controllers_1.Param)("id")),
     __param(2, (0, routing_controllers_1.Body)()),
