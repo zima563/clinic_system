@@ -1,4 +1,3 @@
-import { ProtectRoutesMiddleware } from "./../../middlewares/protectedRoute";
 import {
   Body,
   Delete,
@@ -14,52 +13,35 @@ import {
 } from "routing-controllers";
 import { createValidationMiddleware } from "../../middlewares/validation";
 import { addPatientSchema, UpdatePatientSchema } from "./patient.validation";
-import { CheckPhoneMiddleware } from "../../middlewares/phoneExist";
-import { PrismaClient } from "@prisma/client";
 import { Request, Response } from "express";
 import ApiError from "../../utils/ApiError";
-import ApiFeatures from "../../utils/ApiFeatures";
-import { roleOrPermissionMiddleware } from "../../middlewares/roleOrPermission";
-
-const prisma = new PrismaClient();
+import { patientExist } from "./validators";
+import { secureRouteWithPermissions } from "../../middlewares/secureRoutesMiddleware";
+import * as patientService from "./patient.service";
 
 @JsonController("/api/patients")
 export class patientController {
   @Post("/")
   @UseBefore(
-    ProtectRoutesMiddleware,
-    roleOrPermissionMiddleware("addPatient"),
-    createValidationMiddleware(addPatientSchema),
-    CheckPhoneMiddleware
+    ...secureRouteWithPermissions("addPatient"),
+    createValidationMiddleware(addPatientSchema)
   )
   async addPatient(
     @Req() req: Request,
     @Body() body: any,
     @Res() res: Response
   ) {
-    if (body.phone) {
-      let patient = await prisma.patient.findUnique({
-        where: { phone: body.phone },
-      });
-      if (patient) {
-        throw new ApiError("patient's phone already exist");
-      }
-    }
-    // Convert birthdate to ISO 8601 format if it's not already
-    if (body.birthdate) {
-      const birthdate = new Date(body.birthdate);
-      body.birthdate = birthdate.toISOString(); // Ensure it’s in ISO 8601 format
-    }
-    let patient = await prisma.patient.create({
-      data: body,
-    });
+    await patientExist(body.phone);
+    const birthdate = new Date(body.birthdate);
+    body.birthdate = birthdate.toISOString();
+
+    let patient = await patientService.createPatient(body);
     return res.status(200).json(patient);
   }
 
   @Put("/:id")
   @UseBefore(
-    ProtectRoutesMiddleware,
-    roleOrPermissionMiddleware("updatePatient"),
+    ...secureRouteWithPermissions("updatePatient"),
     createValidationMiddleware(UpdatePatientSchema)
   )
   async updatePatient(
@@ -68,68 +50,40 @@ export class patientController {
     @Body() body: any,
     @Res() res: Response
   ) {
-    if (body.phone) {
-      let patient = await prisma.patient.findUnique({
-        where: { phone: body.phone, NOT: { id } },
-      });
-      if (patient) {
-        throw new ApiError("patient's phone already exist");
-      }
-    }
+    await patientExist(body.phone);
     if (body.birthdate) {
       const birthdate = new Date(body.birthdate);
       body.birthdate = birthdate.toISOString(); // Ensure it’s in ISO 8601 format
     }
-    let patient = await prisma.patient.findUnique({
-      where: { id },
-    });
-    if (!patient) {
-      throw new ApiError("patient not found", 404);
-    }
-    await prisma.patient.update({
-      where: { id },
-      data: body,
-    });
+    await patientService.updatePatient(id, body);
     return res.status(200).json({ message: "patient updated successfully" });
   }
 
   @Get("/")
-  @UseBefore(ProtectRoutesMiddleware, roleOrPermissionMiddleware("listPatient"))
+  @UseBefore(...secureRouteWithPermissions("listPatient"))
   async listPatient(
     @Req() req: any,
     @QueryParams() query: any,
     @Body() body: any,
     @Res() res: any
   ) {
-    // Initialize ApiFeatures with the Prisma model and the search query
-    const apiFeatures = new ApiFeatures(prisma.patient, query);
-
-    // Apply filters, sorting, field selection, search, and pagination
-    await apiFeatures.filter().sort().limitedFields().search("patient"); // Specify the model name, 'user' in this case
-
-    await apiFeatures.paginateWithCount();
-
-    // Execute the query and get the result and pagination
-    const { result, pagination } = await apiFeatures.exec("patient");
-
+    const data = await patientService.listPatient(query);
     // Return the result along with pagination information
     return res.status(200).json({
-      data: result,
-      pagination: pagination, // Use the pagination here
-      count: result.length,
+      data: data.result,
+      pagination: data.pagination, // Use the pagination here
+      count: data.result.length,
     });
   }
 
   @Get("/:id")
-  @UseBefore(ProtectRoutesMiddleware, roleOrPermissionMiddleware("getPatient"))
+  @UseBefore(...secureRouteWithPermissions("getPatient"))
   async getPatient(
     @Req() req: Request,
     @Param("id") id: number,
     @Res() res: Response
   ) {
-    let patient = await prisma.patient.findUnique({
-      where: { id },
-    });
+    let patient = await patientService.getPatient(id);
     if (!patient) {
       throw new ApiError("patient not found", 404);
     }
@@ -142,23 +96,10 @@ export class patientController {
     @Param("id") id: number,
     @Res() res: Response
   ) {
-    let patient = await prisma.patient.findUnique({
-      where: { id },
-    });
+    let patient = await patientService.getPatient(id);
 
-    if (!patient) {
-      throw new ApiError("patient not found", 404);
-    }
-    await prisma.appointment.deleteMany({
-      where: {
-        patientId: id,
-      },
-    });
-    await prisma.patient.delete({
-      where: {
-        id,
-      },
-    });
+    if (!patient) throw new ApiError("patient not found", 404);
+    await patientService.deletePatient(id);
     return res.status(200).json({ message: "patient deleted successfully!" });
   }
 }
