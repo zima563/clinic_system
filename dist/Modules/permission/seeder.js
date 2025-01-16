@@ -1,10 +1,43 @@
 "use strict";
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
     if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
     else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
     return c > 3 && r && Object.defineProperty(target, key, r), r;
 };
+var __importStar = (this && this.__importStar) || (function () {
+    var ownKeys = function(o) {
+        ownKeys = Object.getOwnPropertyNames || function (o) {
+            var ar = [];
+            for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
+            return ar;
+        };
+        return ownKeys(o);
+    };
+    return function (mod) {
+        if (mod && mod.__esModule) return mod;
+        var result = {};
+        if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
+        __setModuleDefault(result, mod);
+        return result;
+    };
+})();
 var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
@@ -26,29 +59,15 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.PermissionController = void 0;
 const routing_controllers_1 = require("routing-controllers");
-const client_1 = require("@prisma/client");
-const permissions_1 = require("./permissions");
 const joi_1 = __importDefault(require("joi"));
 const validation_1 = require("../../middlewares/validation");
 const ApiError_1 = __importDefault(require("../../utils/ApiError"));
-const protectedRoute_1 = require("../../middlewares/protectedRoute");
-const roleOrPermission_1 = require("../../middlewares/roleOrPermission");
-const prisma = new client_1.PrismaClient();
+const permissionService = __importStar(require("./permission.service"));
+const secureRoutesMiddleware_1 = require("../../middlewares/secureRoutesMiddleware");
 let PermissionController = class PermissionController {
     seedPermissions(res) {
         return __awaiter(this, void 0, void 0, function* () {
-            yield prisma.$transaction((tx) => __awaiter(this, void 0, void 0, function* () {
-                yield tx.rolePermission.deleteMany();
-                yield tx.userPermission.deleteMany();
-                yield tx.permission.deleteMany();
-                for (const permission of permissions_1.permissions) {
-                    yield tx.permission.upsert({
-                        where: { name: permission.name },
-                        update: {},
-                        create: permission,
-                    });
-                }
-            }));
+            yield permissionService.seeder();
             return res.status(201).json({
                 status: "success",
                 message: "Permissions seeded successfully",
@@ -57,34 +76,7 @@ let PermissionController = class PermissionController {
     }
     assignPermissionsToUser(req, id, body, res) {
         return __awaiter(this, void 0, void 0, function* () {
-            const user = yield prisma.user.findUnique({
-                where: { id },
-                include: {
-                    userPermissions: true,
-                },
-            });
-            if (!user) {
-                throw new ApiError_1.default("User not found", 404);
-            }
-            // Fetch permissions by name
-            const permissions = yield prisma.permission.findMany({
-                where: {
-                    name: { in: body.permissionNames },
-                },
-            });
-            if (permissions.length !== body.permissionNames.length) {
-                throw new ApiError_1.default("One or more permissions not found", 404);
-            }
-            yield prisma.$transaction((tx) => __awaiter(this, void 0, void 0, function* () {
-                yield tx.userPermission.deleteMany({ where: { userId: id } });
-                const userPermissions = permissions.map((permission) => ({
-                    userId: id,
-                    permissionId: permission.id,
-                }));
-                yield tx.userPermission.createMany({
-                    data: userPermissions,
-                });
-            }));
+            yield permissionService.assignPermissionToUser(id, body);
             return res.status(200).json({
                 message: "Permissions assigned to user successfully",
             });
@@ -92,34 +84,7 @@ let PermissionController = class PermissionController {
     }
     assignPermissionsToRole(req, id, body, res) {
         return __awaiter(this, void 0, void 0, function* () {
-            const role = yield prisma.role.findUnique({
-                where: { id },
-                include: {
-                    rolePermissions: true,
-                },
-            });
-            if (!role) {
-                throw new ApiError_1.default("Role not found", 404);
-            }
-            // Fetch permissions by name
-            const permissions = yield prisma.permission.findMany({
-                where: {
-                    name: { in: body.permissionNames },
-                },
-            });
-            if (permissions.length !== body.permissionNames.length) {
-                throw new ApiError_1.default("One or more permissions not found", 404);
-            }
-            yield prisma.$transaction((tx) => __awaiter(this, void 0, void 0, function* () {
-                yield tx.rolePermission.deleteMany({ where: { roleId: id } });
-                const rolePermissions = permissions.map((permission) => ({
-                    roleId: id,
-                    permissionId: permission.id,
-                }));
-                yield tx.rolePermission.createMany({
-                    data: rolePermissions,
-                });
-            }));
+            yield permissionService.assignPermissionToRole(id, body);
             return res.status(200).json({
                 message: "Permissions assigned to role successfully",
             });
@@ -127,7 +92,7 @@ let PermissionController = class PermissionController {
     }
     ListPermissions(req, res) {
         return __awaiter(this, void 0, void 0, function* () {
-            let permissions = yield prisma.permission.findMany();
+            let permissions = yield permissionService.listPermissions();
             return res.status(200).json({
                 data: permissions,
                 count: permissions.length,
@@ -136,15 +101,10 @@ let PermissionController = class PermissionController {
     }
     ListUserPermissions(req, userId, res) {
         return __awaiter(this, void 0, void 0, function* () {
-            if (!(yield prisma.user.findUnique({ where: { id: userId } }))) {
+            if (!(yield permissionService.getUser(userId))) {
                 throw new ApiError_1.default("user not found", 404);
             }
-            let permissions = yield prisma.userPermission.findMany({
-                where: { userId },
-                include: {
-                    permission: true,
-                },
-            });
+            let permissions = yield permissionService.listPermissionOfUser(userId);
             return res.status(200).json({
                 data: permissions,
                 count: permissions.length,
@@ -153,15 +113,10 @@ let PermissionController = class PermissionController {
     }
     ListRolePermissions(req, roleId, res) {
         return __awaiter(this, void 0, void 0, function* () {
-            if (!(yield prisma.role.findUnique({ where: { id: roleId } }))) {
-                throw new ApiError_1.default("user not found", 404);
+            if (!(yield permissionService.getRole(roleId))) {
+                throw new ApiError_1.default("role not found", 404);
             }
-            let permissions = yield prisma.rolePermission.findMany({
-                where: { roleId },
-                include: {
-                    permission: true,
-                },
-            });
+            let permissions = yield permissionService.listPermissionOfRole(roleId);
             return res.status(200).json({
                 data: permissions,
                 count: permissions.length,
@@ -191,7 +146,7 @@ PermissionController.permissionSchema = joi_1.default.object({
 });
 __decorate([
     (0, routing_controllers_1.Post)("/seed"),
-    (0, routing_controllers_1.UseBefore)(protectedRoute_1.ProtectRoutesMiddleware, (0, roleOrPermission_1.roleOrPermissionMiddleware)("seedPermissions")),
+    (0, routing_controllers_1.UseBefore)(...(0, secureRoutesMiddleware_1.secureRouteWithPermissions)("seedPermissions")),
     __param(0, (0, routing_controllers_1.Res)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [Object]),
@@ -199,7 +154,7 @@ __decorate([
 ], PermissionController.prototype, "seedPermissions", null);
 __decorate([
     (0, routing_controllers_1.Post)("/assignToUser/:id"),
-    (0, routing_controllers_1.UseBefore)(protectedRoute_1.ProtectRoutesMiddleware, (0, roleOrPermission_1.roleOrPermissionMiddleware)("assignPermissionsToUser"), (0, validation_1.createValidationMiddleware)(PermissionController.permissionSchema)),
+    (0, routing_controllers_1.UseBefore)(...(0, secureRoutesMiddleware_1.secureRouteWithPermissions)("assignPermissionsToUser"), (0, validation_1.createValidationMiddleware)(PermissionController.permissionSchema)),
     __param(0, (0, routing_controllers_1.Req)()),
     __param(1, (0, routing_controllers_1.Param)("id")),
     __param(2, (0, routing_controllers_1.Body)()),
@@ -210,7 +165,7 @@ __decorate([
 ], PermissionController.prototype, "assignPermissionsToUser", null);
 __decorate([
     (0, routing_controllers_1.Post)("/assignToRole/:id"),
-    (0, routing_controllers_1.UseBefore)(protectedRoute_1.ProtectRoutesMiddleware, (0, roleOrPermission_1.roleOrPermissionMiddleware)("assignPermissionsToRole"), (0, validation_1.createValidationMiddleware)(PermissionController.permissionSchema)),
+    (0, routing_controllers_1.UseBefore)(...(0, secureRoutesMiddleware_1.secureRouteWithPermissions)("assignPermissionsToRole"), (0, validation_1.createValidationMiddleware)(PermissionController.permissionSchema)),
     __param(0, (0, routing_controllers_1.Req)()),
     __param(1, (0, routing_controllers_1.Param)("id")),
     __param(2, (0, routing_controllers_1.Body)()),
@@ -221,7 +176,7 @@ __decorate([
 ], PermissionController.prototype, "assignPermissionsToRole", null);
 __decorate([
     (0, routing_controllers_1.Get)("/"),
-    (0, routing_controllers_1.UseBefore)(protectedRoute_1.ProtectRoutesMiddleware, (0, roleOrPermission_1.roleOrPermissionMiddleware)("ListPermissions")),
+    (0, routing_controllers_1.UseBefore)(...(0, secureRoutesMiddleware_1.secureRouteWithPermissions)("ListPermissions")),
     __param(0, (0, routing_controllers_1.Req)()),
     __param(1, (0, routing_controllers_1.Res)()),
     __metadata("design:type", Function),
@@ -230,7 +185,7 @@ __decorate([
 ], PermissionController.prototype, "ListPermissions", null);
 __decorate([
     (0, routing_controllers_1.Get)("/user/:id"),
-    (0, routing_controllers_1.UseBefore)(protectedRoute_1.ProtectRoutesMiddleware, (0, roleOrPermission_1.roleOrPermissionMiddleware)("ListUserPermissions")),
+    (0, routing_controllers_1.UseBefore)(...(0, secureRoutesMiddleware_1.secureRouteWithPermissions)("ListUserPermissions")),
     __param(0, (0, routing_controllers_1.Req)()),
     __param(1, (0, routing_controllers_1.Param)("id")),
     __param(2, (0, routing_controllers_1.Res)()),
@@ -240,7 +195,7 @@ __decorate([
 ], PermissionController.prototype, "ListUserPermissions", null);
 __decorate([
     (0, routing_controllers_1.Get)("/role/:id"),
-    (0, routing_controllers_1.UseBefore)(protectedRoute_1.ProtectRoutesMiddleware, (0, roleOrPermission_1.roleOrPermissionMiddleware)("ListRolePermissions")),
+    (0, routing_controllers_1.UseBefore)(...(0, secureRoutesMiddleware_1.secureRouteWithPermissions)("ListRolePermissions")),
     __param(0, (0, routing_controllers_1.Req)()),
     __param(1, (0, routing_controllers_1.Param)("id")),
     __param(2, (0, routing_controllers_1.Res)()),
