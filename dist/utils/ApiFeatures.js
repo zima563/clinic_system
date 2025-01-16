@@ -268,6 +268,7 @@ class ApiFeatures {
                     },
                     details: {
                         select: {
+                            id: true,
                             description: true,
                         },
                     },
