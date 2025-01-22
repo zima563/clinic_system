@@ -47,7 +47,7 @@ const listSchedules = (query) => __awaiter(void 0, void 0, void 0, function* () 
 });
 exports.listSchedules = listSchedules;
 const listOfDates = (id) => __awaiter(void 0, void 0, void 0, function* () {
-    prismaClient_1.prisma.date.findMany({
+    return prismaClient_1.prisma.date.findMany({
         where: {
             scheduleId: id,
         },
@@ -96,7 +96,7 @@ const findScheduleById = (id) => __awaiter(void 0, void 0, void 0, function* () 
 });
 exports.findScheduleById = findScheduleById;
 const deleteDates = (id) => __awaiter(void 0, void 0, void 0, function* () {
-    prismaClient_1.prisma.date.deleteMany({
+    return yield prismaClient_1.prisma.date.deleteMany({
         where: {
             scheduleId: id,
         },
@@ -104,7 +104,7 @@ const deleteDates = (id) => __awaiter(void 0, void 0, void 0, function* () {
 });
 exports.deleteDates = deleteDates;
 const updateSchedule = (id, doctorId, servicesId, price, dates) => __awaiter(void 0, void 0, void 0, function* () {
-    prismaClient_1.prisma.schedule.update({
+    return yield prismaClient_1.prisma.schedule.update({
         where: {
             id,
         },
@@ -124,7 +124,7 @@ const updateSchedule = (id, doctorId, servicesId, price, dates) => __awaiter(voi
 });
 exports.updateSchedule = updateSchedule;
 const deleteSchedule = (id) => __awaiter(void 0, void 0, void 0, function* () {
-    yield prismaClient_1.prisma.schedule.delete({
+    return yield prismaClient_1.prisma.schedule.delete({
         where: { id },
     });
 });

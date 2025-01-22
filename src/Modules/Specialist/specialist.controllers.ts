@@ -1,4 +1,3 @@
-import fs from "fs";
 import {
   Body,
   Delete,
@@ -16,9 +15,7 @@ import {
 import createUploadMiddleware from "../../middlewares/uploadFile"; // Correct import
 import { createValidationMiddleware } from "../../middlewares/validation"; // Correct import
 import { Response } from "express";
-import sharp from "sharp";
-import path from "path";
-import { v4 as uuidv4 } from "uuid";
+
 import { PrismaClient } from "@prisma/client";
 import {
   specialtySchema,
@@ -28,15 +25,17 @@ import ApiError from "../../utils/ApiError";
 import ApiFeatures from "../../utils/ApiFeatures";
 import { ProtectRoutesMiddleware } from "../../middlewares/protectedRoute";
 import { roleOrPermissionMiddleware } from "../../middlewares/roleOrPermission";
+import { secureRouteWithPermissions } from "../../middlewares/secureRoutesMiddleware";
 
 const prisma = new PrismaClient();
+
+import * as specialtyServices from "./specialist.service";
 
 @JsonController("/api/specialist")
 export class specialtyControllers {
   @Post("/")
   @UseBefore(
-    ProtectRoutesMiddleware,
-    roleOrPermissionMiddleware("createSpecialty"),
+    ...secureRouteWithPermissions("createSpecialty"),
     createUploadMiddleware("icon"),
     createValidationMiddleware(specialtySchema)
   )
@@ -45,44 +44,20 @@ export class specialtyControllers {
     @Body() body: any,
     @Res() res: Response
   ) {
-    if (!req.file) {
-      return res.status(400).json({ error: "Icon file is required." });
-    }
-    if (await prisma.specialty.findUnique({ where: { title: body.title } })) {
-      throw new ApiError("specialty title already exist", 409);
-    }
-    // Clean up the file name to prevent issues with special characters
-    const cleanedFilename = req.file.originalname
-      .replace(/\s+/g, "_")
-      .replace(/[^a-zA-Z0-9_.]/g, "");
-
-    // Generate a unique filename
-    const iconFilename = `icon-${uuidv4()}-${encodeURIComponent(
-      cleanedFilename
-    )}`;
-    const iconPath = path.join("uploads", iconFilename);
-
-    // Resize and save the icon using sharp
-    sharp(req.file.buffer)
-      .resize(160, 160)
-      .png({ quality: 80 })
-      .toFile(iconPath);
-
+    await specialtyServices.checkSpecialtyExist(body);
+    let iconFilename = await specialtyServices.uploadFileForSpecialty(req, res);
     // Save the specialty to the database
-    const specialty = await prisma.specialty.create({
-      data: {
-        title: body.title,
-        icon: iconFilename ?? "",
-      },
-    });
+    const specialty = await specialtyServices.createSpecialty(
+      iconFilename,
+      body
+    );
 
     return res.status(200).json(specialty);
   }
 
   @Put("/:id")
   @UseBefore(
-    ProtectRoutesMiddleware,
-    roleOrPermissionMiddleware("updateSpecialty"),
+    ...secureRouteWithPermissions("updateSpecialty"),
     createUploadMiddleware("icon"),
     createValidationMiddleware(updateSpecialtySchema)
   )
@@ -92,85 +67,36 @@ export class specialtyControllers {
     @Param("id") id: number,
     @Res() res: any
   ) {
-    let specialty = await prisma.specialty.findUnique({ where: { id } });
+    let specialty = await specialtyServices.findSpecialtyById(id);
     if (!specialty) {
       throw new ApiError("specialty not found", 404);
     }
-    if (await prisma.specialty.findUnique({ where: { title: body?.title } })) {
-      throw new ApiError("specialty title already exist", 409);
-    }
-    let fileName = specialty.icon;
-    // Process image if provided
-    if (req.file) {
-      const cleanedFilename = req.file.originalname
-        .replace(/\s+/g, "_")
-        .replace(/[^a-zA-Z0-9_.]/g, "");
-      const newFilename = `img-${uuidv4()}-${encodeURIComponent(
-        cleanedFilename
-      )}`;
-      const imgPath = path.join("uploads", newFilename);
+    await specialtyServices.checkSpecialtyExist(body);
+    let fileName = await specialtyServices.uploadFileForSpecialtyUpdate(
+      req,
+      specialty
+    );
 
-      // Resize and save the image
-      await sharp(req.file.buffer)
-        .resize(160, 160)
-        .png({ quality: 80 })
-        .toFile(imgPath);
-
-      // Delete old image if it exists
-      if (specialty.icon) {
-        const oldImagePath = path.join("uploads", specialty.icon);
-        if (fs.existsSync(oldImagePath)) {
-          fs.unlinkSync(oldImagePath);
-        }
-      }
-
-      fileName = newFilename;
-    }
-
-    await prisma.specialty.update({
-      where: { id },
-      data: {
-        icon: fileName ?? "",
-        ...body,
-      },
-    });
+    await specialtyServices.updateSpecialty(id, fileName, body);
     return res.status(200).json({ message: "specialty updated successfully" });
   }
 
   @Get("/all")
-  @UseBefore(
-    ProtectRoutesMiddleware,
-    roleOrPermissionMiddleware("allSpecialtys")
-  )
+  @UseBefore(...secureRouteWithPermissions("allSpecialtys"))
   async allSpecialtys(@QueryParams() query: any, @Res() res: Response) {
-    const apiFeatures = new ApiFeatures(prisma.specialty, query);
-
-    await apiFeatures.filter().sort().limitedFields().search("specialty");
-
-    // Get the count of documents and apply pagination
-    await apiFeatures.paginateWithCount();
-
-    // Execute the query and get the results along with pagination info
-    const { result, pagination } = await apiFeatures.exec("specialty");
-
-    result.map((doc: any) => {
-      doc.icon = process.env.base_url + doc.icon;
-    });
+    let data = await specialtyServices.getListSpecial(query);
 
     return res.status(200).json({
-      data: result,
-      pagination: pagination,
-      count: result.length,
+      data: data.result,
+      pagination: data.pagination,
+      count: data.result.length,
     });
   }
 
   @Get("/:id")
-  @UseBefore(
-    ProtectRoutesMiddleware,
-    roleOrPermissionMiddleware("getOneSpecialty")
-  )
+  @UseBefore(...secureRouteWithPermissions("getOneSpecialty"))
   async getOneSpecialty(@Param("id") id: number, @Res() res: Response) {
-    let specialty = await prisma.specialty.findUnique({ where: { id } });
+    let specialty = await specialtyServices.findSpecialtyById(id);
     if (!specialty) {
       throw new ApiError("specialty not found");
     }
@@ -184,20 +110,11 @@ export class specialtyControllers {
     roleOrPermissionMiddleware("getOneSpecialty")
   )
   async DeleteSpecialty(@Param("id") id: number, @Res() res: Response) {
-    let specialty = await prisma.specialty.findUnique({ where: { id } });
+    let specialty = await specialtyServices.findSpecialtyById(id);
     if (!specialty) {
       throw new ApiError("specialty not found");
     }
-    await prisma.doctor.deleteMany({ where: { specialtyId: id } });
-    if (specialty.icon) {
-      const oldImagePath = path.join("uploads", specialty.icon);
-      if (fs.existsSync(oldImagePath)) {
-        fs.unlinkSync(oldImagePath);
-      }
-    }
-    await prisma.specialty.delete({
-      where: { id },
-    });
+    await specialtyServices.deleteSpecialty(id, specialty);
     return res.status(200).json({ message: "specialty deleted succesfully" });
   }
 }

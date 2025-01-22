@@ -42,7 +42,7 @@ export const listSchedules = async (query: any) => {
 };
 
 export const listOfDates = async (id: number) => {
-  prisma.date.findMany({
+  return prisma.date.findMany({
     where: {
       scheduleId: id,
     },
@@ -91,7 +91,7 @@ export const findScheduleById = async (id: number) => {
 };
 
 export const deleteDates = async (id: number) => {
-  prisma.date.deleteMany({
+  return await prisma.date.deleteMany({
     where: {
       scheduleId: id,
     },
@@ -105,7 +105,7 @@ export const updateSchedule = async (
   price: any,
   dates: any
 ) => {
-  prisma.schedule.update({
+  return await prisma.schedule.update({
     where: {
       id,
     },
@@ -127,7 +127,7 @@ export const updateSchedule = async (
 };
 
 export const deleteSchedule = async (id: number) => {
-  await prisma.schedule.delete({
+  return await prisma.schedule.delete({
     where: { id },
   });
 };
