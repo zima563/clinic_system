@@ -16,47 +16,31 @@ import {
   updateScheduleSchema,
 } from "./schedule.validations";
 import { Request, Response } from "express";
-import { PrismaClient } from "@prisma/client";
-import ApiFeatures from "../../utils/ApiFeatures";
 import ApiError from "../../utils/ApiError";
-import { ProtectRoutesMiddleware } from "../../middlewares/protectedRoute";
-import { roleOrPermissionMiddleware } from "../../middlewares/roleOrPermission";
-const prisma = new PrismaClient();
+
+import { secureRouteWithPermissions } from "../../middlewares/secureRoutesMiddleware";
+import * as scheduleServices from "./schedule.service";
 
 @JsonController("/api/schedule")
 export class scheduleControllers {
   @Post("/")
   @UseBefore(
-    ProtectRoutesMiddleware,
-    roleOrPermissionMiddleware("addSchedule"),
+    ...secureRouteWithPermissions("addSchedule"),
     createValidationMiddleware(addscheduleSchema)
   )
   async addSchedule(@Req() req: Request, @Res() res: Response) {
     const { doctorId, servicesId, price, dates } = req.body;
-    const schedule = await prisma.schedule.create({
-      data: {
-        doctorId,
-        servicesId,
-        price,
-        dates: {
-          create: dates.map(
-            (date: { day: string; fromTime: string; toTime: string }) => ({
-              day: date.day,
-              fromTime: date.fromTime,
-              toTime: date.toTime,
-            })
-          ),
-        },
-      },
-    });
+    const schedule = await scheduleServices.addSchedule(
+      doctorId,
+      servicesId,
+      price,
+      dates
+    );
     return res.status(200).json(schedule);
   }
 
   @Get("/")
-  @UseBefore(
-    ProtectRoutesMiddleware,
-    roleOrPermissionMiddleware("listSchedules")
-  )
+  @UseBefore(...secureRouteWithPermissions("listSchedules"))
   async listSchedules(
     @Req() req: Request,
     @Res() res: Response,
@@ -71,76 +55,33 @@ export class scheduleControllers {
       doctorId: parsedDoctorId,
       servicesId: parsedServicesId,
     };
-    const apiFeatures = new ApiFeatures(prisma.schedule, query);
-    await apiFeatures.filter().limitedFields().sort().search("schedule");
-    await apiFeatures.paginateWithCount();
-
-    const { result, pagination } = await apiFeatures.exec("schedule");
-    result.map((result: any) => {
-      result.doctor.image = process.env.base_url + result.doctor.image;
-    });
+    const data = await scheduleServices.listSchedules(query);
     return res.status(200).json({
-      data: result,
-      pagination,
-      count: result.length,
+      data: data.result,
+      pagination: data.pagination,
+      count: data.result.length,
     });
   }
 
   @Get("/dates/:id")
-  @UseBefore(ProtectRoutesMiddleware, roleOrPermissionMiddleware("listDates"))
+  @UseBefore(...secureRouteWithPermissions("listDates"))
   async listDates(
     @Req() req: Request,
     @Param("id") id: number,
     @Res() res: Response
   ) {
-    let dates = await prisma.date.findMany({
-      where: {
-        scheduleId: id,
-      },
-    });
+    let dates = await scheduleServices.listOfDates(id);
     return res.status(200).json(dates);
   }
 
   @Get("/:id")
-  @UseBefore(
-    ProtectRoutesMiddleware,
-    roleOrPermissionMiddleware("showScheduleDetails")
-  )
+  @UseBefore(...secureRouteWithPermissions("showScheduleDetails"))
   async showScheduleDetails(
     @Req() req: Request,
     @Param("id") id: number,
     @Res() res: Response
   ) {
-    let schedule = await prisma.schedule.findUnique({
-      where: { id },
-      select: {
-        id: true,
-        price: true,
-        doctorId: false,
-        servicesId: false,
-        createdAt: true,
-        updatedAt: true,
-        dates: {
-          select: {
-            id: true,
-            fromTime: true,
-            toTime: true,
-          },
-        },
-        doctor: {
-          select: {
-            id: true,
-            name: true,
-          },
-        },
-        service: {
-          select: {
-            id: true,
-            title: true,
-          },
-        },
-      },
-    });
+    let schedule = await scheduleServices.showDetailsOfSchedule(id);
     if (!schedule) {
       throw new ApiError("schedule not found", 404);
     }
@@ -149,8 +90,7 @@ export class scheduleControllers {
 
   @Put("/:id")
   @UseBefore(
-    ProtectRoutesMiddleware,
-    roleOrPermissionMiddleware("updateSchedule"),
+    ...secureRouteWithPermissions("updateSchedule"),
     createValidationMiddleware(updateScheduleSchema)
   )
   async updateSchedule(
@@ -159,71 +99,38 @@ export class scheduleControllers {
     @Res() res: Response
   ) {
     const { doctorId, servicesId, price, dates } = req.body;
-    const schedule = await prisma.schedule.findUnique({
-      where: {
-        id,
-      },
-    });
+    const schedule = await scheduleServices.findScheduleById(id);
     if (dates) {
-      await prisma.date.deleteMany({
-        where: {
-          scheduleId: id,
-        },
-      });
+      await scheduleServices.deleteDates(id);
     }
     if (!schedule) {
       throw new ApiError("schedule not found", 404);
     }
 
-    await prisma.schedule.update({
-      where: {
-        id,
-      },
-      data: {
-        doctorId,
-        servicesId,
-        price,
-        dates: {
-          create: dates?.map(
-            (date: { day: string; fromTime: string; toTime: string }) => ({
-              day: date.day,
-              fromTime: date.fromTime,
-              toTime: date.toTime,
-            })
-          ),
-        },
-      },
-    });
-    let updatedSchedule = await prisma.schedule.findUnique({
-      where: { id },
-    });
+    await scheduleServices.updateSchedule(
+      id,
+      doctorId,
+      servicesId,
+      price,
+      dates
+    );
+    let updatedSchedule = await scheduleServices.findScheduleById(id);
 
     // Return the updated schedules
     return res.status(200).json(updatedSchedule);
   }
 
   @Delete("/:id")
-  @UseBefore(
-    ProtectRoutesMiddleware,
-    roleOrPermissionMiddleware("deleteSchedule")
-  )
+  @UseBefore(...secureRouteWithPermissions("deleteSchedule"))
   async deleteSchedule(@Param("id") id: number, @Res() res: Response) {
     // Check if the schedule exists
-    const schedule = await prisma.schedule.findUnique({
-      where: { id },
-    });
+    const schedule = await scheduleServices.findScheduleById(id);
 
     if (!schedule) {
       throw new ApiError("schedule not found", 404);
     }
-    await prisma.date.deleteMany({
-      where: {
-        scheduleId: id,
-      },
-    });
-    await prisma.schedule.delete({
-      where: { id },
-    });
+    await scheduleServices.deleteDates(id);
+    await scheduleServices.deleteSchedule(id);
 
     return res.status(200).json({ message: "Schedule deleted successfully" });
   }

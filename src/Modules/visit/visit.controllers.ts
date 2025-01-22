@@ -274,34 +274,33 @@ export class visitController {
     );
 
     const result = await prisma.$transaction(async (prisma) => {
-      const createdVisitDetails = await prisma.visitDetail.createMany({
-        data: visitDetailsWithPrices.map((detail: any) => ({
-          visitId,
-          patientId: detail.patientId,
-          price: detail.price,
-          scheduleId: detail.scheduleId,
-          dateId: detail.dateId,
-        })),
-      });
-
-      // Link each InvoiceDetail to the corresponding VisitDetail
-      for (let i = 0; i < visitDetailsWithPrices.length; i++) {
-        const visitDetail = await prisma.visitDetail.findFirst({
-          where: { visitId, scheduleId: visitDetailsWithPrices[i].scheduleId },
-        });
-
-        // Create invoice detail and link to the visit detail
-        if (visitDetailsWithPrices) {
-          await prisma.invoiceDetail.create({
+      const createdVisitDetails = await Promise.all(
+        visitDetailsWithPrices.map((detail) =>
+          prisma.visitDetail.create({
             data: {
-              description: `Charge for patient ${visit.rf}`, // Customize description
-              amount: visitDetailsWithPrices[i].price,
-              invoiceId: visitInvoice?.invoiceId,
-              visitDetailsId: visitDetails.id, // Link to the VisitDetail
+              visitId: visit.id,
+              patientId: detail.patientId,
+              price: detail.price,
+              scheduleId: detail.scheduleId,
+              dateId: detail.dateId,
             },
-          });
-        }
-      }
+          })
+        )
+      );
+
+      // Create InvoiceDetails for each VisitDetail
+      await Promise.all(
+        createdVisitDetails.map((visitDetail, index) =>
+          prisma.invoiceDetail.create({
+            data: {
+              description: `Charge for patient ${visit.rf}`, // Customize description if necessary
+              amount: visitDetailsWithPrices[index].price,
+              invoiceId: visitInvoice.invoiceId,
+              visitDetailsId: visitDetail.id,
+            },
+          })
+        )
+      );
 
       // Use Decimal to ensure precision in financial calculations
       const roundedTotalVisitPrice = new Decimal(totalVisitPrice).toFixed(2);

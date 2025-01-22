@@ -28,90 +28,46 @@ import { roleOrPermissionMiddleware } from "../../middlewares/roleOrPermission";
 import createUploadMiddleware from "../../middlewares/uploadFile";
 import sharp from "sharp";
 import { v4 as uuidv4 } from "uuid";
-
+import { secureRouteWithPermissions } from "../../middlewares/secureRoutesMiddleware";
+import * as services from "./services.service";
 const prisma = new PrismaClient();
 
 @JsonController("/api/services")
 export class serviceController {
   @Post("/")
   @UseBefore(
-    ProtectRoutesMiddleware,
-    roleOrPermissionMiddleware("addService"),
+    ...secureRouteWithPermissions("addService"),
     createUploadMiddleware("icon"),
     createValidationMiddleware(addServiceValidation)
   )
   async addService(@Req() req: any, @Body() body: any, @Res() res: Response) {
-    if (!req.file) {
-      return res.status(400).json({ error: "image file is required." });
-    }
     if (await prisma.service.findFirst({ where: { title: body.title } })) {
       throw new ApiError("service title already exists", 409);
     }
-    const cleanedFilename = req.file.originalname
-      .replace(/\s+/g, "_")
-      .replace(/[^a-zA-Z0-9_.]/g, "");
 
-    // Generate a unique filename
-    const iconFilename = `icon-${uuidv4()}-${encodeURIComponent(
-      cleanedFilename
-    )}`;
-    const iconPath = path.join("uploads", iconFilename);
+    body.icon = (await services.uploadFile(req, res)) ?? "";
 
-    // Resize and save the icon using sharp
-    await sharp(req.file.buffer)
-      .resize({ width: 100, height: 100, fit: "cover" })
-      .png({ quality: 70, compressionLevel: 9 })
-      .toFile(iconPath);
-    body.icon = iconFilename ?? "";
-
-    let service = await prisma.service.create({
-      data: {
-        title: body.title,
-        desc: body.desc,
-        img: body.icon,
-      },
-    });
+    let service = await services.createService(body);
     return res.status(200).json(service);
   }
 
   @Get("/all")
-  @UseBefore(ProtectRoutesMiddleware, roleOrPermissionMiddleware("allServices"))
+  @UseBefore(...secureRouteWithPermissions("allServices"))
   async allServices(@QueryParams() query: any, @Res() res: Response) {
-    try {
-      const baseFilter = {
-        isDeleted: false,
-      };
-      const apiFeatures = new ApiFeatures(prisma.service, query);
+    const baseFilter = {
+      isDeleted: false,
+    };
+    let data = await services.listServices(baseFilter, query);
 
-      await apiFeatures
-        .filter(baseFilter)
-        .sort()
-        .limitedFields()
-        .search("service");
-
-      await apiFeatures.paginateWithCount();
-      const { result, pagination } = await apiFeatures.exec("service");
-
-      result.map((doc: any) => {
-        doc.img = process.env.base_url + doc.img;
-      });
-
-      return res.status(200).json({
-        data: result,
-        pagination: pagination,
-      });
-    } catch (error) {
-      console.error("Error fetching services:", error);
-      if (!res.headersSent) {
-        return res.status(500).json({ message: "Internal Server Error" });
-      }
-    }
+    return res.status(200).json({
+      data: data.result,
+      pagination: data.pagination,
+    });
   }
 
   @Put("/:id")
   @UseBefore(
-    ProtectRoutesMiddleware,
-    roleOrPermissionMiddleware("updateService"),
+    ...secureRouteWithPermissions("updateService"),
     createUploadMiddleware("icon"),
     createValidationMiddleware(updateServiceValidation)
   )
@@ -121,64 +77,21 @@ export class serviceController {
     @Body() body: any,
     @Res() res: Response
   ) {
-    let service = await prisma.service.findUnique({ where: { id } });
+    let service = await services.getServiceById(id);
 
-    if (
-      await prisma.service.findFirst({
-        where: { title: body.title, NOT: { id } },
-      })
-    ) {
-      throw new ApiError("service title already exists", 409);
-    }
-    let fileName;
-    // Process image if provided
-    if (req.file) {
-      const cleanedFilename = req.file.originalname
-        .replace(/\s+/g, "_")
-        .replace(/[^a-zA-Z0-9_.]/g, "");
-      const newFilename = `img-${uuidv4()}-${encodeURIComponent(
-        cleanedFilename
-      )}`;
-      const imgPath = path.join("uploads", newFilename);
-
-      // Resize and save the image
-      await sharp(req.file.buffer)
-        .resize({ width: 100, height: 100, fit: "cover" })
-        .png({ quality: 70, compressionLevel: 9 })
-        .toFile(imgPath);
-
-      // Delete old image if it exists
-      if (service?.img) {
-        const oldImagePath = path.join("uploads", service?.img);
-        if (fs.existsSync(oldImagePath)) {
-          fs.unlinkSync(oldImagePath);
-        }
-      }
-
-      fileName = newFilename;
-    }
-
-    await prisma.service.update({
-      where: { id },
-      data: {
-        title: body.title || service?.title,
-        desc: body.desc || service?.desc,
-        img: fileName || service?.img,
-      },
-    });
+    await services.CheckTitleExist(id, body.title);
+    let fileName = await services.uploadFileForUpdate(req, service);
+    await services.updateService(id, body, service, fileName);
     return res.status(200).json({ message: "service updated successfully" });
   }
 
   @Get("/:id")
   @UseBefore(
-    ProtectRoutesMiddleware,
-    roleOrPermissionMiddleware("getService"),
+    ...secureRouteWithPermissions("getService"),
     createValidationMiddleware(updateServiceValidation)
   )
   async getService(@Param("id") id: number, @Res() res: Response) {
-    let service = await prisma.service.findUnique({
-      where: { id },
-    });
+    let service = await services.getServiceById(id);
     if (!service) {
       throw new ApiError("service not found", 404);
     }
@@ -192,26 +105,12 @@ export class serviceController {
     roleOrPermissionMiddleware("deactiveService")
   )
   async deactiveService(@Param("id") id: number, @Res() res: Response) {
-    let service = await prisma.service.findUnique({
-      where: { id },
-    });
+    let service = await services.getServiceById(id);
     if (!service) {
       throw new ApiError("service not found", 404);
     }
-    if (service.status) {
-      await prisma.service.update({
-        where: { id },
-        data: { status: false },
-      });
-    } else {
-      await prisma.service.update({
-        where: { id },
-        data: { status: true },
-      });
-    }
-    let updatedService = await prisma.service.findUnique({
-      where: { id },
-    });
+    await services.deactiveService(id, service);
+    let updatedService = await services.getServiceById(id);
     return res.status(200).json(updatedService);
   }
 }
