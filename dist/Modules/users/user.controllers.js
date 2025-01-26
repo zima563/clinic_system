@@ -1,10 +1,43 @@
 "use strict";
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
     if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
     else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
     return c > 3 && r && Object.defineProperty(target, key, r), r;
 };
+var __importStar = (this && this.__importStar) || (function () {
+    var ownKeys = function(o) {
+        ownKeys = Object.getOwnPropertyNames || function (o) {
+            var ar = [];
+            for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
+            return ar;
+        };
+        return ownKeys(o);
+    };
+    return function (mod) {
+        if (mod && mod.__esModule) return mod;
+        var result = {};
+        if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
+        __setModuleDefault(result, mod);
+        return result;
+    };
+})();
 var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
@@ -33,129 +66,66 @@ const routing_controllers_1 = require("routing-controllers");
 const validation_1 = require("../../middlewares/validation");
 const user_validations_1 = require("./user.validations");
 const emailExists_1 = require("../../middlewares/emailExists");
-const ApiFeatures_1 = __importDefault(require("../../utils/ApiFeatures"));
 const ApiError_1 = __importDefault(require("../../utils/ApiError"));
 const roleOrPermission_1 = require("../../middlewares/roleOrPermission");
 const phoneExist_1 = require("../../middlewares/phoneExist");
+const secureRoutesMiddleware_1 = require("../../middlewares/secureRoutesMiddleware");
+const userServices = __importStar(require("./user.service"));
 const prisma = new client_1.PrismaClient();
 let userControllers = class userControllers {
     // Apply CheckEmailMiddleware only for the POST route (user creation)
     addUser(body, res) {
         return __awaiter(this, void 0, void 0, function* () {
             body.password = bcrypt_1.default.hashSync(body.password, 10);
-            let user = yield prisma.user.create({ data: body });
+            let user = yield userServices.addUser(body);
             return res.status(201).json(user);
         });
     }
-    // GET /all does not use CheckEmailMiddleware
     allUsers(query, res) {
         return __awaiter(this, void 0, void 0, function* () {
-            try {
-                // Add isDeleted = false condition to the query
-                const baseFilter = {
-                    isDeleted: false, // Ensure we only fetch users where isDeleted is false
-                };
-                // Initialize ApiFeatures with the Prisma model and the search query
-                const apiFeatures = new ApiFeatures_1.default(prisma.user, query);
-                // Apply filters, sorting, field selection, search, and pagination
-                yield apiFeatures
-                    .filter(baseFilter)
-                    .sort()
-                    .limitedFields()
-                    .search("user"); // Specify the model name, 'user' in this case
-                yield apiFeatures.paginateWithCount();
-                // Execute the query and get the result and pagination
-                const { result, pagination } = yield apiFeatures.exec("user");
-                // Return the result along with pagination information
-                return res.status(200).json({
-                    data: result,
-                    pagination: pagination, // Use the pagination here
-                });
-            }
-            catch (error) {
-                console.error("Error fetching users:", error);
-                // Ensure no further responses are sent
-                if (!res.headersSent) {
-                    return res.status(500).json({ message: "Internal Server Error" });
-                }
-            }
+            let data = yield userServices.getAllUser(query);
+            return res.status(200).json({
+                data: data.result,
+                pagination: data.pagination,
+            });
         });
     }
-    getOneUser(id, res, next) {
+    getOneUser(id, res) {
         return __awaiter(this, void 0, void 0, function* () {
-            let user = yield prisma.user.findUnique({
-                where: { id },
-                include: {
-                    userRoles: {
-                        select: {
-                            role: true,
-                        },
-                    },
-                    userPermissions: {
-                        select: {
-                            permission: true,
-                        },
-                    },
-                },
-            });
+            let user = yield userServices.getUserById(id);
             if (!user)
                 throw new ApiError_1.default("user not found", 404);
             return res.status(201).json(user);
         });
     }
-    updateUser(id, body, res, next) {
+    updateUser(id, body, res) {
         return __awaiter(this, void 0, void 0, function* () {
-            let user = yield prisma.user.findUnique({ where: { id } });
+            let user = yield userServices.getUserById(id);
             if (!user)
                 throw new ApiError_1.default("user not found", 404);
-            yield prisma.user.update({
-                where: { id },
-                data: body,
-            });
+            yield userServices.updateUser(id, body);
             return res.status(201).json({ message: "user updated successfully", user });
         });
     }
-    deactiveUser(id, body, res, next) {
+    deactiveUser(id, body, res) {
         return __awaiter(this, void 0, void 0, function* () {
-            let user = yield prisma.user.findUnique({ where: { id } });
+            let user = yield userServices.getUserById(id);
             if (!user)
                 throw new ApiError_1.default("user not found", 404);
-            if (user.isActive) {
-                yield prisma.user.update({
-                    where: { id },
-                    data: { isActive: false },
-                });
-            }
-            else {
-                yield prisma.user.update({
-                    where: { id },
-                    data: { isActive: true },
-                });
-            }
-            let updatedUser = yield prisma.user.findUnique({ where: { id } });
+            yield userServices.deactiveUser(id, user);
+            let updatedUser = yield userServices.getUserById(id);
             return res
                 .status(201)
                 .json({ message: "user Deactivated successfully", updatedUser });
         });
     }
-    DeleteUser(id, body, res, next) {
+    DeleteUser(id, body, res) {
         return __awaiter(this, void 0, void 0, function* () {
-            let user = yield prisma.user.findUnique({ where: { id } });
+            let user = yield userServices.getUserById(id);
             if (!user)
                 throw new ApiError_1.default("user not found", 404);
-            if (!user.isDeleted) {
-                yield prisma.user.update({
-                    where: { id },
-                    data: { isDeleted: true },
-                });
-            }
-            else {
-                yield prisma.user.update({
-                    where: { id },
-                    data: { isDeleted: false },
-                });
-            }
-            let updatedUser = yield prisma.user.findUnique({ where: { id } });
+            yield userServices.deleteUser(id, user);
+            let updatedUser = yield userServices.getUserById(id);
             return res
                 .status(201)
                 .json({ message: "user Deleted successfully", updatedUser });
@@ -163,11 +133,7 @@ let userControllers = class userControllers {
     }
     login(body, res) {
         return __awaiter(this, void 0, void 0, function* () {
-            let user = yield prisma.user.findFirst({
-                where: {
-                    OR: [{ phone: body.emailOrPhone }, { email: body.emailOrPhone }],
-                },
-            });
+            let user = yield userServices.findUser(body);
             if (!(user && bcrypt_1.default.compareSync(body.password, user.password))) {
                 throw new ApiError_1.default("email or password incorrect");
             }
@@ -175,21 +141,12 @@ let userControllers = class userControllers {
                 // Generate JWT token
                 let token = jsonwebtoken_1.default.sign({ userId: user.id }, process.env.JWT_KEY);
                 // Fetch user's direct permissions
-                const userPermissions = yield prisma.userPermission.findMany({
-                    where: { userId: user.id },
-                    include: { permission: true },
-                });
+                const userPermissions = yield userServices.getUserPermissions(user);
                 // Fetch user's role
-                const userRole = yield prisma.userRole.findFirst({
-                    where: { userId: user.id },
-                    include: { role: true },
-                });
+                const userRole = yield userServices.getUserRole(user);
                 // Fetch permissions related to the user's role
                 const rolePermissions = userRole
-                    ? yield prisma.rolePermission.findMany({
-                        where: { roleId: userRole.roleId },
-                        include: { permission: true },
-                    })
+                    ? yield userServices.getPermissionRelatedWithRole(userRole)
                     : [];
                 // Extract unique permissions for the response
                 const allPermissions = new Set([
@@ -208,7 +165,7 @@ let userControllers = class userControllers {
 exports.userControllers = userControllers;
 __decorate([
     (0, routing_controllers_1.Post)("/"),
-    (0, routing_controllers_1.UseBefore)(protectedRoute_1.ProtectRoutesMiddleware, (0, roleOrPermission_1.roleOrPermissionMiddleware)("addUser"), (0, validation_1.createValidationMiddleware)(user_validations_1.addUser)),
+    (0, routing_controllers_1.UseBefore)(...(0, secureRoutesMiddleware_1.secureRouteWithPermissions)("addUser"), (0, validation_1.createValidationMiddleware)(user_validations_1.addUser)),
     (0, routing_controllers_1.UseBefore)(emailExists_1.CheckEmailMiddleware),
     (0, routing_controllers_1.UseBefore)(phoneExist_1.CheckPhoneMiddleware),
     __param(0, (0, routing_controllers_1.Body)()),
@@ -219,7 +176,7 @@ __decorate([
 ], userControllers.prototype, "addUser", null);
 __decorate([
     (0, routing_controllers_1.Get)("/all"),
-    (0, routing_controllers_1.UseBefore)(protectedRoute_1.ProtectRoutesMiddleware, (0, roleOrPermission_1.roleOrPermissionMiddleware)("allUsers")),
+    (0, routing_controllers_1.UseBefore)(...(0, secureRoutesMiddleware_1.secureRouteWithPermissions)("allUsers")),
     __param(0, (0, routing_controllers_1.QueryParams)()),
     __param(1, (0, routing_controllers_1.Res)()),
     __metadata("design:type", Function),
@@ -228,31 +185,31 @@ __decorate([
 ], userControllers.prototype, "allUsers", null);
 __decorate([
     (0, routing_controllers_1.Get)("/:id"),
-    (0, routing_controllers_1.UseBefore)(protectedRoute_1.ProtectRoutesMiddleware, (0, roleOrPermission_1.roleOrPermissionMiddleware)("getOneUser")),
+    (0, routing_controllers_1.UseBefore)(...(0, secureRoutesMiddleware_1.secureRouteWithPermissions)("getOneUser")),
     __param(0, (0, routing_controllers_1.Param)("id")),
     __param(1, (0, routing_controllers_1.Res)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Number, Object, Function]),
+    __metadata("design:paramtypes", [Number, Object]),
     __metadata("design:returntype", Promise)
 ], userControllers.prototype, "getOneUser", null);
 __decorate([
     (0, routing_controllers_1.Put)("/:id"),
-    (0, routing_controllers_1.UseBefore)(protectedRoute_1.ProtectRoutesMiddleware, (0, roleOrPermission_1.roleOrPermissionMiddleware)("updateUser"), (0, validation_1.createValidationMiddleware)(user_validations_1.UpdateUser)),
+    (0, routing_controllers_1.UseBefore)(...(0, secureRoutesMiddleware_1.secureRouteWithPermissions)("updateUser"), (0, validation_1.createValidationMiddleware)(user_validations_1.UpdateUser)),
     __param(0, (0, routing_controllers_1.Param)("id")),
     __param(1, (0, routing_controllers_1.Body)()),
     __param(2, (0, routing_controllers_1.Res)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Number, Object, Object, Function]),
+    __metadata("design:paramtypes", [Number, Object, Object]),
     __metadata("design:returntype", Promise)
 ], userControllers.prototype, "updateUser", null);
 __decorate([
     (0, routing_controllers_1.Patch)("/:id"),
-    (0, routing_controllers_1.UseBefore)(protectedRoute_1.ProtectRoutesMiddleware, (0, roleOrPermission_1.roleOrPermissionMiddleware)("deactiveUser")),
+    (0, routing_controllers_1.UseBefore)(...(0, secureRoutesMiddleware_1.secureRouteWithPermissions)("deactiveUser")),
     __param(0, (0, routing_controllers_1.Param)("id")),
     __param(1, (0, routing_controllers_1.Body)()),
     __param(2, (0, routing_controllers_1.Res)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Number, Object, Object, Function]),
+    __metadata("design:paramtypes", [Number, Object, Object]),
     __metadata("design:returntype", Promise)
 ], userControllers.prototype, "deactiveUser", null);
 __decorate([
@@ -262,7 +219,7 @@ __decorate([
     __param(1, (0, routing_controllers_1.Body)()),
     __param(2, (0, routing_controllers_1.Res)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Number, Object, Object, Function]),
+    __metadata("design:paramtypes", [Number, Object, Object]),
     __metadata("design:returntype", Promise)
 ], userControllers.prototype, "DeleteUser", null);
 __decorate([
