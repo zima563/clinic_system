@@ -61,13 +61,9 @@ exports.specialtyControllers = void 0;
 const routing_controllers_1 = require("routing-controllers");
 const uploadFile_1 = __importDefault(require("../../middlewares/uploadFile")); // Correct import
 const validation_1 = require("../../middlewares/validation"); // Correct import
-const client_1 = require("@prisma/client");
 const specialist_validation_1 = require("./specialist.validation");
 const ApiError_1 = __importDefault(require("../../utils/ApiError"));
-const protectedRoute_1 = require("../../middlewares/protectedRoute");
-const roleOrPermission_1 = require("../../middlewares/roleOrPermission");
 const secureRoutesMiddleware_1 = require("../../middlewares/secureRoutesMiddleware");
-const prisma = new client_1.PrismaClient();
 const specialtyServices = __importStar(require("./specialist.service"));
 let specialtyControllers = class specialtyControllers {
     createSpecialty(req, body, res) {
@@ -164,7 +160,7 @@ __decorate([
 ], specialtyControllers.prototype, "getOneSpecialty", null);
 __decorate([
     (0, routing_controllers_1.Delete)("/:id"),
-    (0, routing_controllers_1.UseBefore)(protectedRoute_1.ProtectRoutesMiddleware, (0, roleOrPermission_1.roleOrPermissionMiddleware)("getOneSpecialty")),
+    (0, routing_controllers_1.UseBefore)(...(0, secureRoutesMiddleware_1.secureRouteWithPermissions)("getOneSpecialty")),
     __param(0, (0, routing_controllers_1.Param)("id")),
     __param(1, (0, routing_controllers_1.Res)()),
     __metadata("design:type", Function),

@@ -9,25 +9,18 @@ import {
   QueryParams,
   Req,
   Res,
-  UploadedFile,
   UseBefore,
 } from "routing-controllers";
 import createUploadMiddleware from "../../middlewares/uploadFile"; // Correct import
 import { createValidationMiddleware } from "../../middlewares/validation"; // Correct import
 import { Response } from "express";
 
-import { PrismaClient } from "@prisma/client";
 import {
   specialtySchema,
   updateSpecialtySchema,
 } from "./specialist.validation";
 import ApiError from "../../utils/ApiError";
-import ApiFeatures from "../../utils/ApiFeatures";
-import { ProtectRoutesMiddleware } from "../../middlewares/protectedRoute";
-import { roleOrPermissionMiddleware } from "../../middlewares/roleOrPermission";
 import { secureRouteWithPermissions } from "../../middlewares/secureRoutesMiddleware";
-
-const prisma = new PrismaClient();
 
 import * as specialtyServices from "./specialist.service";
 
@@ -106,10 +99,7 @@ export class specialtyControllers {
   }
 
   @Delete("/:id")
-  @UseBefore(
-    ProtectRoutesMiddleware,
-    roleOrPermissionMiddleware("getOneSpecialty")
-  )
+  @UseBefore(...secureRouteWithPermissions("getOneSpecialty"))
   async DeleteSpecialty(@Param("id") id: number, @Res() res: Response) {
     let specialty = await specialtyServices.findSpecialtyById(id);
     if (!specialty) {
