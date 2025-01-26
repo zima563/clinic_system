@@ -1,9 +1,5 @@
-import fs from "fs";
-import path from "path";
-import { ProtectRoutesMiddleware } from "./../../middlewares/protectedRoute";
 import {
   Body,
-  Delete,
   Get,
   JsonController,
   Param,
@@ -23,11 +19,7 @@ import {
 } from "./services.validation";
 import { PrismaClient } from "@prisma/client";
 import ApiError from "../../utils/ApiError";
-import ApiFeatures from "../../utils/ApiFeatures";
-import { roleOrPermissionMiddleware } from "../../middlewares/roleOrPermission";
 import createUploadMiddleware from "../../middlewares/uploadFile";
-import sharp from "sharp";
-import { v4 as uuidv4 } from "uuid";
 import { secureRouteWithPermissions } from "../../middlewares/secureRoutesMiddleware";
 import * as services from "./services.service";
 const prisma = new PrismaClient();
@@ -103,10 +95,7 @@ export class serviceController {
   }
 
   @Patch("/:id")
-  @UseBefore(
-    ProtectRoutesMiddleware,
-    roleOrPermissionMiddleware("deactiveService")
-  )
+  @UseBefore(...secureRouteWithPermissions("deactiveService"))
   async deactiveService(@Param("id") id: number, @Res() res: Response) {
     let service = await services.getServiceById(id);
     if (!service) {

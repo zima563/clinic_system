@@ -58,13 +58,11 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.serviceController = void 0;
-const protectedRoute_1 = require("./../../middlewares/protectedRoute");
 const routing_controllers_1 = require("routing-controllers");
 const validation_1 = require("../../middlewares/validation");
 const services_validation_1 = require("./services.validation");
 const client_1 = require("@prisma/client");
 const ApiError_1 = __importDefault(require("../../utils/ApiError"));
-const roleOrPermission_1 = require("../../middlewares/roleOrPermission");
 const uploadFile_1 = __importDefault(require("../../middlewares/uploadFile"));
 const secureRoutesMiddleware_1 = require("../../middlewares/secureRoutesMiddleware");
 const services = __importStar(require("./services.service"));
@@ -166,7 +164,7 @@ __decorate([
 ], serviceController.prototype, "getService", null);
 __decorate([
     (0, routing_controllers_1.Patch)("/:id"),
-    (0, routing_controllers_1.UseBefore)(protectedRoute_1.ProtectRoutesMiddleware, (0, roleOrPermission_1.roleOrPermissionMiddleware)("deactiveService")),
+    (0, routing_controllers_1.UseBefore)(...(0, secureRoutesMiddleware_1.secureRouteWithPermissions)("deactiveService")),
     __param(0, (0, routing_controllers_1.Param)("id")),
     __param(1, (0, routing_controllers_1.Res)()),
     __metadata("design:type", Function),
