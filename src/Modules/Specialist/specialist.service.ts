@@ -28,11 +28,16 @@ export const uploadFileForSpecialty = async (req: any, res: any) => {
   return iconFilename;
 };
 
-export const createSpecialty = async (icon: any, body: any) => {
+export const createSpecialty = async (
+  icon: any,
+  body: any,
+  createdBy: number
+) => {
   return await prisma.specialty.create({
     data: {
       title: body.title,
       icon: icon ?? "",
+      createdBy,
     },
   });
 };

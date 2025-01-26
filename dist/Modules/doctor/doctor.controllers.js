@@ -83,6 +83,7 @@ const minioClient = new client_s3_1.S3Client({
 let doctorControllers = class doctorControllers {
     addDoctor(req, body, res) {
         return __awaiter(this, void 0, void 0, function* () {
+            var _a;
             yield (0, validators_1.validateDoctor)(body.phone);
             yield (0, validators_1.validateSpecialty)(body.specialtyId);
             if (!req.file)
@@ -108,7 +109,7 @@ let doctorControllers = class doctorControllers {
                 Key: Filename,
             }), { expiresIn: 3600 } // URL valid for 1 hour
             );
-            const doctor = yield doctorServices.addDoctor(body, imageUrl);
+            const doctor = yield doctorServices.addDoctor(Object.assign(Object.assign({}, body), { createdBy: (_a = req.user) === null || _a === void 0 ? void 0 : _a.id }), imageUrl);
             return res.status(200).json(doctor);
         });
     }

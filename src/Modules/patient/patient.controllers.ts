@@ -35,7 +35,10 @@ export class patientController {
     const birthdate = new Date(body.birthdate);
     body.birthdate = birthdate.toISOString();
 
-    let patient = await patientService.createPatient(body);
+    let patient = await patientService.createPatient({
+      createdBy: req.user?.id,
+      ...body,
+    });
     return res.status(200).json(patient);
   }
 

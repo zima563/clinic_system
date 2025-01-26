@@ -31,6 +31,7 @@ export class scheduleControllers {
   async addSchedule(@Req() req: Request, @Res() res: Response) {
     const { doctorId, servicesId, price, dates } = req.body;
     const schedule = await scheduleServices.addSchedule(
+      req.user?.id,
       doctorId,
       servicesId,
       price,

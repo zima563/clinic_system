@@ -68,10 +68,11 @@ const patientService = __importStar(require("./patient.service"));
 let patientController = class patientController {
     addPatient(req, body, res) {
         return __awaiter(this, void 0, void 0, function* () {
+            var _a;
             yield (0, validators_1.patientExist)(body.phone);
             const birthdate = new Date(body.birthdate);
             body.birthdate = birthdate.toISOString();
-            let patient = yield patientService.createPatient(body);
+            let patient = yield patientService.createPatient(Object.assign({ createdBy: (_a = req.user) === null || _a === void 0 ? void 0 : _a.id }, body));
             return res.status(200).json(patient);
         });
     }

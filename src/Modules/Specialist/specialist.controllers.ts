@@ -49,7 +49,8 @@ export class specialtyControllers {
     // Save the specialty to the database
     const specialty = await specialtyServices.createSpecialty(
       iconFilename,
-      body
+      body,
+      req.user.id
     );
 
     return res.status(200).json(specialty);

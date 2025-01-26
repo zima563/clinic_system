@@ -15,9 +15,10 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.deleteSchedule = exports.updateSchedule = exports.deleteDates = exports.findScheduleById = exports.showDetailsOfSchedule = exports.listOfDates = exports.listSchedules = exports.addSchedule = void 0;
 const prismaClient_1 = require("../../prismaClient");
 const ApiFeatures_1 = __importDefault(require("../../utils/ApiFeatures"));
-const addSchedule = (doctorId, servicesId, price, dates) => __awaiter(void 0, void 0, void 0, function* () {
+const addSchedule = (createdBy, doctorId, servicesId, price, dates) => __awaiter(void 0, void 0, void 0, function* () {
     return yield prismaClient_1.prisma.schedule.create({
         data: {
+            createdBy,
             doctorId,
             servicesId,
             price,

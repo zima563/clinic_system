@@ -13,6 +13,33 @@ generator client {
   binaryTargets = ["native", "debian-openssl-1.1.x"]
 }
 
+model User {
+  id        Int      @id @default(autoincrement())
+  userName  String
+  email     String   @unique
+  phone     String   @unique
+  password  String
+  isActive  Boolean  @default(true)
+  isDeleted Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  userRoles       UserRole[]
+  userPermissions UserPermission[]
+  Role            Role[]
+  Service         Service[]
+  Schedule        Schedule[]
+  Specialty       Specialty[]
+  Invoice         Invoice[]
+  InvoiceDetail   InvoiceDetail[]
+  Doctor          Doctor[]
+  Patient         Patient[]
+  Appointment     Appointment[]
+  Visit           Visit[]
+  VisitDetail     VisitDetail[]
+  VisitInvoice    VisitInvoice[]
+}
+
 model Permission {
   id   Int    @id @default(autoincrement())
   name String @unique
@@ -22,9 +49,11 @@ model Permission {
 }
 
 model Role {
-  id   Int    @id @default(autoincrement())
-  name String @unique
+  id        Int    @id @default(autoincrement())
+  name      String @unique
+  createdBy Int
 
+  creator         User             @relation(fields: [createdBy], references: [id])
   rolePermissions RolePermission[]
   userRoles       UserRole[]
 }
@@ -56,31 +85,17 @@ model UserRole {
   user User @relation(fields: [userId], references: [id])
 }
 
-model User {
-  id        Int      @id @default(autoincrement())
-  userName  String
-  email     String   @unique
-  phone     String   @unique
-  password  String
-  isActive  Boolean  @default(true)
-  isDeleted Boolean  @default(false)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  userRoles       UserRole[]
-  userPermissions UserPermission[]
-}
-
 model Service {
-  id        Int      @id @default(autoincrement())
+  id        Int        @id @default(autoincrement())
   title     String
   desc      String
   img       String
-  status    Boolean  @default(true)
-  isDeleted Boolean  @default(false)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
+  status    Boolean    @default(true)
+  isDeleted Boolean    @default(false)
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+  createdBy Int
+  creator   User       @relation(fields: [createdBy], references: [id])
   schedules Schedule[]
 }
 
@@ -89,8 +104,11 @@ model Schedule {
   doctorId   Int
   servicesId Int
   price      Decimal  @db.Decimal(18, 2)
+  isDeleted  Boolean  @default(false)
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
+  createdBy  Int
+  creator    User     @relation(fields: [createdBy], references: [id])
 
   dates        Date[]
   doctor       Doctor        @relation(fields: [doctorId], references: [id])
@@ -100,11 +118,12 @@ model Schedule {
 }
 
 model Date {
-  id          Int           @id @default(autoincrement())
-  day         String
-  fromTime    String
-  toTime      String
-  scheduleId  Int
+  id         Int    @id @default(autoincrement())
+  day        String
+  fromTime   String
+  toTime     String
+  scheduleId Int
+
   schedule    Schedule      @relation(fields: [scheduleId], references: [id])
   Appointment Appointment[]
   VisitDetail VisitDetail[]
@@ -114,37 +133,42 @@ model Specialty {
   id        Int      @id @default(autoincrement())
   title     String   @unique
   icon      String
+  isDeleted Boolean  @default(false)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  createdBy Int
 
+  creator User     @relation(fields: [createdBy], references: [id])
   doctors Doctor[]
 }
 
 model Invoice {
-  id            Int            @id @default(autoincrement())
-  rf            String         @unique @default(uuid())
+  id            Int             @id @default(autoincrement())
+  rf            String          @unique @default(uuid())
   ex            Boolean
-  paymentMethod payment_Method @default(Cash)
-  total         Decimal        @default(0) @db.Decimal(18, 2)
-  createdAt     DateTime       @default(now())
-  updatedAt     DateTime       @updatedAt
-
-  details      InvoiceDetail[]
-  patient      Patient?
-  VisitInvoice VisitInvoice[]
+  paymentMethod payment_Method  @default(Cash)
+  total         Decimal         @default(0) @db.Decimal(18, 2)
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+  createdBy     Int
+  creator       User            @relation(fields: [createdBy], references: [id])
+  details       InvoiceDetail[]
+  patient       Patient?
+  VisitInvoice  VisitInvoice[]
 }
 
 model InvoiceDetail {
-  id             Int      @id @default(autoincrement())
+  id             Int          @id @default(autoincrement())
   invoiceId      Int
   description    String
-  amount         Decimal  @db.Decimal(18, 2)
+  amount         Decimal      @db.Decimal(18, 2)
   visitDetailsId Int?
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
-
-  invoice     Invoice      @relation(fields: [invoiceId], references: [id])
-  visitDetail VisitDetail? @relation(fields: [visitDetailsId], references: [id])
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+  createdBy      Int
+  creator        User         @relation(fields: [createdBy], references: [id])
+  invoice        Invoice      @relation(fields: [invoiceId], references: [id])
+  visitDetail    VisitDetail? @relation(fields: [visitDetailsId], references: [id])
 }
 
 model Doctor {
@@ -155,28 +179,33 @@ model Doctor {
   isActive    Boolean  @default(true)
   specialtyId Int
   info        String
+  isDeleted   Boolean  @default(false)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+  createdBy   Int
+  creator     User     @relation(fields: [createdBy], references: [id])
 
   specialty Specialty  @relation(fields: [specialtyId], references: [id])
   schedules Schedule[]
 }
 
 model Patient {
-  id             Int      @id @default(autoincrement())
+  id             Int           @id @default(autoincrement())
   name           String
-  phone          String   @unique
+  phone          String        @unique
   birthdate      DateTime
   gender         Gender
   medicalHistory String
   info           String
-  invoiceId      Int?     @unique
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
-
-  invoices     Invoice?      @relation(fields: [invoiceId], references: [id])
-  appointments Appointment[]
-  VisitDetail  VisitDetail[]
+  isDeleted      Boolean       @default(false)
+  invoiceId      Int?          @unique
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+  createdBy      Int
+  creator        User          @relation(fields: [createdBy], references: [id])
+  invoices       Invoice?      @relation(fields: [invoiceId], references: [id])
+  appointments   Appointment[]
+  VisitDetail    VisitDetail[]
 }
 
 model Appointment {
@@ -186,10 +215,11 @@ model Appointment {
   status     AppointmentStatus @default(pending)
   scheduleId Int
   dateId     Int
-
-  patient  Patient  @relation(fields: [patientId], references: [id])
-  schedule Schedule @relation(fields: [scheduleId], references: [id])
-  date     Date     @relation(fields: [dateId], references: [id])
+  createdBy  Int
+  creator    User              @relation(fields: [createdBy], references: [id])
+  patient    Patient           @relation(fields: [patientId], references: [id])
+  schedule   Schedule          @relation(fields: [scheduleId], references: [id])
+  date       Date              @relation(fields: [dateId], references: [id])
 }
 
 model Visit {
@@ -199,19 +229,21 @@ model Visit {
   paymentMethod payment_Method @default(Cash)
   createdAt     DateTime       @default(now())
   updatedAt     DateTime       @updatedAt
-
-  details      VisitDetail[]
-  VisitInvoice VisitInvoice[]
+  createdBy     Int
+  creator       User           @relation(fields: [createdBy], references: [id])
+  details       VisitDetail[]
+  VisitInvoice  VisitInvoice[]
 }
 
 model VisitDetail {
-  id         Int     @id @default(autoincrement())
-  visitId    Int
-  patientId  Int
-  price      Decimal @db.Decimal(18, 2)
-  scheduleId Int
-  dateId     Int
-
+  id            Int             @id @default(autoincrement())
+  visitId       Int
+  patientId     Int
+  price         Decimal         @db.Decimal(18, 2)
+  scheduleId    Int
+  dateId        Int
+  createdBy     Int
+  creator       User            @relation(fields: [createdBy], references: [id])
   visit         Visit           @relation(fields: [visitId], references: [id])
   patient       Patient         @relation(fields: [patientId], references: [id])
   schedule      Schedule        @relation(fields: [scheduleId], references: [id])
@@ -222,9 +254,10 @@ model VisitDetail {
 model VisitInvoice {
   visitId   Int
   invoiceId Int
-
-  visit   Visit   @relation(fields: [visitId], references: [id])
-  invoice Invoice @relation(fields: [invoiceId], references: [id])
+  createdBy Int
+  creator   User    @relation(fields: [createdBy], references: [id])
+  visit     Visit   @relation(fields: [visitId], references: [id])
+  invoice   Invoice @relation(fields: [invoiceId], references: [id])
 
   @@id([visitId, invoiceId])
 }

@@ -89,7 +89,13 @@ export class doctorControllers {
       { expiresIn: 3600 } // URL valid for 1 hour
     );
 
-    const doctor = await doctorServices.addDoctor(body, imageUrl);
+    const doctor = await doctorServices.addDoctor(
+      {
+        ...body,
+        createdBy: req.user?.id,
+      },
+      imageUrl
+    );
 
     return res.status(200).json(doctor);
   }

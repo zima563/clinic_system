@@ -60,7 +60,7 @@ export const getRoleById = async (id: number) => {
   });
 };
 
-export const updateRole = async (id: number, body: number) => {
+export const updateRole = async (id: number, body: any) => {
   return prisma.role.update({
     where: { id },
     data: body,

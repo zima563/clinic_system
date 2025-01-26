@@ -44,6 +44,7 @@ export class appointmentController {
     let appointment = await appointmentService.createAppointment({
       ...body,
       dateTime: new Date(body.dateTime).toISOString(),
+      createdBy: req.user?.id,
     });
     return res.status(200).json(appointment);
   }

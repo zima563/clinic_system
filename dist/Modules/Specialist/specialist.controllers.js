@@ -75,7 +75,7 @@ let specialtyControllers = class specialtyControllers {
             yield specialtyServices.checkSpecialtyExist(body);
             let iconFilename = yield specialtyServices.uploadFileForSpecialty(req, res);
             // Save the specialty to the database
-            const specialty = yield specialtyServices.createSpecialty(iconFilename, body);
+            const specialty = yield specialtyServices.createSpecialty(iconFilename, body, req.user.id);
             return res.status(200).json(specialty);
         });
     }

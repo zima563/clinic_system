@@ -36,11 +36,12 @@ const uploadFileForSpecialty = (req, res) => __awaiter(void 0, void 0, void 0, f
     return iconFilename;
 });
 exports.uploadFileForSpecialty = uploadFileForSpecialty;
-const createSpecialty = (icon, body) => __awaiter(void 0, void 0, void 0, function* () {
+const createSpecialty = (icon, body, createdBy) => __awaiter(void 0, void 0, void 0, function* () {
     return yield prismaClient_1.prisma.specialty.create({
         data: {
             title: body.title,
             icon: icon !== null && icon !== void 0 ? icon : "",
+            createdBy,
         },
     });
 });

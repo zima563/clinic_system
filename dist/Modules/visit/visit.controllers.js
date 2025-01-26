@@ -50,15 +50,18 @@ let visitController = class visitController {
             })));
             const total = visitDetailsWithPrices.reduce((sum, detail) => sum + detail.price, 0);
             const result = yield prisma.$transaction((prisma) => __awaiter(this, void 0, void 0, function* () {
+                var _a, _b, _c;
                 // Create a Visit record
                 const visit = yield prisma.visit.create({
                     data: {
                         total,
                         paymentMethod, // Or dynamically set based on request
+                        createdBy: ((_a = req.user) === null || _a === void 0 ? void 0 : _a.id) || 0,
                     },
                 });
                 // Create visit details
                 const createdVisitDetails = yield Promise.all(visitDetailsWithPrices.map((detail) => __awaiter(this, void 0, void 0, function* () {
+                    var _a;
                     return prisma.visitDetail.create({
                         data: {
                             visitId: visit.id,
@@ -66,6 +69,7 @@ let visitController = class visitController {
                             price: detail.price,
                             scheduleId: detail.scheduleId,
                             dateId: detail.dateId,
+                            createdBy: ((_a = req.user) === null || _a === void 0 ? void 0 : _a.id) || 0,
                         },
                     });
                 })));
@@ -75,6 +79,7 @@ let visitController = class visitController {
                         total,
                         ex: true,
                         paymentMethod,
+                        createdBy: ((_b = req.user) === null || _b === void 0 ? void 0 : _b.id) || 0,
                     },
                 });
                 // Link visit and invoice
@@ -82,17 +87,22 @@ let visitController = class visitController {
                     data: {
                         visitId: visit.id,
                         invoiceId: invoice.id,
+                        createdBy: ((_c = req.user) === null || _c === void 0 ? void 0 : _c.id) || 0,
                     },
                 });
                 // Create invoice details linked to visit details
-                const createdInvoiceDetails = yield Promise.all(createdVisitDetails.map((visitDetail) => prisma.invoiceDetail.create({
-                    data: {
-                        description: `Detail for schedule ${visitDetail.scheduleId}`, // Customize description as needed
-                        amount: visitDetail.price,
-                        invoiceId: invoice.id,
-                        visitDetailsId: visitDetail.id, // Link InvoiceDetail to VisitDetail
-                    },
-                })));
+                const createdInvoiceDetails = yield Promise.all(createdVisitDetails.map((visitDetail) => {
+                    var _a;
+                    return prisma.invoiceDetail.create({
+                        data: {
+                            description: `Detail for schedule ${visitDetail.scheduleId}`, // Customize description as needed
+                            amount: visitDetail.price,
+                            invoiceId: invoice.id,
+                            visitDetailsId: visitDetail.id, // Link InvoiceDetail to VisitDetail
+                            createdBy: ((_a = req.user) === null || _a === void 0 ? void 0 : _a.id) || 0,
+                        },
+                    });
+                }));
                 return { visit, createdVisitDetails, invoice, createdInvoiceDetails };
             }));
             if (body.appointmentId) {
@@ -207,24 +217,32 @@ let visitController = class visitController {
             })));
             const totalVisitPrice = visitDetailsWithPrices.reduce((sum, detail) => sum + detail.price, 0);
             const result = yield prisma.$transaction((prisma) => __awaiter(this, void 0, void 0, function* () {
-                const createdVisitDetails = yield Promise.all(visitDetailsWithPrices.map((detail) => prisma.visitDetail.create({
-                    data: {
-                        visitId: visit.id,
-                        patientId: detail.patientId,
-                        price: detail.price,
-                        scheduleId: detail.scheduleId,
-                        dateId: detail.dateId,
-                    },
-                })));
+                const createdVisitDetails = yield Promise.all(visitDetailsWithPrices.map((detail) => {
+                    var _a;
+                    return prisma.visitDetail.create({
+                        data: {
+                            visitId: visit.id,
+                            patientId: detail.patientId,
+                            price: detail.price,
+                            scheduleId: detail.scheduleId,
+                            dateId: detail.dateId,
+                            createdBy: ((_a = req.user) === null || _a === void 0 ? void 0 : _a.id) || 0,
+                        },
+                    });
+                }));
                 // Create InvoiceDetails for each VisitDetail
-                yield Promise.all(createdVisitDetails.map((visitDetail, index) => prisma.invoiceDetail.create({
-                    data: {
-                        description: `Charge for patient ${visit.rf}`, // Customize description if necessary
-                        amount: visitDetailsWithPrices[index].price,
-                        invoiceId: visitInvoice.invoiceId,
-                        visitDetailsId: visitDetail.id,
-                    },
-                })));
+                yield Promise.all(createdVisitDetails.map((visitDetail, index) => {
+                    var _a;
+                    return prisma.invoiceDetail.create({
+                        data: {
+                            description: `Charge for patient ${visit.rf}`, // Customize description if necessary
+                            amount: visitDetailsWithPrices[index].price,
+                            invoiceId: visitInvoice.invoiceId,
+                            visitDetailsId: visitDetail.id,
+                            createdBy: ((_a = req.user) === null || _a === void 0 ? void 0 : _a.id) || 0,
+                        },
+                    });
+                }));
                 // Use Decimal to ensure precision in financial calculations
                 const roundedTotalVisitPrice = new library_1.Decimal(totalVisitPrice).toFixed(2);
                 // Update the visit's total cost

@@ -34,10 +34,11 @@ export class invoiceControllers {
     @Body() body: any,
     @Res() res: Response
   ) {
-    let invoice = await invoiceService.createInvoice(body.amount);
+    let invoice = await invoiceService.createInvoice(body.amount, req.user.id);
 
     let invoiceDetails = await invoiceService.createInvoiceDetails(
       invoice.id,
+      req.user.id,
       body
     );
 

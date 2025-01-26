@@ -30,11 +30,14 @@ export const uploadFile = async (req: any, res: any) => {
 };
 
 export const createService = async (body: any) => {
+  console.log(body);
+
   return await prisma.service.create({
     data: {
       title: body.title,
       desc: body.desc,
       img: body.icon,
+      createdBy: body.createdBy,
     },
   });
 };

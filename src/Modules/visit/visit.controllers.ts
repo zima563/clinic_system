@@ -65,6 +65,7 @@ export class visitController {
         data: {
           total,
           paymentMethod, // Or dynamically set based on request
+          createdBy: req.user?.id || 0,
         },
       });
 
@@ -78,6 +79,7 @@ export class visitController {
               price: detail.price,
               scheduleId: detail.scheduleId,
               dateId: detail.dateId,
+              createdBy: req.user?.id || 0,
             },
           })
         )
@@ -89,6 +91,7 @@ export class visitController {
           total,
           ex: true,
           paymentMethod,
+          createdBy: req.user?.id || 0,
         },
       });
 
@@ -97,6 +100,7 @@ export class visitController {
         data: {
           visitId: visit.id,
           invoiceId: invoice.id,
+          createdBy: req.user?.id || 0,
         },
       });
 
@@ -109,6 +113,7 @@ export class visitController {
               amount: visitDetail.price,
               invoiceId: invoice.id,
               visitDetailsId: visitDetail.id, // Link InvoiceDetail to VisitDetail
+              createdBy: req.user?.id || 0,
             },
           })
         )
@@ -283,6 +288,7 @@ export class visitController {
               price: detail.price,
               scheduleId: detail.scheduleId,
               dateId: detail.dateId,
+              createdBy: req.user?.id || 0,
             },
           })
         )
@@ -297,6 +303,7 @@ export class visitController {
               amount: visitDetailsWithPrices[index].price,
               invoiceId: visitInvoice.invoiceId,
               visitDetailsId: visitDetail.id,
+              createdBy: req.user?.id || 0,
             },
           })
         )

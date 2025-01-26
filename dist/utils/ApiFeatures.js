@@ -171,6 +171,11 @@ class ApiFeatures {
             }
             else if (modelName === "schedule") {
                 this.prismaQuery.include = {
+                    creator: {
+                        select: {
+                            userName: true,
+                        },
+                    },
                     doctorId: false,
                     servicesId: false,
                     dates: {
@@ -197,6 +202,11 @@ class ApiFeatures {
             }
             else if (modelName === "visit") {
                 this.prismaQuery.include = {
+                    creator: {
+                        select: {
+                            userName: true,
+                        },
+                    },
                     details: {
                         select: {
                             id: true,
@@ -239,6 +249,11 @@ class ApiFeatures {
             }
             else if (modelName === "doctor") {
                 this.prismaQuery.include = {
+                    creator: {
+                        select: {
+                            userName: true,
+                        },
+                    },
                     specialty: {
                         select: {
                             title: true,
@@ -249,6 +264,11 @@ class ApiFeatures {
             }
             else if (modelName === "invoice") {
                 this.prismaQuery.include = {
+                    creator: {
+                        select: {
+                            userName: true,
+                        },
+                    },
                     VisitInvoice: {
                         select: {
                             visit: {
@@ -270,6 +290,24 @@ class ApiFeatures {
                         select: {
                             id: true,
                             description: true,
+                        },
+                    },
+                };
+            }
+            else if (modelName === "service") {
+                this.prismaQuery.include = {
+                    creator: {
+                        select: {
+                            userName: true,
+                        },
+                    },
+                };
+            }
+            else if (modelName === "specialty") {
+                this.prismaQuery.include = {
+                    creator: {
+                        select: {
+                            userName: true,
                         },
                     },
                 };

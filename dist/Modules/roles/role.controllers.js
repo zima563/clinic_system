@@ -65,11 +65,12 @@ const role_validation_1 = require("./role.validation");
 const secureRoutesMiddleware_1 = require("../../middlewares/secureRoutesMiddleware");
 const RoleService = __importStar(require("./role.service"));
 let roleControllers = class roleControllers {
-    createRole(body, res) {
+    createRole(req, body, res) {
         return __awaiter(this, void 0, void 0, function* () {
+            var _a;
             if (yield RoleService.roleExist(body.name))
                 throw new ApiError_1.default("this role name already exist", 409);
-            let role = yield RoleService.createRole(body);
+            let role = yield RoleService.createRole(Object.assign({ createdBy: (_a = req.user) === null || _a === void 0 ? void 0 : _a.id }, body));
             res.status(200).json(role);
         });
     }
@@ -126,10 +127,11 @@ exports.roleControllers = roleControllers;
 __decorate([
     (0, routing_controllers_1.Post)("/"),
     (0, routing_controllers_1.UseBefore)(...(0, secureRoutesMiddleware_1.secureRouteWithPermissions)("createRole"), (0, validation_1.createValidationMiddleware)(role_validation_1.createRoleValidation)),
-    __param(0, (0, routing_controllers_1.Body)()),
-    __param(1, (0, routing_controllers_1.Res)()),
+    __param(0, (0, routing_controllers_1.Req)()),
+    __param(1, (0, routing_controllers_1.Body)()),
+    __param(2, (0, routing_controllers_1.Res)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Object, Object]),
+    __metadata("design:paramtypes", [Object, Object, Object]),
     __metadata("design:returntype", Promise)
 ], roleControllers.prototype, "createRole", null);
 __decorate([

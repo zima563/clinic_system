@@ -77,7 +77,7 @@ let serviceController = class serviceController {
                 throw new ApiError_1.default("service title already exists", 409);
             }
             body.icon = (_a = (yield services.uploadFile(req, res))) !== null && _a !== void 0 ? _a : "";
-            let service = yield services.createService(body);
+            let service = yield services.createService(Object.assign(Object.assign({}, body), { createdBy: req.user.id }));
             return res.status(200).json(service);
         });
     }

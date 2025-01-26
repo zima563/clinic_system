@@ -68,8 +68,8 @@ const invoiceService = __importStar(require("./invoice.service"));
 let invoiceControllers = class invoiceControllers {
     createInvoice(req, body, res) {
         return __awaiter(this, void 0, void 0, function* () {
-            let invoice = yield invoiceService.createInvoice(body.amount);
-            let invoiceDetails = yield invoiceService.createInvoiceDetails(invoice.id, body);
+            let invoice = yield invoiceService.createInvoice(body.amount, req.user.id);
+            let invoiceDetails = yield invoiceService.createInvoiceDetails(invoice.id, req.user.id, body);
             return res
                 .status(200)
                 .json({ message: "invoice created successfully", invoiceDetails });

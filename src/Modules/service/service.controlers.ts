@@ -47,7 +47,10 @@ export class serviceController {
 
     body.icon = (await services.uploadFile(req, res)) ?? "";
 
-    let service = await services.createService(body);
+    let service = await services.createService({
+      ...body,
+      createdBy: req.user.id,
+    });
     return res.status(200).json(service);
   }
 

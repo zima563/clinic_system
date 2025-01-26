@@ -39,11 +39,13 @@ const uploadFile = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
 });
 exports.uploadFile = uploadFile;
 const createService = (body) => __awaiter(void 0, void 0, void 0, function* () {
+    console.log(body);
     return yield prismaClient_1.prisma.service.create({
         data: {
             title: body.title,
             desc: body.desc,
             img: body.icon,
+            createdBy: body.createdBy,
         },
     });
 });

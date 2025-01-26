@@ -1,4 +1,4 @@
-import { Response } from "express";
+import { Request, Response } from "express";
 import {
   Body,
   Delete,
@@ -8,6 +8,7 @@ import {
   Post,
   Put,
   QueryParams,
+  Req,
   Res,
   UseBefore,
 } from "routing-controllers";
@@ -28,11 +29,18 @@ export class roleControllers {
     ...secureRouteWithPermissions("createRole"),
     createValidationMiddleware(createRoleValidation)
   )
-  async createRole(@Body() body: any, @Res() res: Response) {
+  async createRole(
+    @Req() req: Request,
+    @Body() body: any,
+    @Res() res: Response
+  ) {
     if (await RoleService.roleExist(body.name))
       throw new ApiError("this role name already exist", 409);
 
-    let role = await RoleService.createRole(body);
+    let role = await RoleService.createRole({
+      createdBy: req.user?.id,
+      ...body,
+    });
     res.status(200).json(role);
   }
 

@@ -68,9 +68,10 @@ const appointmentService = __importStar(require("./appoientment.service"));
 let appointmentController = class appointmentController {
     addAppointment(req, body, res) {
         return __awaiter(this, void 0, void 0, function* () {
+            var _a;
             yield (0, validators_1.validatePatient)(body.patientId);
             yield (0, validators_1.validateSchedule)(body.scheduleId);
-            let appointment = yield appointmentService.createAppointment(Object.assign(Object.assign({}, body), { dateTime: new Date(body.dateTime).toISOString() }));
+            let appointment = yield appointmentService.createAppointment(Object.assign(Object.assign({}, body), { dateTime: new Date(body.dateTime).toISOString(), createdBy: (_a = req.user) === null || _a === void 0 ? void 0 : _a.id }));
             return res.status(200).json(appointment);
         });
     }

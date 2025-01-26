@@ -18,18 +18,19 @@ const library_1 = require("@prisma/client/runtime/library");
 const prismaClient_1 = require("../../prismaClient");
 const ApiFeatures_1 = __importDefault(require("../../utils/ApiFeatures"));
 const ApiError_1 = __importDefault(require("../../utils/ApiError"));
-const createInvoice = (total) => __awaiter(void 0, void 0, void 0, function* () {
+const createInvoice = (total, createdBy) => __awaiter(void 0, void 0, void 0, function* () {
     return prismaClient_1.prisma.invoice.create({
         data: {
             total: total,
             ex: false,
+            createdBy,
         },
     });
 });
 exports.createInvoice = createInvoice;
-const createInvoiceDetails = (id, body) => __awaiter(void 0, void 0, void 0, function* () {
+const createInvoiceDetails = (id, body, createdBy) => __awaiter(void 0, void 0, void 0, function* () {
     return prismaClient_1.prisma.invoiceDetail.create({
-        data: Object.assign({ invoiceId: id }, body),
+        data: Object.assign({ invoiceId: id, createdBy }, body),
         include: {
             invoice: true,
         },

@@ -2,6 +2,7 @@ import { prisma } from "../../prismaClient";
 import ApiFeatures from "../../utils/ApiFeatures";
 
 export const addSchedule = async (
+  createdBy: any,
   doctorId: number,
   servicesId: number,
   price: any,
@@ -9,6 +10,7 @@ export const addSchedule = async (
 ) => {
   return await prisma.schedule.create({
     data: {
+      createdBy,
       doctorId,
       servicesId,
       price,

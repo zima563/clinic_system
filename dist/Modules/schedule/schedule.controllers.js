@@ -67,8 +67,9 @@ const scheduleServices = __importStar(require("./schedule.service"));
 let scheduleControllers = class scheduleControllers {
     addSchedule(req, res) {
         return __awaiter(this, void 0, void 0, function* () {
+            var _a;
             const { doctorId, servicesId, price, dates } = req.body;
-            const schedule = yield scheduleServices.addSchedule(doctorId, servicesId, price, dates);
+            const schedule = yield scheduleServices.addSchedule((_a = req.user) === null || _a === void 0 ? void 0 : _a.id, doctorId, servicesId, price, dates);
             return res.status(200).json(schedule);
         });
     }
