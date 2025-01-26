@@ -1,5 +1,3 @@
-import { ProtectRoutesMiddleware } from "./../../middlewares/protectedRoute";
-import { Visit } from "./../../../node_modules/.prisma/client/index.d";
 import {
   Body,
   Delete,
@@ -7,7 +5,6 @@ import {
   JsonController,
   Param,
   Post,
-  QueryParam,
   QueryParams,
   Req,
   Res,
@@ -17,13 +14,8 @@ import {
 import { createValidationMiddleware } from "../../middlewares/validation";
 import { appendVisitSchema, createVisitSchema } from "./visit.validation";
 import { Request, Response } from "express";
-import { PrismaClient } from "@prisma/client";
 import ApiError from "../../utils/ApiError";
-import { Decimal } from "@prisma/client/runtime/library";
-import { roleOrPermissionMiddleware } from "../../middlewares/roleOrPermission";
-import ApiFeatures from "../../utils/ApiFeatures";
 import { secureRouteWithPermissions } from "../../middlewares/secureRoutesMiddleware";
-const prisma = new PrismaClient();
 
 import * as visitServices from "./visit.service";
 

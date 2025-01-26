@@ -61,10 +61,8 @@ exports.visitController = void 0;
 const routing_controllers_1 = require("routing-controllers");
 const validation_1 = require("../../middlewares/validation");
 const visit_validation_1 = require("./visit.validation");
-const client_1 = require("@prisma/client");
 const ApiError_1 = __importDefault(require("../../utils/ApiError"));
 const secureRoutesMiddleware_1 = require("../../middlewares/secureRoutesMiddleware");
-const prisma = new client_1.PrismaClient();
 const visitServices = __importStar(require("./visit.service"));
 let visitController = class visitController {
     createVisit(req, body, res) {
