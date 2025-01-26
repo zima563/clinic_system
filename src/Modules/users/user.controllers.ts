@@ -1,5 +1,3 @@
-import { ProtectRoutesMiddleware } from "./../../middlewares/protectedRoute";
-import { PrismaClient } from "@prisma/client";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import { NextFunction, Response } from "express";
@@ -19,14 +17,10 @@ import {
 import { createValidationMiddleware } from "../../middlewares/validation";
 import { addUser, loginValidation, UpdateUser } from "./user.validations";
 import { CheckEmailMiddleware } from "../../middlewares/emailExists";
-import ApiFeatures from "../../utils/ApiFeatures";
 import ApiError from "../../utils/ApiError";
-import { roleOrPermissionMiddleware } from "../../middlewares/roleOrPermission";
 import { CheckPhoneMiddleware } from "../../middlewares/phoneExist";
 import { secureRouteWithPermissions } from "../../middlewares/secureRoutesMiddleware";
 import * as userServices from "./user.service";
-
-const prisma = new PrismaClient();
 
 @JsonController("/api/users")
 export class userControllers {
@@ -97,7 +91,7 @@ export class userControllers {
   }
 
   @Patch("/soft/:id")
-  @UseBefore(ProtectRoutesMiddleware, roleOrPermissionMiddleware("DeleteUser"))
+  @UseBefore(...secureRouteWithPermissions("DeleteUser"))
   async DeleteUser(
     @Param("id") id: number,
     @Body() body: any,

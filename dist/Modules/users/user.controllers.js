@@ -58,8 +58,6 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.userControllers = void 0;
-const protectedRoute_1 = require("./../../middlewares/protectedRoute");
-const client_1 = require("@prisma/client");
 const bcrypt_1 = __importDefault(require("bcrypt"));
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const routing_controllers_1 = require("routing-controllers");
@@ -67,11 +65,9 @@ const validation_1 = require("../../middlewares/validation");
 const user_validations_1 = require("./user.validations");
 const emailExists_1 = require("../../middlewares/emailExists");
 const ApiError_1 = __importDefault(require("../../utils/ApiError"));
-const roleOrPermission_1 = require("../../middlewares/roleOrPermission");
 const phoneExist_1 = require("../../middlewares/phoneExist");
 const secureRoutesMiddleware_1 = require("../../middlewares/secureRoutesMiddleware");
 const userServices = __importStar(require("./user.service"));
-const prisma = new client_1.PrismaClient();
 let userControllers = class userControllers {
     // Apply CheckEmailMiddleware only for the POST route (user creation)
     addUser(body, res) {
@@ -214,7 +210,7 @@ __decorate([
 ], userControllers.prototype, "deactiveUser", null);
 __decorate([
     (0, routing_controllers_1.Patch)("/soft/:id"),
-    (0, routing_controllers_1.UseBefore)(protectedRoute_1.ProtectRoutesMiddleware, (0, roleOrPermission_1.roleOrPermissionMiddleware)("DeleteUser")),
+    (0, routing_controllers_1.UseBefore)(...(0, secureRoutesMiddleware_1.secureRouteWithPermissions)("DeleteUser")),
     __param(0, (0, routing_controllers_1.Param)("id")),
     __param(1, (0, routing_controllers_1.Body)()),
     __param(2, (0, routing_controllers_1.Res)()),
