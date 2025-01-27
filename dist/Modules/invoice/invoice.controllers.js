@@ -69,7 +69,7 @@ let invoiceControllers = class invoiceControllers {
     createInvoice(req, body, res) {
         return __awaiter(this, void 0, void 0, function* () {
             let invoice = yield invoiceService.createInvoice(body.amount, req.user.id);
-            let invoiceDetails = yield invoiceService.createInvoiceDetails(invoice.id, req.user.id, body);
+            let invoiceDetails = yield invoiceService.createInvoiceDetails(invoice.id, body, req.user.id);
             return res
                 .status(200)
                 .json({ message: "invoice created successfully", invoiceDetails });
@@ -141,7 +141,7 @@ let invoiceControllers = class invoiceControllers {
     Append_Invoice_Details(req, body, id, res) {
         return __awaiter(this, void 0, void 0, function* () {
             const invoice = yield invoiceService.getInvoiceWithDetails(id);
-            yield invoiceService.appendInvoiceDetail(id, invoice, body);
+            yield invoiceService.appendInvoiceDetail(id, invoice, body, req);
             const invoiceAfter = yield invoiceService.getInvoiceWithDetails(id);
             return res
                 .status(200)

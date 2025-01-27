@@ -49,7 +49,16 @@ export const checkSpecialtyExist = async (body: any) => {
 };
 
 export const findSpecialtyById = async (id: number) => {
-  return await prisma.specialty.findUnique({ where: { id } });
+  return await prisma.specialty.findUnique({
+    where: { id },
+    include: {
+      creator: {
+        select: {
+          userName: true,
+        },
+      },
+    },
+  });
 };
 
 export const uploadFileForSpecialtyUpdate = async (

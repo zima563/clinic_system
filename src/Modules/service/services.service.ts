@@ -61,7 +61,16 @@ export const listServices = async (baseFilter: any, query: any) => {
 };
 
 export const getServiceById = async (id: number) => {
-  return await prisma.service.findUnique({ where: { id } });
+  return await prisma.service.findUnique({
+    where: { id },
+    include: {
+      creator: {
+        select: {
+          userName: true,
+        },
+      },
+    },
+  });
 };
 
 export const CheckTitleExist = async (id: number, title: string) => {

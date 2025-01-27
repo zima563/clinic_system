@@ -29,8 +29,13 @@ const createInvoice = (total, createdBy) => __awaiter(void 0, void 0, void 0, fu
 });
 exports.createInvoice = createInvoice;
 const createInvoiceDetails = (id, body, createdBy) => __awaiter(void 0, void 0, void 0, function* () {
-    return prismaClient_1.prisma.invoiceDetail.create({
-        data: Object.assign({ invoiceId: id, createdBy }, body),
+    return yield prismaClient_1.prisma.invoiceDetail.create({
+        data: {
+            invoiceId: id,
+            createdBy,
+            description: body.description,
+            amount: body.amount,
+        },
         include: {
             invoice: true,
         },
@@ -296,6 +301,11 @@ const showInvoiceDetails = (id) => __awaiter(void 0, void 0, void 0, function* (
             id,
         },
         include: {
+            creator: {
+                select: {
+                    userName: true,
+                },
+            },
             details: {
                 select: {
                     description: true,
@@ -351,7 +361,7 @@ const getInvoiceWithDetails = (id) => __awaiter(void 0, void 0, void 0, function
     });
 });
 exports.getInvoiceWithDetails = getInvoiceWithDetails;
-const appendInvoiceDetail = (id, invoice, body) => __awaiter(void 0, void 0, void 0, function* () {
+const appendInvoiceDetail = (id, invoice, body, req) => __awaiter(void 0, void 0, void 0, function* () {
     const invoiceTotal = new library_1.Decimal((invoice === null || invoice === void 0 ? void 0 : invoice.total) || 0);
     const bodyAmount = new library_1.Decimal(body.amount || 0);
     const finalTotal = invoiceTotal.plus(bodyAmount);
@@ -360,7 +370,7 @@ const appendInvoiceDetail = (id, invoice, body) => __awaiter(void 0, void 0, voi
         data: { total: finalTotal },
     });
     yield prismaClient_1.prisma.invoiceDetail.create({
-        data: Object.assign({ invoiceId: id }, body),
+        data: Object.assign({ invoiceId: id, createdBy: req.user.id }, body),
         include: {
             invoice: true,
         },

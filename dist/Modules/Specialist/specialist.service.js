@@ -53,7 +53,16 @@ const checkSpecialtyExist = (body) => __awaiter(void 0, void 0, void 0, function
 });
 exports.checkSpecialtyExist = checkSpecialtyExist;
 const findSpecialtyById = (id) => __awaiter(void 0, void 0, void 0, function* () {
-    return yield prismaClient_1.prisma.specialty.findUnique({ where: { id } });
+    return yield prismaClient_1.prisma.specialty.findUnique({
+        where: { id },
+        include: {
+            creator: {
+                select: {
+                    userName: true,
+                },
+            },
+        },
+    });
 });
 exports.findSpecialtyById = findSpecialtyById;
 const uploadFileForSpecialtyUpdate = (req, specialty) => __awaiter(void 0, void 0, void 0, function* () {

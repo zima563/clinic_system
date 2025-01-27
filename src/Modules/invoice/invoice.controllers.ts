@@ -38,8 +38,8 @@ export class invoiceControllers {
 
     let invoiceDetails = await invoiceService.createInvoiceDetails(
       invoice.id,
-      req.user.id,
-      body
+      body,
+      req.user.id
     );
 
     return res
@@ -159,7 +159,7 @@ export class invoiceControllers {
   ) {
     const invoice = await invoiceService.getInvoiceWithDetails(id);
 
-    await invoiceService.appendInvoiceDetail(id, invoice, body);
+    await invoiceService.appendInvoiceDetail(id, invoice, body, req);
 
     const invoiceAfter = await invoiceService.getInvoiceWithDetails(id);
     return res

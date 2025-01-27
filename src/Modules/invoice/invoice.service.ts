@@ -19,11 +19,12 @@ export const createInvoiceDetails = async (
   body: any,
   createdBy: number
 ) => {
-  return prisma.invoiceDetail.create({
+  return await prisma.invoiceDetail.create({
     data: {
       invoiceId: id,
       createdBy,
-      ...body,
+      description: body.description,
+      amount: body.amount,
     },
     include: {
       invoice: true,
@@ -336,6 +337,11 @@ export const showInvoiceDetails = async (id: number) => {
       id,
     },
     include: {
+      creator: {
+        select: {
+          userName: true,
+        },
+      },
       details: {
         select: {
           description: true,
@@ -394,7 +400,8 @@ export const getInvoiceWithDetails = async (id: number) => {
 export const appendInvoiceDetail = async (
   id: number,
   invoice: any,
-  body: any
+  body: any,
+  req: any
 ) => {
   const invoiceTotal = new Decimal(invoice?.total || 0);
   const bodyAmount = new Decimal(body.amount || 0);
@@ -407,6 +414,7 @@ export const appendInvoiceDetail = async (
   await prisma.invoiceDetail.create({
     data: {
       invoiceId: id,
+      createdBy: req.user.id,
       ...body,
     },
     include: {

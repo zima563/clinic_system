@@ -65,7 +65,16 @@ const listServices = (baseFilter, query) => __awaiter(void 0, void 0, void 0, fu
 });
 exports.listServices = listServices;
 const getServiceById = (id) => __awaiter(void 0, void 0, void 0, function* () {
-    return yield prismaClient_1.prisma.service.findUnique({ where: { id } });
+    return yield prismaClient_1.prisma.service.findUnique({
+        where: { id },
+        include: {
+            creator: {
+                select: {
+                    userName: true,
+                },
+            },
+        },
+    });
 });
 exports.getServiceById = getServiceById;
 const CheckTitleExist = (id, title) => __awaiter(void 0, void 0, void 0, function* () {
