@@ -11,6 +11,7 @@ import {
   Put,
   QueryParam,
   QueryParams,
+  Req,
   Res,
   UseBefore,
 } from "routing-controllers";
@@ -76,13 +77,14 @@ export class userControllers {
   @Patch("/:id")
   @UseBefore(...secureRouteWithPermissions("deactiveUser"))
   async deactiveUser(
+    @Req() req: any,
     @Param("id") id: number,
     @Body() body: any,
     @Res() res: Response
   ) {
     let user = await userServices.getUserById(id);
     if (!user) throw new ApiError("user not found", 404);
-    await userServices.deactiveUser(id, user);
+    await userServices.deactiveUser(id, user, req?.user.id);
     let updatedUser = await userServices.getUserById(id);
 
     return res

@@ -50,7 +50,10 @@ export const updateUser = async (id: number, body: any) => {
   });
 };
 
-export const deactiveUser = async (id: number, user: any) => {
+export const deactiveUser = async (id: number, user: any, userId: number) => {
+  if (userId === id) {
+    throw new ApiError("you not allow to deactive your Account ..!", 401);
+  }
   if (user.isActive) {
     await prisma.user.update({
       where: { id },
