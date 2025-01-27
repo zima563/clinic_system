@@ -1,10 +1,9 @@
 import { prisma } from "../../prismaClient";
 import ApiFeatures from "../../utils/ApiFeatures";
 
-export const addDoctor = async (body: any, imageUrl: string) => {
+export const addDoctor = async (body: any) => {
   return prisma.doctor.create({
     data: {
-      image: imageUrl ?? "",
       ...body,
     },
   });
@@ -45,6 +44,13 @@ export const getDoctors = async (query: any) => {
 export const getDoctor = async (id: number) => {
   return prisma.doctor.findUnique({
     where: { id },
+    include: {
+      creator: {
+        select: {
+          userName: true,
+        },
+      },
+    },
   });
 };
 

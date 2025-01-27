@@ -62,6 +62,11 @@ const getAppointments = () => __awaiter(void 0, void 0, void 0, function* () {
             id: true,
             dateTime: true,
             status: true,
+            creator: {
+                select: {
+                    userName: true,
+                },
+            },
             schedule: {
                 select: {
                     price: true,
@@ -103,6 +108,11 @@ const showAppointmnetDetail = (id) => __awaiter(void 0, void 0, void 0, function
             id: true,
             dateTime: true,
             status: true,
+            creator: {
+                select: {
+                    userName: true,
+                },
+            },
             schedule: {
                 select: {
                     price: true,

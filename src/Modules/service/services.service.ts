@@ -19,14 +19,13 @@ export const uploadFile = async (req: any, res: any) => {
     cleanedFilename
   )}`;
   const iconPath = path.join("uploads", iconFilename);
-
   // Resize and save the icon using sharp
   await sharp(req.file.buffer)
     .resize({ width: 100, height: 100, fit: "cover" })
     .png({ quality: 70, compressionLevel: 9 })
     .toFile(iconPath);
 
-  return iconPath;
+  return iconFilename;
 };
 
 export const createService = async (body: any) => {

@@ -114,7 +114,16 @@ export const getAllVisits = async (query: any) => {
 };
 
 export const getVisitById = async (id: number) => {
-  return await prisma.visit.findUnique({ where: { id } });
+  return await prisma.visit.findUnique({
+    where: { id },
+    include: {
+      creator: {
+        select: {
+          userName: true,
+        },
+      },
+    },
+  });
 };
 
 export const getVisitDetails = async (id: number) => {

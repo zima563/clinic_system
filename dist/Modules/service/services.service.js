@@ -35,7 +35,7 @@ const uploadFile = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
         .resize({ width: 100, height: 100, fit: "cover" })
         .png({ quality: 70, compressionLevel: 9 })
         .toFile(iconPath);
-    return iconPath;
+    return iconFilename;
 });
 exports.uploadFile = uploadFile;
 const createService = (body) => __awaiter(void 0, void 0, void 0, function* () {

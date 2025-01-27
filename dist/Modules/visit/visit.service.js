@@ -114,7 +114,16 @@ const getAllVisits = (query) => __awaiter(void 0, void 0, void 0, function* () {
 });
 exports.getAllVisits = getAllVisits;
 const getVisitById = (id) => __awaiter(void 0, void 0, void 0, function* () {
-    return yield prismaClient_1.prisma.visit.findUnique({ where: { id } });
+    return yield prismaClient_1.prisma.visit.findUnique({
+        where: { id },
+        include: {
+            creator: {
+                select: {
+                    userName: true,
+                },
+            },
+        },
+    });
 });
 exports.getVisitById = getVisitById;
 const getVisitDetails = (id) => __awaiter(void 0, void 0, void 0, function* () {

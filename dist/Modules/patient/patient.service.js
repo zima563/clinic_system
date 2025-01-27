@@ -52,6 +52,13 @@ exports.listPatient = listPatient;
 const getPatient = (id) => __awaiter(void 0, void 0, void 0, function* () {
     return prismaClient_1.prisma.patient.findUnique({
         where: { id },
+        include: {
+            creator: {
+                select: {
+                    userName: true,
+                },
+            },
+        },
     });
 });
 exports.getPatient = getPatient;

@@ -42,6 +42,13 @@ export const listPatient = async (query: any) => {
 export const getPatient = async (id: number) => {
   return prisma.patient.findUnique({
     where: { id },
+    include: {
+      creator: {
+        select: {
+          userName: true,
+        },
+      },
+    },
   });
 };
 

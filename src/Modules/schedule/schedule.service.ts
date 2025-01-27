@@ -80,6 +80,11 @@ export const showDetailsOfSchedule = async (id: number) => {
           title: true,
         },
       },
+      creator: {
+        select: {
+          userName: true,
+        },
+      },
     },
   });
 };

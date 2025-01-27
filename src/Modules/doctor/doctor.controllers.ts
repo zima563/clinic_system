@@ -34,6 +34,7 @@ import {
   validateSpecialty,
 } from "./validators";
 import * as doctorServices from "./doctor.service";
+import { uploadFile } from "../service/services.service";
 
 const minioClient = new S3Client({
   region: "us-east-1",
@@ -48,7 +49,7 @@ export class doctorControllers {
   @Post("/")
   @UseBefore(
     ...secureRouteWithPermissions("addDoctor"),
-    createUploadMiddleware("icon"),
+    createUploadMiddleware("image"),
     createValidationMiddleware(addDoctorValidationSchema)
   )
   async addDoctor(
@@ -58,44 +59,14 @@ export class doctorControllers {
   ) {
     await validateDoctor(body.phone);
     await validateSpecialty(body.specialtyId);
-    if (!req.file) throw new ApiError("image file is required.", 404);
+
     body.specialtyId = parseInt(body.specialtyId, 10);
-    const cleanedFilename = req.file.originalname
-      .replace(/\s+/g, "_")
-      .replace(/[^a-zA-Z0-9_.]/g, "");
+    body.image = await uploadFile(req, res);
 
-    const Filename = `img-${uuidv4()}-${encodeURIComponent(cleanedFilename)}`;
-
-    const resizedImageBuffer = await sharp(req.file.buffer)
-      .resize(100, 100)
-      .png({ quality: 80 })
-      .toBuffer();
-    const bucketName = "uploads";
-
-    await minioClient.send(
-      new PutObjectCommand({
-        Bucket: bucketName,
-        Key: Filename,
-        Body: resizedImageBuffer,
-        ContentType: "image/png",
-      })
-    );
-    const imageUrl = await getSignedUrl(
-      minioClient,
-      new PutObjectCommand({
-        Bucket: bucketName,
-        Key: Filename,
-      }),
-      { expiresIn: 3600 } // URL valid for 1 hour
-    );
-
-    const doctor = await doctorServices.addDoctor(
-      {
-        ...body,
-        createdBy: req.user?.id,
-      },
-      imageUrl
-    );
+    const doctor = await doctorServices.addDoctor({
+      ...body,
+      createdBy: req.user?.id,
+    });
 
     return res.status(200).json(doctor);
   }

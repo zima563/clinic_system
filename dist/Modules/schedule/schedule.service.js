@@ -84,6 +84,11 @@ const showDetailsOfSchedule = (id) => __awaiter(void 0, void 0, void 0, function
                     title: true,
                 },
             },
+            creator: {
+                select: {
+                    userName: true,
+                },
+            },
         },
     });
 });

@@ -68,10 +68,10 @@ const uuid_1 = require("uuid");
 const sharp_1 = __importDefault(require("sharp"));
 const path_1 = __importDefault(require("path"));
 const client_s3_1 = require("@aws-sdk/client-s3");
-const s3_request_presigner_1 = require("@aws-sdk/s3-request-presigner");
 const secureRoutesMiddleware_1 = require("../../middlewares/secureRoutesMiddleware");
 const validators_1 = require("./validators");
 const doctorServices = __importStar(require("./doctor.service"));
+const services_service_1 = require("../service/services.service");
 const minioClient = new client_s3_1.S3Client({
     region: "us-east-1",
     endpoint: "http://127.0.0.1:9000",
@@ -86,30 +86,9 @@ let doctorControllers = class doctorControllers {
             var _a;
             yield (0, validators_1.validateDoctor)(body.phone);
             yield (0, validators_1.validateSpecialty)(body.specialtyId);
-            if (!req.file)
-                throw new ApiError_1.default("image file is required.", 404);
             body.specialtyId = parseInt(body.specialtyId, 10);
-            const cleanedFilename = req.file.originalname
-                .replace(/\s+/g, "_")
-                .replace(/[^a-zA-Z0-9_.]/g, "");
-            const Filename = `img-${(0, uuid_1.v4)()}-${encodeURIComponent(cleanedFilename)}`;
-            const resizedImageBuffer = yield (0, sharp_1.default)(req.file.buffer)
-                .resize(100, 100)
-                .png({ quality: 80 })
-                .toBuffer();
-            const bucketName = "uploads";
-            yield minioClient.send(new client_s3_1.PutObjectCommand({
-                Bucket: bucketName,
-                Key: Filename,
-                Body: resizedImageBuffer,
-                ContentType: "image/png",
-            }));
-            const imageUrl = yield (0, s3_request_presigner_1.getSignedUrl)(minioClient, new client_s3_1.PutObjectCommand({
-                Bucket: bucketName,
-                Key: Filename,
-            }), { expiresIn: 3600 } // URL valid for 1 hour
-            );
-            const doctor = yield doctorServices.addDoctor(Object.assign(Object.assign({}, body), { createdBy: (_a = req.user) === null || _a === void 0 ? void 0 : _a.id }), imageUrl);
+            body.image = yield (0, services_service_1.uploadFile)(req, res);
+            const doctor = yield doctorServices.addDoctor(Object.assign(Object.assign({}, body), { createdBy: (_a = req.user) === null || _a === void 0 ? void 0 : _a.id }));
             return res.status(200).json(doctor);
         });
     }
@@ -188,7 +167,7 @@ let doctorControllers = class doctorControllers {
 exports.doctorControllers = doctorControllers;
 __decorate([
     (0, routing_controllers_1.Post)("/"),
-    (0, routing_controllers_1.UseBefore)(...(0, secureRoutesMiddleware_1.secureRouteWithPermissions)("addDoctor"), (0, uploadFile_1.default)("icon"), (0, validation_1.createValidationMiddleware)(doctor_validation_1.addDoctorValidationSchema)),
+    (0, routing_controllers_1.UseBefore)(...(0, secureRoutesMiddleware_1.secureRouteWithPermissions)("addDoctor"), (0, uploadFile_1.default)("image"), (0, validation_1.createValidationMiddleware)(doctor_validation_1.addDoctorValidationSchema)),
     __param(0, (0, routing_controllers_1.Req)()),
     __param(1, (0, routing_controllers_1.Body)()),
     __param(2, (0, routing_controllers_1.Res)()),

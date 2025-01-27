@@ -51,6 +51,11 @@ export const getAppointments = async () => {
       id: true,
       dateTime: true,
       status: true,
+      creator: {
+        select: {
+          userName: true,
+        },
+      },
       schedule: {
         select: {
           price: true,
@@ -92,6 +97,11 @@ export const showAppointmnetDetail = async (id: number) => {
       id: true,
       dateTime: true,
       status: true,
+      creator: {
+        select: {
+          userName: true,
+        },
+      },
       schedule: {
         select: {
           price: true,

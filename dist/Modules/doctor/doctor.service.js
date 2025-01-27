@@ -15,9 +15,9 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.deactiveOrActive = exports.getDoctor = exports.getDoctors = exports.updateDoctor = exports.addDoctor = void 0;
 const prismaClient_1 = require("../../prismaClient");
 const ApiFeatures_1 = __importDefault(require("../../utils/ApiFeatures"));
-const addDoctor = (body, imageUrl) => __awaiter(void 0, void 0, void 0, function* () {
+const addDoctor = (body) => __awaiter(void 0, void 0, void 0, function* () {
     return prismaClient_1.prisma.doctor.create({
-        data: Object.assign({ image: imageUrl !== null && imageUrl !== void 0 ? imageUrl : "" }, body),
+        data: Object.assign({}, body),
     });
 });
 exports.addDoctor = addDoctor;
@@ -45,6 +45,13 @@ exports.getDoctors = getDoctors;
 const getDoctor = (id) => __awaiter(void 0, void 0, void 0, function* () {
     return prismaClient_1.prisma.doctor.findUnique({
         where: { id },
+        include: {
+            creator: {
+                select: {
+                    userName: true,
+                },
+            },
+        },
     });
 });
 exports.getDoctor = getDoctor;
