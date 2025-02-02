@@ -72,7 +72,7 @@ model RolePermission {
   permission Permission @relation(fields: [permissionId], references: [id])
   role       Role       @relation(fields: [roleId], references: [id])
 
-  @@map("rolePermission")
+  @@map("rolepermission")
 }
 
 model UserPermission {
@@ -83,7 +83,7 @@ model UserPermission {
   permission Permission @relation(fields: [permissionId], references: [id])
   user       User       @relation(fields: [userId], references: [id])
 
-  @@map("userPermission")
+  @@map("userpermission")
 }
 
 model UserRole {
@@ -94,7 +94,7 @@ model UserRole {
   role Role @relation(fields: [roleId], references: [id])
   user User @relation(fields: [userId], references: [id])
 
-  @@map("userRole")
+  @@map("userrole")
 }
 
 model Service {
@@ -192,7 +192,7 @@ model InvoiceDetail {
   invoice        Invoice      @relation(fields: [invoiceId], references: [id])
   visitDetail    VisitDetail? @relation(fields: [visitDetailsId], references: [id])
 
-  @@map("invoiceDetail")
+  @@map("invoicedetail")
 }
 
 model Doctor {
@@ -282,7 +282,7 @@ model VisitDetail {
   date          Date            @relation(fields: [dateId], references: [id])
   invoiceDetail InvoiceDetail[]
 
-  @@map("visitDetail")
+  @@map("visitdetail")
 }
 
 model VisitInvoice {
@@ -294,7 +294,7 @@ model VisitInvoice {
   invoice   Invoice @relation(fields: [invoiceId], references: [id])
 
   @@id([visitId, invoiceId])
-  @@map("visitInvoice")
+  @@map("visitinvoice")
 }
 
 enum Gender {
