@@ -39,7 +39,7 @@ model User {
   VisitDetail     VisitDetail[]
   VisitInvoice    VisitInvoice[]
 
-  @@map("User")
+  @@map("user")
 }
 
 model Permission {
@@ -49,7 +49,7 @@ model Permission {
   rolePermissions RolePermission[]
   userPermissions UserPermission[]
 
-  @@map("Permission")
+  @@map("permission")
 }
 
 model Role {
@@ -61,7 +61,7 @@ model Role {
   rolePermissions RolePermission[]
   userRoles       UserRole[]
 
-  @@map("Role")
+  @@map("role")
 }
 
 model RolePermission {
@@ -72,7 +72,7 @@ model RolePermission {
   permission Permission @relation(fields: [permissionId], references: [id])
   role       Role       @relation(fields: [roleId], references: [id])
 
-  @@map("RolePermission")
+  @@map("rolePermission")
 }
 
 model UserPermission {
@@ -83,7 +83,7 @@ model UserPermission {
   permission Permission @relation(fields: [permissionId], references: [id])
   user       User       @relation(fields: [userId], references: [id])
 
-  @@map("UserPermission")
+  @@map("userPermission")
 }
 
 model UserRole {
@@ -94,7 +94,7 @@ model UserRole {
   role Role @relation(fields: [roleId], references: [id])
   user User @relation(fields: [userId], references: [id])
 
-  @@map("UserRole")
+  @@map("userRole")
 }
 
 model Service {
@@ -110,7 +110,7 @@ model Service {
   creator   User       @relation(fields: [createdBy], references: [id])
   schedules Schedule[]
 
-  @@map("Service")
+  @@map("service")
 }
 
 model Schedule {
@@ -130,7 +130,7 @@ model Schedule {
   visits       VisitDetail[]
   appointments Appointment[]
 
-  @@map("Schedule")
+  @@map("schedule")
 }
 
 model Date {
@@ -144,7 +144,7 @@ model Date {
   Appointment Appointment[]
   VisitDetail VisitDetail[]
 
-  @@map("Date")
+  @@map("date")
 }
 
 model Specialty {
@@ -159,7 +159,7 @@ model Specialty {
   creator User     @relation(fields: [createdBy], references: [id])
   doctors Doctor[]
 
-  @@map("Specialty")
+  @@map("specialty")
 }
 
 model Invoice {
@@ -176,7 +176,7 @@ model Invoice {
   patient       Patient?
   VisitInvoice  VisitInvoice[]
 
-  @@map("Invoice")
+  @@map("invoice")
 }
 
 model InvoiceDetail {
@@ -192,7 +192,7 @@ model InvoiceDetail {
   invoice        Invoice      @relation(fields: [invoiceId], references: [id])
   visitDetail    VisitDetail? @relation(fields: [visitDetailsId], references: [id])
 
-  @@map("InvoiceDetail")
+  @@map("invoiceDetail")
 }
 
 model Doctor {
@@ -212,7 +212,7 @@ model Doctor {
   specialty Specialty  @relation(fields: [specialtyId], references: [id])
   schedules Schedule[]
 
-  @@map("Doctor")
+  @@map("doctor")
 }
 
 model Patient {
@@ -233,7 +233,7 @@ model Patient {
   appointments   Appointment[]
   VisitDetail    VisitDetail[]
 
-  @@map("Patient")
+  @@map("patient")
 }
 
 model Appointment {
@@ -249,7 +249,7 @@ model Appointment {
   schedule   Schedule          @relation(fields: [scheduleId], references: [id])
   date       Date              @relation(fields: [dateId], references: [id])
 
-  @@map("Appointment")
+  @@map("appointment")
 }
 
 model Visit {
@@ -264,7 +264,7 @@ model Visit {
   details       VisitDetail[]
   VisitInvoice  VisitInvoice[]
 
-  @@map("Visit")
+  @@map("visit")
 }
 
 model VisitDetail {
@@ -282,7 +282,7 @@ model VisitDetail {
   date          Date            @relation(fields: [dateId], references: [id])
   invoiceDetail InvoiceDetail[]
 
-  @@map("VisitDetail")
+  @@map("visitDetail")
 }
 
 model VisitInvoice {
@@ -294,7 +294,7 @@ model VisitInvoice {
   invoice   Invoice @relation(fields: [invoiceId], references: [id])
 
   @@id([visitId, invoiceId])
-  @@map("VisitInvoice")
+  @@map("visitInvoice")
 }
 
 enum Gender {
