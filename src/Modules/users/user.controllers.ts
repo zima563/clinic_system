@@ -29,10 +29,10 @@ export class userControllers {
   @Post("/")
   @UseBefore(
     ...secureRouteWithPermissions("addUser"),
-    createValidationMiddleware(addUser)
+    createValidationMiddleware(addUser),
+    CheckEmailMiddleware,
+    CheckPhoneMiddleware
   )
-  @UseBefore(CheckEmailMiddleware)
-  @UseBefore(CheckPhoneMiddleware)
   async addUser(@Body() body: any, @Res() res: Response) {
     body.password = bcrypt.hashSync(body.password, 10);
     let user = await userServices.addUser(body);

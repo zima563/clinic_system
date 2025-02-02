@@ -52,7 +52,7 @@ export class PermissionController {
 
   @Post("/assignToUser/:id")
   @UseBefore(
-    ...secureRouteWithPermissions("assignPermissionsToUser"),
+    // ...secureRouteWithPermissions("assignPermissionsToUser"),
     createValidationMiddleware(PermissionController.permissionSchema)
   )
   async assignPermissionsToUser(
