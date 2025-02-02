@@ -52,7 +52,7 @@ export class PermissionController {
 
   @Post("/assignToUser/:id")
   @UseBefore(
-    // ...secureRouteWithPermissions("assignPermissionsToUser"),
+    ...secureRouteWithPermissions("assignPermissionsToUser"),
     createValidationMiddleware(PermissionController.permissionSchema)
   )
   async assignPermissionsToUser(
@@ -85,7 +85,7 @@ export class PermissionController {
   }
 
   @Get("/")
-  // @UseBefore(...secureRouteWithPermissions("ListPermissions"))
+  @UseBefore(...secureRouteWithPermissions("ListPermissions"))
   async ListPermissions(@Req() req: Request, @Res() res: Response) {
     let permissions = await permissionService.listPermissions();
     return res.status(200).json({
