@@ -1,265 +1,229 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-datasource db {
-  provider = "mysql"
-  url      = env("DATABASE_URL")
-}
-
 generator client {
   provider      = "prisma-client-js"
   binaryTargets = ["native", "debian-openssl-1.1.x"]
 }
 
-model User {
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model user {
   id        Int      @id @default(autoincrement())
-  userName  String
-  email     String   @unique
-  phone     String   @unique
+  email     String   @unique(map: "User_email_key")
+  phone     String   @unique(map: "User_phone_key")
   password  String
-  isActive  Boolean  @default(true)
-  isDeleted Boolean  @default(false)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-
-  userRoles       UserRole[]
-  userPermissions UserPermission[]
-  Role            Role[]
-  Service         Service[]
-  Schedule        Schedule[]
-  Specialty       Specialty[]
-  Invoice         Invoice[]
-  InvoiceDetail   InvoiceDetail[]
-  Doctor          Doctor[]
-  Patient         Patient[]
-  Appointment     Appointment[]
-  Visit           Visit[]
-  VisitDetail     VisitDetail[]
-  VisitInvoice    VisitInvoice[]
+  userName  String
+  isActive  Boolean  @default(true)
+  isDeleted Boolean  @default(false)
 }
 
-model Permission {
+model permission {
   id   Int    @id @default(autoincrement())
-  name String @unique
-
-  rolePermissions RolePermission[]
-  userPermissions UserPermission[]
+  name String @unique(map: "Permission_name_key")
 }
 
-model Role {
+model role {
   id        Int    @id @default(autoincrement())
-  name      String @unique
+  name      String @unique(map: "Role_name_key")
   createdBy Int
 
-  creator         User             @relation(fields: [createdBy], references: [id])
-  rolePermissions RolePermission[]
-  userRoles       UserRole[]
+  @@index([createdBy], map: "Role_createdBy_fkey")
 }
 
-model RolePermission {
-  id           Int @id @default(autoincrement())
-  permissionId Int
-  roleId       Int
-
-  permission Permission @relation(fields: [permissionId], references: [id])
-  role       Role       @relation(fields: [roleId], references: [id])
-}
-
-model UserPermission {
-  id           Int @id @default(autoincrement())
-  permissionId Int
-  userId       Int
-
-  permission Permission @relation(fields: [permissionId], references: [id])
-  user       User       @relation(fields: [userId], references: [id])
-}
-
-model UserRole {
-  id     Int @id @default(autoincrement())
-  roleId Int
-  userId Int
-
-  role Role @relation(fields: [roleId], references: [id])
-  user User @relation(fields: [userId], references: [id])
-}
-
-model Service {
-  id        Int        @id @default(autoincrement())
+model service {
+  id        Int      @id @default(autoincrement())
   title     String
   desc      String
+  status    Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  isDeleted Boolean  @default(false)
   img       String
-  status    Boolean    @default(true)
-  isDeleted Boolean    @default(false)
-  createdAt DateTime   @default(now())
-  updatedAt DateTime   @updatedAt
   createdBy Int
-  creator   User       @relation(fields: [createdBy], references: [id])
-  schedules Schedule[]
+
+  @@index([createdBy], map: "Service_createdBy_fkey")
 }
 
-model Schedule {
+model schedule {
   id         Int      @id @default(autoincrement())
   doctorId   Int
   servicesId Int
   price      Decimal  @db.Decimal(18, 2)
-  isDeleted  Boolean  @default(false)
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
   createdBy  Int
-  creator    User     @relation(fields: [createdBy], references: [id])
+  isDeleted  Boolean  @default(false)
 
-  dates        Date[]
-  doctor       Doctor        @relation(fields: [doctorId], references: [id])
-  service      Service       @relation(fields: [servicesId], references: [id])
-  visits       VisitDetail[]
-  appointments Appointment[]
+  @@index([createdBy], map: "Schedule_createdBy_fkey")
+  @@index([doctorId], map: "Schedule_doctorId_fkey")
+  @@index([servicesId], map: "Schedule_servicesId_fkey")
 }
 
-model Date {
+model date {
   id         Int    @id @default(autoincrement())
   day        String
   fromTime   String
   toTime     String
   scheduleId Int
 
-  schedule    Schedule      @relation(fields: [scheduleId], references: [id])
-  Appointment Appointment[]
-  VisitDetail VisitDetail[]
+  @@index([scheduleId], map: "Date_scheduleId_fkey")
 }
 
-model Specialty {
+model specialty {
   id        Int      @id @default(autoincrement())
-  title     String   @unique
+  title     String   @unique(map: "Specialty_title_key")
   icon      String
-  isDeleted Boolean  @default(false)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   createdBy Int
+  isDeleted Boolean  @default(false)
 
-  creator User     @relation(fields: [createdBy], references: [id])
-  doctors Doctor[]
+  @@index([createdBy], map: "Specialty_createdBy_fkey")
 }
 
-model Invoice {
-  id            Int             @id @default(autoincrement())
-  rf            String          @unique @default(uuid())
+model invoice {
+  id            Int            @id @default(autoincrement())
+  rf            String         @unique(map: "Invoice_rf_key") @default(uuid())
+  total         Decimal        @default(0.00) @db.Decimal(18, 2)
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
   ex            Boolean
-  paymentMethod payment_Method  @default(Cash)
-  total         Decimal         @default(0) @db.Decimal(18, 2)
-  createdAt     DateTime        @default(now())
-  updatedAt     DateTime        @updatedAt
+  paymentMethod payment_Method @default(Cash)
   createdBy     Int
-  creator       User            @relation(fields: [createdBy], references: [id])
-  details       InvoiceDetail[]
-  patient       Patient?
-  VisitInvoice  VisitInvoice[]
+
+  @@index([createdBy], map: "Invoice_createdBy_fkey")
 }
 
-model InvoiceDetail {
-  id             Int          @id @default(autoincrement())
-  invoiceId      Int
-  description    String
-  amount         Decimal      @db.Decimal(18, 2)
-  visitDetailsId Int?
-  createdAt      DateTime     @default(now())
-  updatedAt      DateTime     @updatedAt
-  createdBy      Int
-  creator        User         @relation(fields: [createdBy], references: [id])
-  invoice        Invoice      @relation(fields: [invoiceId], references: [id])
-  visitDetail    VisitDetail? @relation(fields: [visitDetailsId], references: [id])
-}
-
-model Doctor {
+model doctor {
   id          Int      @id @default(autoincrement())
   name        String
   phone       String
   image       String
   isActive    Boolean  @default(true)
   specialtyId Int
-  info        String
-  isDeleted   Boolean  @default(false)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+  info        String
   createdBy   Int
-  creator     User     @relation(fields: [createdBy], references: [id])
+  isDeleted   Boolean  @default(false)
 
-  specialty Specialty  @relation(fields: [specialtyId], references: [id])
-  schedules Schedule[]
+  @@index([createdBy], map: "Doctor_createdBy_fkey")
+  @@index([specialtyId], map: "Doctor_specialtyId_fkey")
 }
 
-model Patient {
-  id             Int           @id @default(autoincrement())
+model patient {
+  id             Int      @id @default(autoincrement())
   name           String
-  phone          String        @unique
+  phone          String   @unique(map: "Patient_phone_key")
   birthdate      DateTime
   gender         Gender
   medicalHistory String
   info           String
-  isDeleted      Boolean       @default(false)
-  invoiceId      Int?          @unique
-  createdAt      DateTime      @default(now())
-  updatedAt      DateTime      @updatedAt
+  invoiceId      Int?     @unique(map: "Patient_invoiceId_key")
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
   createdBy      Int
-  creator        User          @relation(fields: [createdBy], references: [id])
-  invoices       Invoice?      @relation(fields: [invoiceId], references: [id])
-  appointments   Appointment[]
-  VisitDetail    VisitDetail[]
+  isDeleted      Boolean  @default(false)
+
+  @@index([createdBy], map: "Patient_createdBy_fkey")
 }
 
-model Appointment {
+model appointment {
   id         Int               @id @default(autoincrement())
-  dateTime   DateTime
   patientId  Int
   status     AppointmentStatus @default(pending)
   scheduleId Int
   dateId     Int
+  dateTime   DateTime
   createdBy  Int
-  creator    User              @relation(fields: [createdBy], references: [id])
-  patient    Patient           @relation(fields: [patientId], references: [id])
-  schedule   Schedule          @relation(fields: [scheduleId], references: [id])
-  date       Date              @relation(fields: [dateId], references: [id])
+
+  @@index([createdBy], map: "Appointment_createdBy_fkey")
+  @@index([dateId], map: "Appointment_dateId_fkey")
+  @@index([patientId], map: "Appointment_patientId_fkey")
+  @@index([scheduleId], map: "Appointment_scheduleId_fkey")
 }
 
-model Visit {
+model visit {
   id            Int            @id @default(autoincrement())
-  rf            String         @unique @default(uuid())
+  rf            String         @unique(map: "Visit_rf_key") @default(uuid())
   total         Decimal        @db.Decimal(18, 2)
-  paymentMethod payment_Method @default(Cash)
   createdAt     DateTime       @default(now())
   updatedAt     DateTime       @updatedAt
+  paymentMethod payment_Method @default(Cash)
   createdBy     Int
-  creator       User           @relation(fields: [createdBy], references: [id])
-  details       VisitDetail[]
-  VisitInvoice  VisitInvoice[]
+
+  @@index([createdBy], map: "Visit_createdBy_fkey")
 }
 
-model VisitDetail {
-  id            Int             @id @default(autoincrement())
-  visitId       Int
-  patientId     Int
-  price         Decimal         @db.Decimal(18, 2)
-  scheduleId    Int
-  dateId        Int
-  createdBy     Int
-  creator       User            @relation(fields: [createdBy], references: [id])
-  visit         Visit           @relation(fields: [visitId], references: [id])
-  patient       Patient         @relation(fields: [patientId], references: [id])
-  schedule      Schedule        @relation(fields: [scheduleId], references: [id])
-  date          Date            @relation(fields: [dateId], references: [id])
-  invoiceDetail InvoiceDetail[]
+model invoicedetail {
+  id             Int      @id @default(autoincrement())
+  invoiceId      Int
+  description    String
+  amount         Decimal  @db.Decimal(18, 2)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime
+  visitDetailsId Int?
+  createdBy      Int
+
+  @@index([createdBy], map: "InvoiceDetail_createdBy_fkey")
+  @@index([invoiceId], map: "InvoiceDetail_invoiceId_fkey")
+  @@index([visitDetailsId], map: "InvoiceDetail_visitDetailsId_fkey")
 }
 
-model VisitInvoice {
+model rolepermission {
+  id           Int @id @default(autoincrement())
+  permissionId Int
+  roleId       Int
+
+  @@index([permissionId], map: "RolePermission_permissionId_fkey")
+  @@index([roleId], map: "RolePermission_roleId_fkey")
+}
+
+model userpermission {
+  id           Int @id @default(autoincrement())
+  permissionId Int
+  userId       Int
+
+  @@index([permissionId], map: "UserPermission_permissionId_fkey")
+  @@index([userId], map: "UserPermission_userId_fkey")
+}
+
+model userrole {
+  id     Int @id @default(autoincrement())
+  roleId Int
+  userId Int
+
+  @@index([roleId], map: "UserRole_roleId_fkey")
+  @@index([userId], map: "UserRole_userId_fkey")
+}
+
+model visitdetail {
+  id         Int     @id @default(autoincrement())
+  visitId    Int
+  patientId  Int
+  price      Decimal @db.Decimal(18, 2)
+  scheduleId Int
+  dateId     Int
+  createdBy  Int
+
+  @@index([createdBy], map: "VisitDetail_createdBy_fkey")
+  @@index([dateId], map: "VisitDetail_dateId_fkey")
+  @@index([patientId], map: "VisitDetail_patientId_fkey")
+  @@index([scheduleId], map: "VisitDetail_scheduleId_fkey")
+  @@index([visitId], map: "VisitDetail_visitId_fkey")
+}
+
+model visitinvoice {
   visitId   Int
   invoiceId Int
   createdBy Int
-  creator   User    @relation(fields: [createdBy], references: [id])
-  visit     Visit   @relation(fields: [visitId], references: [id])
-  invoice   Invoice @relation(fields: [invoiceId], references: [id])
 
   @@id([visitId, invoiceId])
+  @@index([createdBy], map: "VisitInvoice_createdBy_fkey")
+  @@index([invoiceId], map: "VisitInvoice_invoiceId_fkey")
 }
 
 enum Gender {

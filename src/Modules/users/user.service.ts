@@ -1,8 +1,6 @@
 import { prisma } from "../../prismaClient";
 import ApiError from "../../utils/ApiError";
 import ApiFeatures from "../../utils/ApiFeatures";
-import bcrypt from "bcrypt";
-import jwt from "jsonwebtoken";
 
 export const addUser = async (body: any) => {
   return prisma.user.create({ data: body });

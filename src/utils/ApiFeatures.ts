@@ -315,6 +315,14 @@ class ApiFeatures {
           },
         },
       };
+    } else if (modelName === "role") {
+      this.prismaQuery.include = {
+        rolePermissions: {
+          select: {
+            permission: true,
+          },
+        },
+      };
     }
 
     const result = await this.prismaModel.findMany({

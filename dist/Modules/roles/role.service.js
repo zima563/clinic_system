@@ -67,6 +67,9 @@ exports.listRoleUser = listRoleUser;
 const getRoleById = (id) => __awaiter(void 0, void 0, void 0, function* () {
     return prismaClient_1.prisma.role.findUnique({
         where: { id },
+        include: {
+            rolePermissions: true,
+        },
     });
 });
 exports.getRoleById = getRoleById;

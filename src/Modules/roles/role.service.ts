@@ -57,6 +57,9 @@ export const listRoleUser = async (id: number) => {
 export const getRoleById = async (id: number) => {
   return prisma.role.findUnique({
     where: { id },
+    include: {
+      rolePermissions: true,
+    },
   });
 };
 
