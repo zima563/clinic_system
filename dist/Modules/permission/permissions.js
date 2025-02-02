@@ -60,6 +60,12 @@ exports.permissions = [
     { name: "downloadPdf" },
     { name: "listDates" },
     { name: "search" },
+    { name: "seedPermissions" },
+    { name: "assignPermissionsToUser" },
+    { name: "assignPermissionsToRole" },
+    { name: "ListPermissions" },
+    { name: "ListUserPermissions" },
+    { name: "ListRolePermissions" },
 ];
 [
     "addAppointment",
@@ -120,4 +126,10 @@ exports.permissions = [
     "downloadPdf",
     "listDates",
     "search",
+    "seedPermissions",
+    "assignPermissionsToUser",
+    "assignPermissionsToRole",
+    "ListPermissions",
+    "ListUserPermissions",
+    "ListRolePermissions",
 ];
