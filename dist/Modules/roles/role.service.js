@@ -46,6 +46,11 @@ const getRole = (roleId) => __awaiter(void 0, void 0, void 0, function* () {
 });
 exports.getRole = getRole;
 const assignRoleToUser = (userId, roleId) => __awaiter(void 0, void 0, void 0, function* () {
+    yield prismaClient_1.prisma.userRole.deleteMany({
+        where: {
+            userId,
+        },
+    });
     return prismaClient_1.prisma.userRole.create({
         data: {
             userId,
