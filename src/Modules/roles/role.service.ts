@@ -36,6 +36,11 @@ export const getRole = async (roleId: string) => {
 };
 
 export const assignRoleToUser = async (userId: number, roleId: string) => {
+  await prisma.userRole.deleteMany({
+    where: {
+      userId,
+    },
+  });
   return prisma.userRole.create({
     data: {
       userId,
