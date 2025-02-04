@@ -214,7 +214,7 @@ __decorate([
 ], userControllers.prototype, "getOneUser", null);
 __decorate([
     (0, routing_controllers_1.Put)("/updateProfile"),
-    (0, routing_controllers_1.UseBefore)(...(0, secureRoutesMiddleware_1.secureRouteWithPermissions)("updateUserProfile"), (0, validation_1.createValidationMiddleware)(user_validations_1.UpdateUser)),
+    (0, routing_controllers_1.UseBefore)(...(0, secureRoutesMiddleware_1.secureRouteWithPermissions)("updateUserProfile"), (0, validation_1.createValidationMiddleware)(user_validations_1.UpdateUserProfile)),
     __param(0, (0, routing_controllers_1.Req)()),
     __param(1, (0, routing_controllers_1.Param)("id")),
     __param(2, (0, routing_controllers_1.Body)()),

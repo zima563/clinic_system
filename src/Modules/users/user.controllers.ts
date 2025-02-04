@@ -16,7 +16,12 @@ import {
   UseBefore,
 } from "routing-controllers";
 import { createValidationMiddleware } from "../../middlewares/validation";
-import { addUser, loginValidation, UpdateUser } from "./user.validations";
+import {
+  addUser,
+  loginValidation,
+  UpdateUser,
+  UpdateUserProfile,
+} from "./user.validations";
 import { CheckEmailMiddleware } from "../../middlewares/emailExists";
 import ApiError from "../../utils/ApiError";
 import { CheckPhoneMiddleware } from "../../middlewares/phoneExist";
@@ -68,7 +73,7 @@ export class userControllers {
   @Put("/updateProfile")
   @UseBefore(
     ...secureRouteWithPermissions("updateUserProfile"),
-    createValidationMiddleware(UpdateUser)
+    createValidationMiddleware(UpdateUserProfile)
   )
   async updateUserProfile(
     @Req() req: any,
