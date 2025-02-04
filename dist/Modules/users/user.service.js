@@ -77,7 +77,10 @@ const deactiveUser = (id, user, userId) => __awaiter(void 0, void 0, void 0, fun
     }
 });
 exports.deactiveUser = deactiveUser;
-const deleteUser = (id, user) => __awaiter(void 0, void 0, void 0, function* () {
+const deleteUser = (id, user, userId) => __awaiter(void 0, void 0, void 0, function* () {
+    if (userId === id) {
+        throw new ApiError_1.default("you not allow to delete your Account ..!", 401);
+    }
     if (!user.isDeleted) {
         yield prismaClient_1.prisma.user.update({
             where: { id },

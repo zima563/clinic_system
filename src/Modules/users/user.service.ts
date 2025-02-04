@@ -65,7 +65,10 @@ export const deactiveUser = async (id: number, user: any, userId: number) => {
   }
 };
 
-export const deleteUser = async (id: number, user: any) => {
+export const deleteUser = async (id: number, user: any, userId: number) => {
+  if (userId === id) {
+    throw new ApiError("you not allow to delete your Account ..!", 401);
+  }
   if (!user.isDeleted) {
     await prisma.user.update({
       where: { id },

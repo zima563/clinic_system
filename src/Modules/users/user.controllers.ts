@@ -95,13 +95,14 @@ export class userControllers {
   @Patch("/soft/:id")
   @UseBefore(...secureRouteWithPermissions("DeleteUser"))
   async DeleteUser(
+    @Req() req: any,
     @Param("id") id: number,
     @Body() body: any,
     @Res() res: Response
   ) {
     let user = await userServices.getUserById(id);
     if (!user) throw new ApiError("user not found", 404);
-    await userServices.deleteUser(id, user);
+    await userServices.deleteUser(id, user, req.user);
     let updatedUser = await userServices.getUserById(id);
 
     return res

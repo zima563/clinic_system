@@ -115,12 +115,12 @@ let userControllers = class userControllers {
                 .json({ message: "user Deactivated successfully", updatedUser });
         });
     }
-    DeleteUser(id, body, res) {
+    DeleteUser(req, id, body, res) {
         return __awaiter(this, void 0, void 0, function* () {
             let user = yield userServices.getUserById(id);
             if (!user)
                 throw new ApiError_1.default("user not found", 404);
-            yield userServices.deleteUser(id, user);
+            yield userServices.deleteUser(id, user, req.user);
             let updatedUser = yield userServices.getUserById(id);
             return res
                 .status(201)
@@ -210,11 +210,12 @@ __decorate([
 __decorate([
     (0, routing_controllers_1.Patch)("/soft/:id"),
     (0, routing_controllers_1.UseBefore)(...(0, secureRoutesMiddleware_1.secureRouteWithPermissions)("DeleteUser")),
-    __param(0, (0, routing_controllers_1.Param)("id")),
-    __param(1, (0, routing_controllers_1.Body)()),
-    __param(2, (0, routing_controllers_1.Res)()),
+    __param(0, (0, routing_controllers_1.Req)()),
+    __param(1, (0, routing_controllers_1.Param)("id")),
+    __param(2, (0, routing_controllers_1.Body)()),
+    __param(3, (0, routing_controllers_1.Res)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Number, Object, Object]),
+    __metadata("design:paramtypes", [Object, Number, Object, Object]),
     __metadata("design:returntype", Promise)
 ], userControllers.prototype, "DeleteUser", null);
 __decorate([
