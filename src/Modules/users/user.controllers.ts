@@ -40,7 +40,7 @@ export class userControllers {
   }
 
   @Get("/all")
-  // @UseBefore(...secureRouteWithPermissions("allUsers"))
+  @UseBefore(...secureRouteWithPermissions("allUsers"))
   async allUsers(@QueryParams() query: any, @Res() res: Response) {
     let data = await userServices.getAllUser(query);
     return res.status(200).json({

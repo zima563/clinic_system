@@ -177,9 +177,8 @@ __decorate([
     __metadata("design:returntype", Promise)
 ], userControllers.prototype, "addUser", null);
 __decorate([
-    (0, routing_controllers_1.Get)("/all")
-    // @UseBefore(...secureRouteWithPermissions("allUsers"))
-    ,
+    (0, routing_controllers_1.Get)("/all"),
+    (0, routing_controllers_1.UseBefore)(...(0, secureRoutesMiddleware_1.secureRouteWithPermissions)("allUsers")),
     __param(0, (0, routing_controllers_1.QueryParams)()),
     __param(1, (0, routing_controllers_1.Res)()),
     __metadata("design:type", Function),
