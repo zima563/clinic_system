@@ -266,7 +266,7 @@ __decorate([
     __metadata("design:returntype", Promise)
 ], invoiceControllers.prototype, "Remove_Invoice_Details", null);
 __decorate([
-    (0, routing_controllers_1.Delete)("/"),
+    (0, routing_controllers_1.Delete)("/:id"),
     (0, routing_controllers_1.UseBefore)(...(0, secureRoutesMiddleware_1.secureRouteWithPermissions)("DeleteInvoice")),
     __param(0, (0, routing_controllers_1.Req)()),
     __param(1, (0, routing_controllers_1.Param)("id")),

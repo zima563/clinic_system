@@ -192,7 +192,7 @@ export class invoiceControllers {
       .json({ message: "invoice details removed successfully", invoiceAfter });
   }
 
-  @Delete("/")
+  @Delete("/:id")
   @UseBefore(...secureRouteWithPermissions("DeleteInvoice"))
   async DeleteInvoice(
     @Req() req: any,
