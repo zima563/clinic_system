@@ -162,6 +162,17 @@ let invoiceControllers = class invoiceControllers {
                 .json({ message: "invoice details removed successfully", invoiceAfter });
         });
     }
+    DeleteInvoice(req, id, res) {
+        return __awaiter(this, void 0, void 0, function* () {
+            let invoice = yield invoiceService.getInvoiceById(id);
+            if (!invoice)
+                throw new ApiError_1.default("invoice not found", 404);
+            yield invoiceService.deleteInvoice(id);
+            return res.status(200).json({
+                message: "invoice deleted successfully",
+            });
+        });
+    }
 };
 exports.invoiceControllers = invoiceControllers;
 __decorate([
@@ -245,7 +256,7 @@ __decorate([
     __metadata("design:returntype", Promise)
 ], invoiceControllers.prototype, "Append_Invoice_Details", null);
 __decorate([
-    (0, routing_controllers_1.Delete)("/:id"),
+    (0, routing_controllers_1.Delete)("/details/:id"),
     (0, routing_controllers_1.UseBefore)(...(0, secureRoutesMiddleware_1.secureRouteWithPermissions)("Remove_Invoice_Details")),
     __param(0, (0, routing_controllers_1.Req)()),
     __param(1, (0, routing_controllers_1.Param)("id")),
@@ -254,6 +265,16 @@ __decorate([
     __metadata("design:paramtypes", [Object, Number, Object]),
     __metadata("design:returntype", Promise)
 ], invoiceControllers.prototype, "Remove_Invoice_Details", null);
+__decorate([
+    (0, routing_controllers_1.Delete)("/"),
+    (0, routing_controllers_1.UseBefore)(...(0, secureRoutesMiddleware_1.secureRouteWithPermissions)("DeleteInvoice")),
+    __param(0, (0, routing_controllers_1.Req)()),
+    __param(1, (0, routing_controllers_1.Param)("id")),
+    __param(2, (0, routing_controllers_1.Res)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, Number, Object]),
+    __metadata("design:returntype", Promise)
+], invoiceControllers.prototype, "DeleteInvoice", null);
 exports.invoiceControllers = invoiceControllers = __decorate([
     (0, routing_controllers_1.JsonController)("/api/invoice")
 ], invoiceControllers);

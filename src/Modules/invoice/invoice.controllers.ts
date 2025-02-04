@@ -167,7 +167,7 @@ export class invoiceControllers {
       .json({ message: "invoice appended successfully", invoiceAfter });
   }
 
-  @Delete("/:id")
+  @Delete("/details/:id")
   @UseBefore(...secureRouteWithPermissions("Remove_Invoice_Details"))
   async Remove_Invoice_Details(
     @Req() req: any,
@@ -190,5 +190,21 @@ export class invoiceControllers {
     return res
       .status(200)
       .json({ message: "invoice details removed successfully", invoiceAfter });
+  }
+
+  @Delete("/")
+  @UseBefore(...secureRouteWithPermissions("DeleteInvoice"))
+  async DeleteInvoice(
+    @Req() req: any,
+    @Param("id") id: number,
+    @Res() res: any
+  ) {
+    let invoice = await invoiceService.getInvoiceById(id);
+    if (!invoice) throw new ApiError("invoice not found", 404);
+
+    await invoiceService.deleteInvoice(id);
+    return res.status(200).json({
+      message: "invoice deleted successfully",
+    });
   }
 }

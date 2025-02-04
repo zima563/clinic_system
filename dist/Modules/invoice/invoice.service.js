@@ -12,7 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.removeInvoiceDetail = exports.appendInvoiceDetail = exports.getInvoiceWithDetails = exports.listInvoiceDetails = exports.showInvoiceDetails = exports.pdf_summary = exports.summeryInvoice = exports.updateInvoice = exports.getInvoiceDetails = exports.listInvoice = exports.createInvoiceDetails = exports.createInvoice = void 0;
+exports.deleteInvoice = exports.getInvoiceById = exports.removeInvoiceDetail = exports.appendInvoiceDetail = exports.getInvoiceWithDetails = exports.listInvoiceDetails = exports.showInvoiceDetails = exports.pdf_summary = exports.summeryInvoice = exports.updateInvoice = exports.getInvoiceDetails = exports.listInvoice = exports.createInvoiceDetails = exports.createInvoice = void 0;
 const pdf_creator_node_1 = __importDefault(require("pdf-creator-node"));
 const library_1 = require("@prisma/client/runtime/library");
 const prismaClient_1 = require("../../prismaClient");
@@ -390,3 +390,22 @@ const removeInvoiceDetail = (id, invoice, invoiceDetail) => __awaiter(void 0, vo
     });
 });
 exports.removeInvoiceDetail = removeInvoiceDetail;
+const getInvoiceById = (id) => __awaiter(void 0, void 0, void 0, function* () {
+    return yield prismaClient_1.prisma.invoice.findUnique({
+        where: { id },
+    });
+});
+exports.getInvoiceById = getInvoiceById;
+const deleteInvoice = (id) => __awaiter(void 0, void 0, void 0, function* () {
+    yield prismaClient_1.prisma.invoiceDetail.deleteMany({
+        where: {
+            invoiceId: id,
+        },
+    });
+    yield prismaClient_1.prisma.invoice.delete({
+        where: {
+            id,
+        },
+    });
+});
+exports.deleteInvoice = deleteInvoice;

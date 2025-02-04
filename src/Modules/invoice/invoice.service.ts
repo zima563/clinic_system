@@ -439,3 +439,21 @@ export const removeInvoiceDetail = async (
     where: { id },
   });
 };
+
+export const getInvoiceById = async (id: number) => {
+  return await prisma.invoice.findUnique({
+    where: { id },
+  });
+};
+export const deleteInvoice = async (id: number) => {
+  await prisma.invoiceDetail.deleteMany({
+    where: {
+      invoiceId: id,
+    },
+  });
+  await prisma.invoice.delete({
+    where: {
+      id,
+    },
+  });
+};
