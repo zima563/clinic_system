@@ -49,18 +49,18 @@ export class userControllers {
     });
   }
 
-  @Get("/:id")
-  @UseBefore(...secureRouteWithPermissions("getOneUser"))
-  async getOneUser(@Param("id") id: number, @Res() res: Response) {
-    let user = await userServices.getUserById(id);
-    if (!user) throw new ApiError("user not found", 404);
-    return res.status(201).json(user);
-  }
-
   @Get("/profile")
   @UseBefore(...secureRouteWithPermissions("profile"))
   async getUserProfile(@Req() req: any, @Res() res: Response) {
     let user = await userServices.getUserById(req.user.id);
+    if (!user) throw new ApiError("user not found", 404);
+    return res.status(201).json(user);
+  }
+
+  @Get("/:id")
+  @UseBefore(...secureRouteWithPermissions("getOneUser"))
+  async getOneUser(@Param("id") id: number, @Res() res: Response) {
+    let user = await userServices.getUserById(id);
     if (!user) throw new ApiError("user not found", 404);
     return res.status(201).json(user);
   }
