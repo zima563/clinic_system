@@ -57,6 +57,14 @@ export class userControllers {
     return res.status(201).json(user);
   }
 
+  @Get("/profile")
+  @UseBefore(...secureRouteWithPermissions("profile"))
+  async getUserProfile(@Req() req: any, @Res() res: Response) {
+    let user = await userServices.getUserById(req.user.id);
+    if (!user) throw new ApiError("user not found", 404);
+    return res.status(201).json(user);
+  }
+
   @Put("/:id")
   @UseBefore(
     ...secureRouteWithPermissions("updateUser"),
