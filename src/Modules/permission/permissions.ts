@@ -63,6 +63,8 @@ export const permissions = [
   { name: "ListPermissions" },
   { name: "ListUserPermissions" },
   { name: "ListRolePermissions" },
+  { name: "deleteInvoice" },
+  { name: "profile" },
 ];
 
 [
@@ -130,4 +132,6 @@ export const permissions = [
   "ListPermissions",
   "ListUserPermissions",
   "ListRolePermissions",
+  "deleteInvoice",
+  "profile",
 ];
