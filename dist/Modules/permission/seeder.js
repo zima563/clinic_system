@@ -177,8 +177,9 @@ __decorate([
     __metadata("design:returntype", Promise)
 ], PermissionController.prototype, "assignPermissionsToRole", null);
 __decorate([
-    (0, routing_controllers_1.Get)("/"),
-    (0, routing_controllers_1.UseBefore)(...(0, secureRoutesMiddleware_1.secureRouteWithPermissions)("ListPermissions")),
+    (0, routing_controllers_1.Get)("/")
+    // @UseBefore(...secureRouteWithPermissions("ListPermissions"))
+    ,
     __param(0, (0, routing_controllers_1.Req)()),
     __param(1, (0, routing_controllers_1.Res)()),
     __metadata("design:type", Function),
@@ -186,8 +187,9 @@ __decorate([
     __metadata("design:returntype", Promise)
 ], PermissionController.prototype, "ListPermissions", null);
 __decorate([
-    (0, routing_controllers_1.Get)("/user/:id"),
-    (0, routing_controllers_1.UseBefore)(...(0, secureRoutesMiddleware_1.secureRouteWithPermissions)("ListUserPermissions")),
+    (0, routing_controllers_1.Get)("/user/:id")
+    // @UseBefore(...secureRouteWithPermissions("ListUserPermissions"))
+    ,
     __param(0, (0, routing_controllers_1.Req)()),
     __param(1, (0, routing_controllers_1.Param)("id")),
     __param(2, (0, routing_controllers_1.Res)()),
