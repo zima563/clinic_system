@@ -48,7 +48,7 @@ const getRole = (roleId) => __awaiter(void 0, void 0, void 0, function* () {
 exports.getRole = getRole;
 const assignRoleToUser = (userId, roleId, id) => __awaiter(void 0, void 0, void 0, function* () {
     if (userId === id) {
-        throw new ApiError_1.default("you not allow to deactive your Account ..!", 401);
+        throw new ApiError_1.default("you not allow to change your Role ..!", 401);
     }
     yield prismaClient_1.prisma.userRole.deleteMany({
         where: {

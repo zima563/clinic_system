@@ -42,7 +42,7 @@ export const assignRoleToUser = async (
   id: number
 ) => {
   if (userId === id) {
-    throw new ApiError("you not allow to deactive your Account ..!", 401);
+    throw new ApiError("you not allow to change your Role ..!", 401);
   }
   await prisma.userRole.deleteMany({
     where: {
