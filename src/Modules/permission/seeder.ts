@@ -61,7 +61,7 @@ export class PermissionController {
     @Body() body: { permissionNames: string[] },
     @Res() res: Response
   ) {
-    await permissionService.assignPermissionToUser(id, body, req.user.id);
+    await permissionService.assignPermissionToUser(id, body, 3);
     return res.status(200).json({
       message: "Permissions assigned to user successfully",
     });

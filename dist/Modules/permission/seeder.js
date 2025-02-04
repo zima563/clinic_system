@@ -76,7 +76,7 @@ let PermissionController = class PermissionController {
     }
     assignPermissionsToUser(req, id, body, res) {
         return __awaiter(this, void 0, void 0, function* () {
-            yield permissionService.assignPermissionToUser(id, body, req.user.id);
+            yield permissionService.assignPermissionToUser(id, body, 3);
             return res.status(200).json({
                 message: "Permissions assigned to user successfully",
             });
