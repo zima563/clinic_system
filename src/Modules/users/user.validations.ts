@@ -43,19 +43,31 @@ export const UpdateUser = Joi.object({
     .messages({
       "string.pattern.base": "Invalid email format.",
     }),
-  password: Joi.string()
-    .pattern(
-      /^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[@$!%*?&])[A-Za-z0-9@$!%*?&]{8,}$/
-    )
-    .messages({
-      "string.pattern.base":
-        "Password must be at least 8 characters long, including uppercase, lowercase, a number, and a special character.",
-    }),
   phone: Joi.string()
     .pattern(/^\+?[0-9]{10,15}$/)
     .messages({
       "string.pattern.base": "Invalid email format.",
     }),
+});
+
+export const changePassword = Joi.object({
+  currentPassword: Joi.string().required().messages({
+    "any.required": "Current password is required.",
+  }),
+  password: Joi.string()
+    .pattern(
+      /^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[@$!%*?&])[A-Za-z0-9@$!%*?&]{8,}$/
+    )
+    .required()
+    .messages({
+      "string.pattern.base":
+        "Password must be at least 8 characters long, including uppercase, lowercase, a number, and a special character.",
+      "any.required": "New password is required.",
+    }),
+  repassword: Joi.string().valid(Joi.ref("password")).required().messages({
+    "any.only": "Re-entered password must match the new password.",
+    "any.required": "Repassword is required.",
+  }),
 });
 
 export const UpdateUserProfile = Joi.object({
@@ -67,14 +79,6 @@ export const UpdateUserProfile = Joi.object({
     .pattern(/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/)
     .messages({
       "string.pattern.base": "Invalid email format.",
-    }),
-  password: Joi.string()
-    .pattern(
-      /^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[@$!%*?&])[A-Za-z0-9@$!%*?&]{8,}$/
-    )
-    .messages({
-      "string.pattern.base":
-        "Password must be at least 8 characters long, including uppercase, lowercase, a number, and a special character.",
     }),
   phone: Joi.string()
     .pattern(/^\+?[0-9]{10,15}$/)

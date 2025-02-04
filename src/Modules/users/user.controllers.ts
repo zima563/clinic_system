@@ -18,6 +18,7 @@ import {
 import { createValidationMiddleware } from "../../middlewares/validation";
 import {
   addUser,
+  changePassword,
   loginValidation,
   UpdateUser,
   UpdateUserProfile,
@@ -83,6 +84,23 @@ export class userControllers {
     let user = await userServices.getUserById(req.user.id);
     if (!user) throw new ApiError("user not found", 404);
     await userServices.updateUser(req.user.id, body);
+
+    return res.status(201).json({ message: "user updated successfully", user });
+  }
+
+  @Patch("/ChangePassword")
+  @UseBefore(
+    ...secureRouteWithPermissions("ChangePassword"),
+    createValidationMiddleware(changePassword)
+  )
+  async ChangePassword(
+    @Req() req: any,
+    @Body() body: any,
+    @Res() res: Response
+  ) {
+    let user = await userServices.getUserById(req.user.id);
+    if (!user) throw new ApiError("user not found", 404);
+    await userServices.changePassword(req.user.id, body, user);
 
     return res.status(201).json({ message: "user updated successfully", user });
   }

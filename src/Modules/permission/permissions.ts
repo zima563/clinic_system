@@ -66,6 +66,7 @@ export const permissions = [
   { name: "deleteInvoice" },
   { name: "profile" },
   { name: "updateUserProfile" },
+  { name: "ChangePassword" },
 ];
 
 [
@@ -136,4 +137,5 @@ export const permissions = [
   "deleteInvoice",
   "profile",
   "updateUserProfile",
+  "ChangePassword",
 ];

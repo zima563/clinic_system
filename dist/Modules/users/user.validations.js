@@ -3,7 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.loginValidation = exports.UpdateUserProfile = exports.UpdateUser = exports.addUser = void 0;
+exports.loginValidation = exports.UpdateUserProfile = exports.changePassword = exports.UpdateUser = exports.addUser = void 0;
 const joi_1 = __importDefault(require("joi"));
 exports.addUser = joi_1.default.object({
     userName: joi_1.default.string().min(3).max(50).required().messages({
@@ -44,15 +44,26 @@ exports.UpdateUser = joi_1.default.object({
         .messages({
         "string.pattern.base": "Invalid email format.",
     }),
-    password: joi_1.default.string()
-        .pattern(/^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[@$!%*?&])[A-Za-z0-9@$!%*?&]{8,}$/)
-        .messages({
-        "string.pattern.base": "Password must be at least 8 characters long, including uppercase, lowercase, a number, and a special character.",
-    }),
     phone: joi_1.default.string()
         .pattern(/^\+?[0-9]{10,15}$/)
         .messages({
         "string.pattern.base": "Invalid email format.",
+    }),
+});
+exports.changePassword = joi_1.default.object({
+    currentPassword: joi_1.default.string().required().messages({
+        "any.required": "Current password is required.",
+    }),
+    password: joi_1.default.string()
+        .pattern(/^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[@$!%*?&])[A-Za-z0-9@$!%*?&]{8,}$/)
+        .required()
+        .messages({
+        "string.pattern.base": "Password must be at least 8 characters long, including uppercase, lowercase, a number, and a special character.",
+        "any.required": "New password is required.",
+    }),
+    repassword: joi_1.default.string().valid(joi_1.default.ref("password")).required().messages({
+        "any.only": "Re-entered password must match the new password.",
+        "any.required": "Repassword is required.",
     }),
 });
 exports.UpdateUserProfile = joi_1.default.object({
@@ -64,11 +75,6 @@ exports.UpdateUserProfile = joi_1.default.object({
         .pattern(/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/)
         .messages({
         "string.pattern.base": "Invalid email format.",
-    }),
-    password: joi_1.default.string()
-        .pattern(/^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[@$!%*?&])[A-Za-z0-9@$!%*?&]{8,}$/)
-        .messages({
-        "string.pattern.base": "Password must be at least 8 characters long, including uppercase, lowercase, a number, and a special character.",
     }),
     phone: joi_1.default.string()
         .pattern(/^\+?[0-9]{10,15}$/)

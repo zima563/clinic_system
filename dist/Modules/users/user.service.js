@@ -12,10 +12,11 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getPermissionRelatedWithRole = exports.getUserRole = exports.getUserPermissions = exports.findUser = exports.deleteUser = exports.deactiveUser = exports.updateUser = exports.getUserById = exports.getAllUser = exports.addUser = void 0;
+exports.getPermissionRelatedWithRole = exports.getUserRole = exports.getUserPermissions = exports.findUser = exports.deleteUser = exports.deactiveUser = exports.changePassword = exports.updateUser = exports.getUserById = exports.getAllUser = exports.addUser = void 0;
 const prismaClient_1 = require("../../prismaClient");
 const ApiError_1 = __importDefault(require("../../utils/ApiError"));
 const ApiFeatures_1 = __importDefault(require("../../utils/ApiFeatures"));
+const bcrypt_1 = __importDefault(require("bcrypt"));
 const addUser = (body) => __awaiter(void 0, void 0, void 0, function* () {
     return prismaClient_1.prisma.user.create({ data: body });
 });
@@ -59,6 +60,19 @@ const updateUser = (id, body) => __awaiter(void 0, void 0, void 0, function* () 
     });
 });
 exports.updateUser = updateUser;
+const changePassword = (id, body, user) => __awaiter(void 0, void 0, void 0, function* () {
+    if (!bcrypt_1.default.compareSync(body.currentPassword, user.password)) {
+        throw new ApiError_1.default("Your Current Password is incorrect");
+    }
+    body.password = bcrypt_1.default.hashSync(body.password, 8);
+    return yield prismaClient_1.prisma.user.update({
+        where: { id },
+        data: {
+            password: body.password,
+        },
+    });
+});
+exports.changePassword = changePassword;
 const deactiveUser = (id, user, userId) => __awaiter(void 0, void 0, void 0, function* () {
     if (userId === id) {
         throw new ApiError_1.default("you not allow to deactive your Account ..!", 401);

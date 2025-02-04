@@ -1,6 +1,7 @@
 import { prisma } from "../../prismaClient";
 import ApiError from "../../utils/ApiError";
 import ApiFeatures from "../../utils/ApiFeatures";
+import bcrypt from "bcrypt";
 
 export const addUser = async (body: any) => {
   return prisma.user.create({ data: body });
@@ -45,6 +46,19 @@ export const updateUser = async (id: number, body: any) => {
   return await prisma.user.update({
     where: { id },
     data: body,
+  });
+};
+
+export const changePassword = async (id: number, body: any, user: any) => {
+  if (!bcrypt.compareSync(body.currentPassword, user.password)) {
+    throw new ApiError("Your Current Password is incorrect");
+  }
+  body.password = bcrypt.hashSync(body.password, 8);
+  return await prisma.user.update({
+    where: { id },
+    data: {
+      password: body.password,
+    },
   });
 };
 
