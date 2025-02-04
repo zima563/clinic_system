@@ -145,8 +145,9 @@ PermissionController.permissionSchema = joi_1.default.object({
     }),
 });
 __decorate([
-    (0, routing_controllers_1.Post)("/seed"),
-    (0, routing_controllers_1.UseBefore)(...(0, secureRoutesMiddleware_1.secureRouteWithPermissions)("seedPermissions")),
+    (0, routing_controllers_1.Post)("/seed")
+    // @UseBefore(...secureRouteWithPermissions("seedPermissions"))
+    ,
     __param(0, (0, routing_controllers_1.Res)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [Object]),
@@ -154,7 +155,9 @@ __decorate([
 ], PermissionController.prototype, "seedPermissions", null);
 __decorate([
     (0, routing_controllers_1.Post)("/assignToUser/:id"),
-    (0, routing_controllers_1.UseBefore)(...(0, secureRoutesMiddleware_1.secureRouteWithPermissions)("assignPermissionsToUser"), (0, validation_1.createValidationMiddleware)(PermissionController.permissionSchema)),
+    (0, routing_controllers_1.UseBefore)(
+    // ...secureRouteWithPermissions("assignPermissionsToUser"),
+    (0, validation_1.createValidationMiddleware)(PermissionController.permissionSchema)),
     __param(0, (0, routing_controllers_1.Req)()),
     __param(1, (0, routing_controllers_1.Param)("id")),
     __param(2, (0, routing_controllers_1.Body)()),
@@ -175,8 +178,9 @@ __decorate([
     __metadata("design:returntype", Promise)
 ], PermissionController.prototype, "assignPermissionsToRole", null);
 __decorate([
-    (0, routing_controllers_1.Get)("/"),
-    (0, routing_controllers_1.UseBefore)(...(0, secureRoutesMiddleware_1.secureRouteWithPermissions)("ListPermissions")),
+    (0, routing_controllers_1.Get)("/")
+    // @UseBefore(...secureRouteWithPermissions("ListPermissions"))
+    ,
     __param(0, (0, routing_controllers_1.Req)()),
     __param(1, (0, routing_controllers_1.Res)()),
     __metadata("design:type", Function),
@@ -184,8 +188,9 @@ __decorate([
     __metadata("design:returntype", Promise)
 ], PermissionController.prototype, "ListPermissions", null);
 __decorate([
-    (0, routing_controllers_1.Get)("/user/:id"),
-    (0, routing_controllers_1.UseBefore)(...(0, secureRoutesMiddleware_1.secureRouteWithPermissions)("ListUserPermissions")),
+    (0, routing_controllers_1.Get)("/user/:id")
+    // @UseBefore(...secureRouteWithPermissions("ListUserPermissions"))
+    ,
     __param(0, (0, routing_controllers_1.Req)()),
     __param(1, (0, routing_controllers_1.Param)("id")),
     __param(2, (0, routing_controllers_1.Res)()),

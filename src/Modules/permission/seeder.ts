@@ -41,7 +41,7 @@ export class PermissionController {
   });
 
   @Post("/seed")
-  @UseBefore(...secureRouteWithPermissions("seedPermissions"))
+  // @UseBefore(...secureRouteWithPermissions("seedPermissions"))
   async seedPermissions(@Res() res: Response) {
     await permissionService.seeder();
     return res.status(201).json({
@@ -52,7 +52,7 @@ export class PermissionController {
 
   @Post("/assignToUser/:id")
   @UseBefore(
-    ...secureRouteWithPermissions("assignPermissionsToUser"),
+    // ...secureRouteWithPermissions("assignPermissionsToUser"),
     createValidationMiddleware(PermissionController.permissionSchema)
   )
   async assignPermissionsToUser(
@@ -85,7 +85,7 @@ export class PermissionController {
   }
 
   @Get("/")
-  @UseBefore(...secureRouteWithPermissions("ListPermissions"))
+  // @UseBefore(...secureRouteWithPermissions("ListPermissions"))
   async ListPermissions(@Req() req: Request, @Res() res: Response) {
     let permissions = await permissionService.listPermissions();
     return res.status(200).json({
@@ -95,7 +95,7 @@ export class PermissionController {
   }
 
   @Get("/user/:id")
-  @UseBefore(...secureRouteWithPermissions("ListUserPermissions"))
+  // @UseBefore(...secureRouteWithPermissions("ListUserPermissions"))
   async ListUserPermissions(
     @Req() req: Request,
     @Param("id") userId: number,

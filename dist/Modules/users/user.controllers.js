@@ -102,6 +102,15 @@ let userControllers = class userControllers {
             return res.status(201).json(user);
         });
     }
+    updateUserProfile(req, id, body, res) {
+        return __awaiter(this, void 0, void 0, function* () {
+            let user = yield userServices.getUserById(req.user.id);
+            if (!user)
+                throw new ApiError_1.default("user not found", 404);
+            yield userServices.updateUser(req.user.id, body);
+            return res.status(201).json({ message: "user updated successfully", user });
+        });
+    }
     updateUser(id, body, res) {
         return __awaiter(this, void 0, void 0, function* () {
             let user = yield userServices.getUserById(id);
@@ -203,6 +212,17 @@ __decorate([
     __metadata("design:paramtypes", [Number, Object]),
     __metadata("design:returntype", Promise)
 ], userControllers.prototype, "getOneUser", null);
+__decorate([
+    (0, routing_controllers_1.Put)("/updateProfile"),
+    (0, routing_controllers_1.UseBefore)(...(0, secureRoutesMiddleware_1.secureRouteWithPermissions)("updateUserProfile"), (0, validation_1.createValidationMiddleware)(user_validations_1.UpdateUser)),
+    __param(0, (0, routing_controllers_1.Req)()),
+    __param(1, (0, routing_controllers_1.Param)("id")),
+    __param(2, (0, routing_controllers_1.Body)()),
+    __param(3, (0, routing_controllers_1.Res)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, Number, Object, Object]),
+    __metadata("design:returntype", Promise)
+], userControllers.prototype, "updateUserProfile", null);
 __decorate([
     (0, routing_controllers_1.Put)("/:id"),
     (0, routing_controllers_1.UseBefore)(...(0, secureRoutesMiddleware_1.secureRouteWithPermissions)("updateUser"), (0, validation_1.createValidationMiddleware)(user_validations_1.UpdateUser)),

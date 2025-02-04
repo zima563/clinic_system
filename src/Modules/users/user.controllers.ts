@@ -65,6 +65,24 @@ export class userControllers {
     return res.status(201).json(user);
   }
 
+  @Put("/updateProfile")
+  @UseBefore(
+    ...secureRouteWithPermissions("updateUserProfile"),
+    createValidationMiddleware(UpdateUser)
+  )
+  async updateUserProfile(
+    @Req() req: any,
+    @Param("id") id: number,
+    @Body() body: any,
+    @Res() res: Response
+  ) {
+    let user = await userServices.getUserById(req.user.id);
+    if (!user) throw new ApiError("user not found", 404);
+    await userServices.updateUser(req.user.id, body);
+
+    return res.status(201).json({ message: "user updated successfully", user });
+  }
+
   @Put("/:id")
   @UseBefore(
     ...secureRouteWithPermissions("updateUser"),
