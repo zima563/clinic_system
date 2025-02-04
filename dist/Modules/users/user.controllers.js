@@ -120,7 +120,7 @@ let userControllers = class userControllers {
             let user = yield userServices.getUserById(id);
             if (!user)
                 throw new ApiError_1.default("user not found", 404);
-            yield userServices.deleteUser(id, user, req.user);
+            yield userServices.deleteUser(id, user, req.user.id);
             let updatedUser = yield userServices.getUserById(id);
             return res
                 .status(201)

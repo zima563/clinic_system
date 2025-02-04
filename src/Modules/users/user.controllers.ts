@@ -102,7 +102,7 @@ export class userControllers {
   ) {
     let user = await userServices.getUserById(id);
     if (!user) throw new ApiError("user not found", 404);
-    await userServices.deleteUser(id, user, req.user);
+    await userServices.deleteUser(id, user, req.user.id);
     let updatedUser = await userServices.getUserById(id);
 
     return res
