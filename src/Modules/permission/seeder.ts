@@ -52,7 +52,7 @@ export class PermissionController {
 
   @Post("/assignToUser/:id")
   @UseBefore(
-    // ...secureRouteWithPermissions("assignPermissionsToUser"),
+    ...secureRouteWithPermissions("assignPermissionsToUser"),
     createValidationMiddleware(PermissionController.permissionSchema)
   )
   async assignPermissionsToUser(
@@ -61,7 +61,7 @@ export class PermissionController {
     @Body() body: { permissionNames: string[] },
     @Res() res: Response
   ) {
-    await permissionService.assignPermissionToUser(id, body, 2);
+    await permissionService.assignPermissionToUser(id, body, req.user.id);
     return res.status(200).json({
       message: "Permissions assigned to user successfully",
     });
