@@ -56,12 +56,12 @@ export class PermissionController {
     createValidationMiddleware(PermissionController.permissionSchema)
   )
   async assignPermissionsToUser(
-    @Req() req: Request,
+    @Req() req: any,
     @Param("id") id: number,
     @Body() body: { permissionNames: string[] },
     @Res() res: Response
   ) {
-    await permissionService.assignPermissionToUser(id, body);
+    await permissionService.assignPermissionToUser(id, body, req.user.id);
     return res.status(200).json({
       message: "Permissions assigned to user successfully",
     });

@@ -1,4 +1,5 @@
 import { prisma } from "../../prismaClient";
+import ApiError from "../../utils/ApiError";
 import ApiFeatures from "../../utils/ApiFeatures";
 
 export const roleExist = async (name: string) => {
@@ -35,7 +36,14 @@ export const getRole = async (roleId: string) => {
   });
 };
 
-export const assignRoleToUser = async (userId: number, roleId: string) => {
+export const assignRoleToUser = async (
+  userId: number,
+  roleId: string,
+  id: number
+) => {
+  if (userId === id) {
+    throw new ApiError("you not allow to deactive your Account ..!", 401);
+  }
   await prisma.userRole.deleteMany({
     where: {
       userId,

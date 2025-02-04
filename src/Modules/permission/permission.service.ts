@@ -18,7 +18,14 @@ export const seeder = async () => {
   });
 };
 
-export const assignPermissionToUser = async (id: number, body: any) => {
+export const assignPermissionToUser = async (
+  id: number,
+  body: any,
+  userId: number
+) => {
+  if (userId === id) {
+    throw new ApiError("you not allow to change your Permissions ..!", 401);
+  }
   const user = await prisma.user.findUnique({
     where: { id },
     include: {

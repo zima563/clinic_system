@@ -31,7 +31,10 @@ const seeder = () => __awaiter(void 0, void 0, void 0, function* () {
     }));
 });
 exports.seeder = seeder;
-const assignPermissionToUser = (id, body) => __awaiter(void 0, void 0, void 0, function* () {
+const assignPermissionToUser = (id, body, userId) => __awaiter(void 0, void 0, void 0, function* () {
+    if (userId === id) {
+        throw new ApiError_1.default("you not allow to change your Permissions ..!", 401);
+    }
     const user = yield prismaClient_1.prisma.user.findUnique({
         where: { id },
         include: {

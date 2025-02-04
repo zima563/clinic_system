@@ -14,6 +14,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.DeleteRole = exports.updateRole = exports.getRoleById = exports.listRoleUser = exports.assignRoleToUser = exports.getRole = exports.getUser = exports.listRole = exports.createRole = exports.roleExist = void 0;
 const prismaClient_1 = require("../../prismaClient");
+const ApiError_1 = __importDefault(require("../../utils/ApiError"));
 const ApiFeatures_1 = __importDefault(require("../../utils/ApiFeatures"));
 const roleExist = (name) => __awaiter(void 0, void 0, void 0, function* () {
     return prismaClient_1.prisma.role.findFirst({ where: { name } });
@@ -45,7 +46,10 @@ const getRole = (roleId) => __awaiter(void 0, void 0, void 0, function* () {
     });
 });
 exports.getRole = getRole;
-const assignRoleToUser = (userId, roleId) => __awaiter(void 0, void 0, void 0, function* () {
+const assignRoleToUser = (userId, roleId, id) => __awaiter(void 0, void 0, void 0, function* () {
+    if (userId === id) {
+        throw new ApiError_1.default("you not allow to deactive your Account ..!", 401);
+    }
     yield prismaClient_1.prisma.userRole.deleteMany({
         where: {
             userId,

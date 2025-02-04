@@ -62,6 +62,7 @@ export class roleControllers {
     createValidationMiddleware(assignRoleToUserValidation)
   )
   async assignRoleToUser(
+    @Req() req: any,
     @Param("userId") userId: number,
     @Body() body: any,
     @Res() res: Response
@@ -71,7 +72,7 @@ export class roleControllers {
     } else if (!(await RoleService.getRole(body.roleId))) {
       throw new ApiError("role not found", 404);
     }
-    await RoleService.assignRoleToUser(userId, body.roleId);
+    await RoleService.assignRoleToUser(userId, body.roleId, req.user.id);
     res.json({ message: "assigning role to user successfully" });
   }
 

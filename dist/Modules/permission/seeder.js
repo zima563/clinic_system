@@ -76,7 +76,7 @@ let PermissionController = class PermissionController {
     }
     assignPermissionsToUser(req, id, body, res) {
         return __awaiter(this, void 0, void 0, function* () {
-            yield permissionService.assignPermissionToUser(id, body);
+            yield permissionService.assignPermissionToUser(id, body, req.user.id);
             return res.status(200).json({
                 message: "Permissions assigned to user successfully",
             });
@@ -160,7 +160,7 @@ __decorate([
     __param(2, (0, routing_controllers_1.Body)()),
     __param(3, (0, routing_controllers_1.Res)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Request, Number, Object, Object]),
+    __metadata("design:paramtypes", [Object, Number, Object, Object]),
     __metadata("design:returntype", Promise)
 ], PermissionController.prototype, "assignPermissionsToUser", null);
 __decorate([

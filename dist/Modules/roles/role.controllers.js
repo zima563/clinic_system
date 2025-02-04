@@ -84,7 +84,7 @@ let roleControllers = class roleControllers {
             });
         });
     }
-    assignRoleToUser(userId, body, res) {
+    assignRoleToUser(req, userId, body, res) {
         return __awaiter(this, void 0, void 0, function* () {
             if (!(yield RoleService.getUser(userId))) {
                 throw new ApiError_1.default("user not found", 404);
@@ -92,7 +92,7 @@ let roleControllers = class roleControllers {
             else if (!(yield RoleService.getRole(body.roleId))) {
                 throw new ApiError_1.default("role not found", 404);
             }
-            yield RoleService.assignRoleToUser(userId, body.roleId);
+            yield RoleService.assignRoleToUser(userId, body.roleId, req.user.id);
             res.json({ message: "assigning role to user successfully" });
         });
     }
@@ -146,11 +146,12 @@ __decorate([
 __decorate([
     (0, routing_controllers_1.Post)("/userRole/:userId"),
     (0, routing_controllers_1.UseBefore)(...(0, secureRoutesMiddleware_1.secureRouteWithPermissions)("assignRoleToUser"), (0, validation_1.createValidationMiddleware)(role_validation_1.assignRoleToUserValidation)),
-    __param(0, (0, routing_controllers_1.Param)("userId")),
-    __param(1, (0, routing_controllers_1.Body)()),
-    __param(2, (0, routing_controllers_1.Res)()),
+    __param(0, (0, routing_controllers_1.Req)()),
+    __param(1, (0, routing_controllers_1.Param)("userId")),
+    __param(2, (0, routing_controllers_1.Body)()),
+    __param(3, (0, routing_controllers_1.Res)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Number, Object, Object]),
+    __metadata("design:paramtypes", [Object, Number, Object, Object]),
     __metadata("design:returntype", Promise)
 ], roleControllers.prototype, "assignRoleToUser", null);
 __decorate([
