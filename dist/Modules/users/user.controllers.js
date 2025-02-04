@@ -102,7 +102,7 @@ let userControllers = class userControllers {
             return res.status(201).json(user);
         });
     }
-    updateUserProfile(req, id, body, res) {
+    updateUserProfile(req, body, res) {
         return __awaiter(this, void 0, void 0, function* () {
             let user = yield userServices.getUserById(req.user.id);
             if (!user)
@@ -216,11 +216,10 @@ __decorate([
     (0, routing_controllers_1.Put)("/updateProfile"),
     (0, routing_controllers_1.UseBefore)(...(0, secureRoutesMiddleware_1.secureRouteWithPermissions)("updateUserProfile"), (0, validation_1.createValidationMiddleware)(user_validations_1.UpdateUserProfile)),
     __param(0, (0, routing_controllers_1.Req)()),
-    __param(1, (0, routing_controllers_1.Param)("id")),
-    __param(2, (0, routing_controllers_1.Body)()),
-    __param(3, (0, routing_controllers_1.Res)()),
+    __param(1, (0, routing_controllers_1.Body)()),
+    __param(2, (0, routing_controllers_1.Res)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Object, Number, Object, Object]),
+    __metadata("design:paramtypes", [Object, Object, Object]),
     __metadata("design:returntype", Promise)
 ], userControllers.prototype, "updateUserProfile", null);
 __decorate([

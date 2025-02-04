@@ -77,7 +77,6 @@ export class userControllers {
   )
   async updateUserProfile(
     @Req() req: any,
-    @Param("id") id: number,
     @Body() body: any,
     @Res() res: Response
   ) {
