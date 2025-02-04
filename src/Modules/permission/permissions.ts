@@ -65,6 +65,7 @@ export const permissions = [
   { name: "ListRolePermissions" },
   { name: "deleteInvoice" },
   { name: "profile" },
+  { name: "updateUserProfile" },
 ];
 
 [
@@ -134,4 +135,5 @@ export const permissions = [
   "ListRolePermissions",
   "deleteInvoice",
   "profile",
+  "updateUserProfile",
 ];

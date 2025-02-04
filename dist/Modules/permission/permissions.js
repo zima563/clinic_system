@@ -68,6 +68,7 @@ exports.permissions = [
     { name: "ListRolePermissions" },
     { name: "deleteInvoice" },
     { name: "profile" },
+    { name: "updateUserProfile" },
 ];
 [
     "addAppointment",
@@ -136,4 +137,5 @@ exports.permissions = [
     "ListRolePermissions",
     "deleteInvoice",
     "profile",
+    "updateUserProfile",
 ];
