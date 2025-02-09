@@ -27,7 +27,7 @@ exports.addDoctorValidationSchema = joi_1.default.object({
             .required(),
         size: joi_1.default.number().required(),
         buffer: joi_1.default.any(),
-    }).required(),
+    }),
     specialtyId: joi_1.default.number().integer().positive().required().messages({
         "number.base": "Specialty ID must be a number",
         "number.integer": "Specialty ID must be an integer",

@@ -27,7 +27,7 @@ export const addServiceValidation = Joi.object({
       .required(),
     size: Joi.number().required(),
     buffer: Joi.any(),
-  }).required(),
+  }),
 });
 
 export const updateServiceValidation = Joi.object({

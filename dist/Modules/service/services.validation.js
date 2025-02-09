@@ -30,7 +30,7 @@ exports.addServiceValidation = joi_1.default.object({
             .required(),
         size: joi_1.default.number().required(),
         buffer: joi_1.default.any(),
-    }).required(),
+    }),
 });
 exports.updateServiceValidation = joi_1.default.object({
     id: joi_1.default.string().required(),

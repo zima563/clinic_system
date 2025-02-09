@@ -20,9 +20,12 @@ const uuid_1 = require("uuid");
 const prismaClient_1 = require("../../prismaClient");
 const ApiFeatures_1 = __importDefault(require("../../utils/ApiFeatures"));
 const ApiError_1 = __importDefault(require("../../utils/ApiError"));
-const uploadFile = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    if (!req.file) {
-        return res.status(400).json({ error: "image file is required." });
+const uploadFile = (req, res, modelName) => __awaiter(void 0, void 0, void 0, function* () {
+    if (!req.file && modelName === "doctor") {
+        return "avatar.png";
+    }
+    if (!req.file && modelName === "service") {
+        return "avatar.png";
     }
     const cleanedFilename = req.file.originalname
         .replace(/\s+/g, "_")

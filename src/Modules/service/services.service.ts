@@ -6,9 +6,13 @@ import { prisma } from "../../prismaClient";
 import ApiFeatures from "../../utils/ApiFeatures";
 import ApiError from "../../utils/ApiError";
 
-export const uploadFile = async (req: any, res: any) => {
-  if (!req.file) {
-    return res.status(400).json({ error: "image file is required." });
+export const uploadFile = async (req: any, res: any, modelName: string) => {
+  if (!req.file && modelName === "doctor") {
+    return "avatar.png";
+  }
+
+  if (!req.file && modelName === "service") {
+    return "avatar.png";
   }
   const cleanedFilename = req.file.originalname
     .replace(/\s+/g, "_")

@@ -37,7 +37,7 @@ export class serviceController {
       throw new ApiError("service title already exists", 409);
     }
 
-    body.icon = (await services.uploadFile(req, res)) ?? "";
+    body.icon = (await services.uploadFile(req, res, "service")) ?? "";
 
     let service = await services.createService({
       ...body,

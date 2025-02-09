@@ -22,7 +22,7 @@ export const addDoctorValidationSchema = Joi.object({
       .required(),
     size: Joi.number().required(),
     buffer: Joi.any(),
-  }).required(),
+  }),
   specialtyId: Joi.number().integer().positive().required().messages({
     "number.base": "Specialty ID must be a number",
     "number.integer": "Specialty ID must be an integer",

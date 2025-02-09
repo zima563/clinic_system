@@ -87,7 +87,7 @@ let doctorControllers = class doctorControllers {
             yield (0, validators_1.validateDoctor)(body.phone);
             yield (0, validators_1.validateSpecialty)(body.specialtyId);
             body.specialtyId = parseInt(body.specialtyId, 10);
-            body.image = yield (0, services_service_1.uploadFile)(req, res);
+            body.image = yield (0, services_service_1.uploadFile)(req, res, "doctor");
             const doctor = yield doctorServices.addDoctor(Object.assign(Object.assign({}, body), { createdBy: (_a = req.user) === null || _a === void 0 ? void 0 : _a.id }));
             return res.status(200).json(doctor);
         });

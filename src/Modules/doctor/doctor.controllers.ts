@@ -61,7 +61,7 @@ export class doctorControllers {
     await validateSpecialty(body.specialtyId);
 
     body.specialtyId = parseInt(body.specialtyId, 10);
-    body.image = await uploadFile(req, res);
+    body.image = await uploadFile(req, res, "doctor");
 
     const doctor = await doctorServices.addDoctor({
       ...body,
