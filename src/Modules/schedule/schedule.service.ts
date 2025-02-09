@@ -34,7 +34,7 @@ export const listSchedules = async (query: any) => {
 
   const { result, pagination } = await apiFeatures.exec("schedule");
   result.map((result: any) => {
-    result.doctor.image = process.env.base_url + result.doctor.image;
+    // result.doctor.image = process.env.base_url + result.doctor.image;
   });
 
   return {

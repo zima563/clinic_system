@@ -39,7 +39,7 @@ const listSchedules = (query) => __awaiter(void 0, void 0, void 0, function* () 
     yield apiFeatures.paginateWithCount();
     const { result, pagination } = yield apiFeatures.exec("schedule");
     result.map((result) => {
-        result.doctor.image = process.env.base_url + result.doctor.image;
+        // result.doctor.image = process.env.base_url + result.doctor.image;
     });
     return {
         result,

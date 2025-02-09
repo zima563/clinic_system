@@ -57,6 +57,7 @@ export class scheduleControllers {
       servicesId: parsedServicesId,
     };
     const data = await scheduleServices.listSchedules(query);
+
     return res.status(200).json({
       data: data.result,
       pagination: data.pagination,
