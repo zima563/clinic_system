@@ -20,7 +20,7 @@ export const addscheduleSchema = Joi.object({
     .items(
       Joi.object({
         day: Joi.string()
-          .valid("mon", "tue", "wed", "thu", "fri", "sat", "sun")
+          .valid("Mon", "Tue", "Ted", "Thu", "Fri", "Sat", "Sun")
           .required()
           .messages({
             "any.only":
