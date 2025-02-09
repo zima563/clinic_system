@@ -70,7 +70,7 @@ exports.updateScheduleSchema = Joi.object({
     dates: Joi.array()
         .items(Joi.object({
         day: Joi.string()
-            .valid("mon", "tue", "wed", "thu", "fri", "sat", "sun")
+            .valid("Mon", "Tue", "Ted", "Thu", "Fri", "Sat", "Sun")
             .required()
             .messages({
             "any.only": "Day must be one of 'mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'.",
