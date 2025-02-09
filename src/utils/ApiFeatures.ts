@@ -210,6 +210,7 @@ class ApiFeatures {
           select: {
             id: true,
             name: true,
+            image: true,
           },
         },
         service: {
