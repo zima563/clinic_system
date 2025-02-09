@@ -41,6 +41,16 @@ class ApiFeatures {
             };
             delete filterObj.createdAt;
         }
+        if (this.searchQuery.dateTime) {
+            const date = new Date(this.searchQuery.dateTime);
+            const startOfDay = new Date(date.setUTCHours(0, 0, 0, 0));
+            const endOfDay = new Date(date.setUTCHours(23, 59, 59, 999));
+            this.prismaQuery.where.dateTime = {
+                gte: startOfDay,
+                lte: endOfDay,
+            };
+            delete filterObj.dateTime;
+        }
         if (this.searchQuery.ex !== undefined) {
             this.prismaQuery.where.ex = this.searchQuery.ex === "1";
             delete filterObj.ex;
@@ -317,6 +327,48 @@ class ApiFeatures {
                     rolePermissions: {
                         select: {
                             permission: true,
+                        },
+                    },
+                };
+            }
+            else if (modelName === "appointment") {
+                this.prismaQuery.include = {
+                    select: {
+                        id: true,
+                        dateTime: true,
+                        status: true,
+                        creator: {
+                            select: {
+                                userName: true,
+                            },
+                        },
+                        schedule: {
+                            select: {
+                                price: true,
+                                service: {
+                                    select: {
+                                        id: true,
+                                        title: true,
+                                    },
+                                },
+                                doctor: {
+                                    select: {
+                                        id: true,
+                                        name: true,
+                                    },
+                                },
+                            },
+                        },
+                        date: {
+                            select: {
+                                fromTime: true,
+                                toTime: true,
+                            },
+                        },
+                        patient: {
+                            select: {
+                                name: true,
+                            },
                         },
                     },
                 };

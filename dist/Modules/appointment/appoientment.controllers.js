@@ -88,14 +88,14 @@ let appointmentController = class appointmentController {
     }
     getAppointment(req, res) {
         return __awaiter(this, void 0, void 0, function* () {
-            let appointments = yield appointmentService.getAppointments();
-            appointments.map((app) => {
+            let appointments = yield appointmentService.getAppointments(req.query);
+            appointments.result.map((app) => {
                 app.schedule.doctor.image =
                     process.env.base_url + app.schedule.doctor.image;
             });
             return res.status(200).json({
-                data: appointments,
-                count: appointments.length,
+                data: appointments.result,
+                count: appointments.result.length,
             });
         });
     }
