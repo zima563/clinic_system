@@ -70,14 +70,14 @@ export class appointmentController {
   @Get("/")
   @UseBefore(...secureRouteWithPermissions("getAppointment"))
   async getAppointment(@Req() req: Request, @Res() res: Response) {
-    let appointments = await appointmentService.getAppointments();
-    appointments.map((app: any) => {
+    let appointments = await appointmentService.getAppointments(req.query);
+    appointments.result.map((app: any) => {
       app.schedule.doctor.image =
         process.env.base_url + app.schedule.doctor.image;
     });
     return res.status(200).json({
-      data: appointments,
-      count: appointments.length,
+      data: appointments.result,
+      count: appointments.result.length,
     });
   }
 
