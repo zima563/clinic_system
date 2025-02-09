@@ -335,43 +335,41 @@ class ApiFeatures {
         },
       };
     } else if (modelName === "appointment") {
-      this.prismaQuery.include = {
-        select: {
-          id: true,
-          dateTime: true,
-          status: true,
-          creator: {
-            select: {
-              userName: true,
-            },
+      this.prismaQuery.select = {
+        id: true,
+        dateTime: true,
+        status: true,
+        creator: {
+          select: {
+            userName: true,
           },
-          schedule: {
-            select: {
-              price: true,
-              service: {
-                select: {
-                  id: true,
-                  title: true,
-                },
+        },
+        schedule: {
+          select: {
+            price: true,
+            service: {
+              select: {
+                id: true,
+                title: true,
               },
-              doctor: {
-                select: {
-                  id: true,
-                  name: true,
-                },
+            },
+            doctor: {
+              select: {
+                id: true,
+                name: true,
               },
             },
           },
-          date: {
-            select: {
-              fromTime: true,
-              toTime: true,
-            },
+        },
+        date: {
+          select: {
+            fromTime: true,
+            toTime: true,
           },
-          patient: {
-            select: {
-              name: true,
-            },
+        },
+        patient: {
+          select: {
+            name: true,
           },
         },
       };
