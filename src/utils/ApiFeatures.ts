@@ -88,7 +88,7 @@ class ApiFeatures {
           acc[key] = order === "desc" ? "desc" : "asc";
           return acc;
         }, {})
-      : { createdAt: "asc" };
+      : {};
     this.prismaQuery.orderBy = sortBy;
     return this;
   }
