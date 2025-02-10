@@ -36,10 +36,13 @@ const updatePatient = (id, body) => __awaiter(void 0, void 0, void 0, function* 
 });
 exports.updatePatient = updatePatient;
 const listPatient = (query) => __awaiter(void 0, void 0, void 0, function* () {
+    const baseFilter = {
+        isDeleted: false,
+    };
     // Initialize ApiFeatures with the Prisma model and the search query
     const apiFeatures = new ApiFeatures_1.default(prismaClient_1.prisma.patient, query);
     // Apply filters, sorting, field selection, search, and pagination
-    yield apiFeatures.filter().sort().limitedFields().search("patient"); // Specify the model name, 'user' in this case
+    yield apiFeatures.filter(baseFilter).sort().limitedFields().search("patient"); // Specify the model name, 'user' in this case
     yield apiFeatures.paginateWithCount();
     // Execute the query and get the result and pagination
     const { result, pagination } = yield apiFeatures.exec("patient");
@@ -63,14 +66,12 @@ const getPatient = (id) => __awaiter(void 0, void 0, void 0, function* () {
 });
 exports.getPatient = getPatient;
 const deletePatient = (id) => __awaiter(void 0, void 0, void 0, function* () {
-    yield prismaClient_1.prisma.appointment.deleteMany({
-        where: {
-            patientId: id,
-        },
-    });
-    yield prismaClient_1.prisma.patient.delete({
+    yield prismaClient_1.prisma.patient.update({
         where: {
             id,
+        },
+        data: {
+            isDeleted: true,
         },
     });
 });
