@@ -69,7 +69,7 @@ let patientController = class patientController {
     addPatient(req, body, res) {
         return __awaiter(this, void 0, void 0, function* () {
             var _a;
-            yield (0, validators_1.patientExist)(body.phone);
+            yield (0, validators_1.patientExist)(body.phone, 0);
             const birthdate = new Date(body.birthdate);
             body.birthdate = birthdate.toISOString();
             let patient = yield patientService.createPatient(Object.assign({ createdBy: (_a = req.user) === null || _a === void 0 ? void 0 : _a.id }, body));
@@ -78,7 +78,7 @@ let patientController = class patientController {
     }
     updatePatient(req, id, body, res) {
         return __awaiter(this, void 0, void 0, function* () {
-            yield (0, validators_1.patientExist)(body.phone);
+            yield (0, validators_1.patientExist)(body.phone, id);
             if (body.birthdate) {
                 const birthdate = new Date(body.birthdate);
                 body.birthdate = birthdate.toISOString(); // Ensure it’s in ISO 8601 format

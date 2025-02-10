@@ -31,7 +31,7 @@ export class patientController {
     @Body() body: any,
     @Res() res: Response
   ) {
-    await patientExist(body.phone);
+    await patientExist(body.phone, 0);
     const birthdate = new Date(body.birthdate);
     body.birthdate = birthdate.toISOString();
 
@@ -53,7 +53,7 @@ export class patientController {
     @Body() body: any,
     @Res() res: Response
   ) {
-    await patientExist(body.phone);
+    await patientExist(body.phone, id);
     if (body.birthdate) {
       const birthdate = new Date(body.birthdate);
       body.birthdate = birthdate.toISOString(); // Ensure it’s in ISO 8601 format

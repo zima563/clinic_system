@@ -15,10 +15,10 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.patientExist = void 0;
 const prismaClient_1 = require("../../prismaClient");
 const ApiError_1 = __importDefault(require("../../utils/ApiError"));
-const patientExist = (phone) => __awaiter(void 0, void 0, void 0, function* () {
+const patientExist = (phone, id) => __awaiter(void 0, void 0, void 0, function* () {
     if (phone) {
         let patient = yield prismaClient_1.prisma.patient.findUnique({
-            where: { phone },
+            where: { phone, NOT: { id } },
         });
         if (patient) {
             throw new ApiError_1.default("patient's phone already exist");
