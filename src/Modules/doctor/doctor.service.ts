@@ -14,6 +14,7 @@ export const updateDoctor = async (
   fileName: string | undefined,
   body: any
 ) => {
+  body.specialtyId = parseInt(body.specialtyId, 8);
   return prisma.doctor.update({
     where: { id },
     data: {

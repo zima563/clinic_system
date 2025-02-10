@@ -22,6 +22,7 @@ const addDoctor = (body) => __awaiter(void 0, void 0, void 0, function* () {
 });
 exports.addDoctor = addDoctor;
 const updateDoctor = (id, fileName, body) => __awaiter(void 0, void 0, void 0, function* () {
+    body.specialtyId = parseInt(body.specialtyId, 8);
     return prismaClient_1.prisma.doctor.update({
         where: { id },
         data: Object.assign({ image: fileName }, body),
