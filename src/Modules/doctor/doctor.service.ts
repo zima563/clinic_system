@@ -24,11 +24,14 @@ export const updateDoctor = async (
 };
 
 export const getDoctors = async (query: any) => {
+  const baseFilter = {
+    isDeleted: false,
+  };
   // Initialize ApiFeatures with the Prisma model and the search query
   const apiFeatures = new ApiFeatures(prisma.doctor, query);
 
   // Apply filters, sorting, field selection, search, and pagination
-  await apiFeatures.filter().sort().limitedFields().search("doctor"); // Specify the model name, 'user' in this case
+  await apiFeatures.filter(baseFilter).sort().limitedFields().search("doctor"); // Specify the model name, 'user' in this case
 
   await apiFeatures.paginateWithCount();
 
@@ -54,16 +57,13 @@ export const getDoctor = async (id: number) => {
   });
 };
 
-export const deactiveOrActive = async (doctor: any, id: number) => {
-  if (doctor.isActive) {
-    await prisma.doctor.update({
-      where: { id },
-      data: { isActive: false },
-    });
-  } else {
-    await prisma.doctor.update({
-      where: { id },
-      data: { isActive: true },
-    });
-  }
+export const deactiveOrActive = async (id: number) => {
+  await prisma.doctor.update({
+    where: {
+      id,
+    },
+    data: {
+      isDeleted: true,
+    },
+  });
 };

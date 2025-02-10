@@ -156,7 +156,7 @@ let doctorControllers = class doctorControllers {
             let doctor = yield doctorServices.getDoctor(id);
             if (!doctor)
                 throw new ApiError_1.default("doctor not found", 404);
-            yield doctorServices.deactiveOrActive(doctor, id);
+            yield doctorServices.deactiveOrActive(id);
             let updatedDoctor = yield doctorServices.getDoctor(id);
             return res
                 .status(200)

@@ -170,7 +170,7 @@ export class doctorControllers {
     let doctor = await doctorServices.getDoctor(id);
     if (!doctor) throw new ApiError("doctor not found", 404);
 
-    await doctorServices.deactiveOrActive(doctor, id);
+    await doctorServices.deactiveOrActive(id);
 
     let updatedDoctor = await doctorServices.getDoctor(id);
 
