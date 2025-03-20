@@ -12,7 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.validatePhone = exports.validateSpecialty = exports.validateDoctorById = exports.validateDoctor = void 0;
+exports.validatePhone = exports.validateSpecialty = exports.validateDoctor = void 0;
 const prismaClient_1 = require("../../prismaClient");
 const ApiError_1 = __importDefault(require("../../utils/ApiError"));
 const validateDoctor = (phone) => __awaiter(void 0, void 0, void 0, function* () {
@@ -23,15 +23,6 @@ const validateDoctor = (phone) => __awaiter(void 0, void 0, void 0, function* ()
     }
 });
 exports.validateDoctor = validateDoctor;
-const validateDoctorById = (id) => __awaiter(void 0, void 0, void 0, function* () {
-    const doctor = yield prismaClient_1.prisma.doctor.findUnique({
-        where: { id },
-    });
-    if (!doctor) {
-        throw new ApiError_1.default("Doctor not found", 404);
-    }
-});
-exports.validateDoctorById = validateDoctorById;
 const validateSpecialty = (id) => __awaiter(void 0, void 0, void 0, function* () {
     if (id) {
         if (!(yield prismaClient_1.prisma.specialty.findUnique({

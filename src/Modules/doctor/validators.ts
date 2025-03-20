@@ -9,15 +9,6 @@ export const validateDoctor = async (phone: string) => {
   }
 };
 
-export const validateDoctorById = async (id: number) => {
-  const doctor = await prisma.doctor.findUnique({
-    where: { id },
-  });
-  if (!doctor) {
-    throw new ApiError("Doctor not found", 404);
-  }
-};
-
 export const validateSpecialty = async (id: string) => {
   if (id) {
     if (
