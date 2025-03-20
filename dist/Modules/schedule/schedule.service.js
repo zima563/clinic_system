@@ -12,11 +12,20 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.deleteSchedule = exports.updateSchedule = exports.deleteDates = exports.findScheduleById = exports.showDetailsOfSchedule = exports.listOfDates = exports.listSchedules = exports.addSchedule = void 0;
+exports.deleteSchedule = exports.updateSchedule = exports.deleteDates = exports.showDetailsOfSchedule = exports.listOfDates = exports.listSchedules = exports.addSchedule = exports.findScheduleById = void 0;
 const prismaClient_1 = require("../../prismaClient");
 const ApiFeatures_1 = __importDefault(require("../../utils/ApiFeatures"));
-const addSchedule = (createdBy, doctorId, servicesId, price, dates) => __awaiter(void 0, void 0, void 0, function* () {
-    return yield prismaClient_1.prisma.schedule.create({
+const ApiError_1 = __importDefault(require("../../utils/ApiError"));
+const findScheduleById = (id) => __awaiter(void 0, void 0, void 0, function* () {
+    return yield prismaClient_1.prisma.schedule.findUnique({
+        where: {
+            id,
+        },
+    });
+});
+exports.findScheduleById = findScheduleById;
+const addSchedule = (res, createdBy, doctorId, servicesId, price, dates) => __awaiter(void 0, void 0, void 0, function* () {
+    const schedule = yield prismaClient_1.prisma.schedule.create({
         data: {
             createdBy,
             doctorId,
@@ -31,9 +40,10 @@ const addSchedule = (createdBy, doctorId, servicesId, price, dates) => __awaiter
             },
         },
     });
+    return res.status(200).json(schedule);
 });
 exports.addSchedule = addSchedule;
-const listSchedules = (query) => __awaiter(void 0, void 0, void 0, function* () {
+const listSchedules = (res, query) => __awaiter(void 0, void 0, void 0, function* () {
     const apiFeatures = new ApiFeatures_1.default(prismaClient_1.prisma.schedule, query);
     yield apiFeatures.filter().limitedFields().sort().search("schedule");
     yield apiFeatures.paginateWithCount();
@@ -41,22 +51,24 @@ const listSchedules = (query) => __awaiter(void 0, void 0, void 0, function* () 
     result.map((result) => {
         result.doctor.image = process.env.base_url + result.doctor.image;
     });
-    return {
-        result,
-        pagination,
-    };
+    return res.status(200).json({
+        data: result,
+        pagination: pagination,
+        count: result.length,
+    });
 });
 exports.listSchedules = listSchedules;
-const listOfDates = (id) => __awaiter(void 0, void 0, void 0, function* () {
-    return prismaClient_1.prisma.date.findMany({
+const listOfDates = (res, id) => __awaiter(void 0, void 0, void 0, function* () {
+    const dates = yield prismaClient_1.prisma.date.findMany({
         where: {
             scheduleId: id,
         },
     });
+    return res.status(200).json(dates);
 });
 exports.listOfDates = listOfDates;
-const showDetailsOfSchedule = (id) => __awaiter(void 0, void 0, void 0, function* () {
-    return yield prismaClient_1.prisma.schedule.findUnique({
+const showDetailsOfSchedule = (res, id) => __awaiter(void 0, void 0, void 0, function* () {
+    const schedule = yield prismaClient_1.prisma.schedule.findUnique({
         where: { id },
         select: {
             id: true,
@@ -91,16 +103,12 @@ const showDetailsOfSchedule = (id) => __awaiter(void 0, void 0, void 0, function
             },
         },
     });
+    if (!schedule) {
+        throw new ApiError_1.default("schedule not found", 404);
+    }
+    return res.status(200).json(schedule);
 });
 exports.showDetailsOfSchedule = showDetailsOfSchedule;
-const findScheduleById = (id) => __awaiter(void 0, void 0, void 0, function* () {
-    return yield prismaClient_1.prisma.schedule.findUnique({
-        where: {
-            id,
-        },
-    });
-});
-exports.findScheduleById = findScheduleById;
 const deleteDates = (id) => __awaiter(void 0, void 0, void 0, function* () {
     return yield prismaClient_1.prisma.date.deleteMany({
         where: {
@@ -109,8 +117,15 @@ const deleteDates = (id) => __awaiter(void 0, void 0, void 0, function* () {
     });
 });
 exports.deleteDates = deleteDates;
-const updateSchedule = (id, doctorId, servicesId, price, dates) => __awaiter(void 0, void 0, void 0, function* () {
-    return yield prismaClient_1.prisma.schedule.update({
+const updateSchedule = (res, id, doctorId, servicesId, price, dates) => __awaiter(void 0, void 0, void 0, function* () {
+    const schedule = yield (0, exports.findScheduleById)(id);
+    if (dates) {
+        yield (0, exports.deleteDates)(id);
+    }
+    if (!schedule) {
+        throw new ApiError_1.default("schedule not found", 404);
+    }
+    yield prismaClient_1.prisma.schedule.update({
         where: {
             id,
         },
@@ -127,11 +142,21 @@ const updateSchedule = (id, doctorId, servicesId, price, dates) => __awaiter(voi
             },
         },
     });
+    let updatedSchedule = yield (0, exports.findScheduleById)(id);
+    // Return the updated schedules
+    return res.status(200).json(updatedSchedule);
 });
 exports.updateSchedule = updateSchedule;
-const deleteSchedule = (id) => __awaiter(void 0, void 0, void 0, function* () {
-    return yield prismaClient_1.prisma.schedule.delete({
+const deleteSchedule = (res, id) => __awaiter(void 0, void 0, void 0, function* () {
+    // Check if the schedule exists
+    const schedule = yield (0, exports.findScheduleById)(id);
+    if (!schedule) {
+        throw new ApiError_1.default("schedule not found", 404);
+    }
+    yield (0, exports.deleteDates)(id);
+    yield prismaClient_1.prisma.schedule.delete({
         where: { id },
     });
+    return res.status(200).json({ message: "Schedule deleted successfully" });
 });
 exports.deleteSchedule = deleteSchedule;

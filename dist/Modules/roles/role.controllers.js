@@ -53,14 +53,10 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.roleControllers = void 0;
 const routing_controllers_1 = require("routing-controllers");
 const validation_1 = require("../../middlewares/validation");
-const ApiError_1 = __importDefault(require("../../utils/ApiError"));
 const role_validation_1 = require("./role.validation");
 const secureRoutesMiddleware_1 = require("../../middlewares/secureRoutesMiddleware");
 const RoleService = __importStar(require("./role.service"));
@@ -68,58 +64,32 @@ let roleControllers = class roleControllers {
     createRole(req, body, res) {
         return __awaiter(this, void 0, void 0, function* () {
             var _a;
-            if (yield RoleService.roleExist(body.name))
-                throw new ApiError_1.default("this role name already exist", 409);
-            let role = yield RoleService.createRole(Object.assign({ createdBy: (_a = req.user) === null || _a === void 0 ? void 0 : _a.id }, body));
-            res.status(200).json(role);
+            return yield RoleService.createRole(res, Object.assign({ createdBy: (_a = req.user) === null || _a === void 0 ? void 0 : _a.id }, body));
         });
     }
-    // GET /all does not use CheckEmailMiddleware
     allRoles(query, res) {
         return __awaiter(this, void 0, void 0, function* () {
-            const data = yield RoleService.listRole(query);
-            return res.status(200).json({
-                data: data.result,
-                pagination: data.pagination,
-            });
+            return yield RoleService.listRole(res, query);
         });
     }
     assignRoleToUser(req, userId, body, res) {
         return __awaiter(this, void 0, void 0, function* () {
-            if (!(yield RoleService.getUser(userId))) {
-                throw new ApiError_1.default("user not found", 404);
-            }
-            else if (!(yield RoleService.getRole(body.roleId))) {
-                throw new ApiError_1.default("role not found", 404);
-            }
-            yield RoleService.assignRoleToUser(userId, body.roleId, req.user.id);
-            res.json({ message: "assigning role to user successfully" });
+            return yield RoleService.assignRoleToUser(res, userId, body.roleId, req.user.id);
         });
     }
-    getAllRoleUsers(query, id, res) {
+    getAllRoleUsers(id, res) {
         return __awaiter(this, void 0, void 0, function* () {
-            let all = yield RoleService.listRoleUser(id);
-            res.status(200).json(all);
+            return yield RoleService.listRoleUser(res, id);
         });
     }
     updateRole(id, body, res) {
         return __awaiter(this, void 0, void 0, function* () {
-            if (!(yield RoleService.getRoleById(id)))
-                throw new ApiError_1.default("role not found");
-            if (yield RoleService.roleExist(body.name)) {
-                throw new ApiError_1.default("this role name already exist", 409);
-            }
-            yield RoleService.updateRole(id, body);
-            return res.status(200).json({ message: "role updated successfully" });
+            return yield RoleService.updateRole(res, id, body);
         });
     }
     deleteRole(id, res) {
         return __awaiter(this, void 0, void 0, function* () {
-            if (!(yield RoleService.getRoleById(id))) {
-                throw new ApiError_1.default("role not found");
-            }
-            yield RoleService.DeleteRole(id);
-            return res.status(200).json({ message: "role deleted successfully" });
+            return yield RoleService.DeleteRole(res, id);
         });
     }
 };
@@ -157,11 +127,10 @@ __decorate([
 __decorate([
     (0, routing_controllers_1.Get)("/userRole/:id"),
     (0, routing_controllers_1.UseBefore)(...(0, secureRoutesMiddleware_1.secureRouteWithPermissions)("getAllRoleUsers")),
-    __param(0, (0, routing_controllers_1.QueryParams)()),
-    __param(1, (0, routing_controllers_1.Param)("id")),
-    __param(2, (0, routing_controllers_1.Res)()),
+    __param(0, (0, routing_controllers_1.Param)("id")),
+    __param(1, (0, routing_controllers_1.Res)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Object, Number, Object]),
+    __metadata("design:paramtypes", [Number, Object]),
     __metadata("design:returntype", Promise)
 ], roleControllers.prototype, "getAllRoleUsers", null);
 __decorate([

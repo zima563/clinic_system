@@ -34,26 +34,16 @@ export class roleControllers {
     @Body() body: any,
     @Res() res: Response
   ) {
-    if (await RoleService.roleExist(body.name))
-      throw new ApiError("this role name already exist", 409);
-
-    let role = await RoleService.createRole({
+    return await RoleService.createRole(res, {
       createdBy: req.user?.id,
       ...body,
     });
-    res.status(200).json(role);
   }
 
-  // GET /all does not use CheckEmailMiddleware
   @Get("/all")
   @UseBefore(...secureRouteWithPermissions("allRoles"))
   async allRoles(@QueryParams() query: any, @Res() res: Response) {
-    const data = await RoleService.listRole(query);
-
-    return res.status(200).json({
-      data: data.result,
-      pagination: data.pagination,
-    });
+    return await RoleService.listRole(res, query);
   }
 
   @Post("/userRole/:userId")
@@ -67,24 +57,18 @@ export class roleControllers {
     @Body() body: any,
     @Res() res: Response
   ) {
-    if (!(await RoleService.getUser(userId))) {
-      throw new ApiError("user not found", 404);
-    } else if (!(await RoleService.getRole(body.roleId))) {
-      throw new ApiError("role not found", 404);
-    }
-    await RoleService.assignRoleToUser(userId, body.roleId, req.user.id);
-    res.json({ message: "assigning role to user successfully" });
+    return await RoleService.assignRoleToUser(
+      res,
+      userId,
+      body.roleId,
+      req.user.id
+    );
   }
 
   @Get("/userRole/:id")
   @UseBefore(...secureRouteWithPermissions("getAllRoleUsers"))
-  async getAllRoleUsers(
-    @QueryParams() query: any,
-    @Param("id") id: number,
-    @Res() res: Response
-  ) {
-    let all = await RoleService.listRoleUser(id);
-    res.status(200).json(all);
+  async getAllRoleUsers(@Param("id") id: number, @Res() res: Response) {
+    return await RoleService.listRoleUser(res, id);
   }
 
   @Put("/:id")
@@ -97,23 +81,12 @@ export class roleControllers {
     @Body() body: any,
     @Res() res: Response
   ) {
-    if (!(await RoleService.getRoleById(id)))
-      throw new ApiError("role not found");
-
-    if (await RoleService.roleExist(body.name)) {
-      throw new ApiError("this role name already exist", 409);
-    }
-    await RoleService.updateRole(id, body);
-    return res.status(200).json({ message: "role updated successfully" });
+    return await RoleService.updateRole(res, id, body);
   }
 
   @Delete("/:id")
   @UseBefore(...secureRouteWithPermissions("deleteRole"))
   async deleteRole(@Param("id") id: number, @Res() res: Response) {
-    if (!(await RoleService.getRoleById(id))) {
-      throw new ApiError("role not found");
-    }
-    await RoleService.DeleteRole(id);
-    return res.status(200).json({ message: "role deleted successfully" });
+    return await RoleService.DeleteRole(res, id);
   }
 }

@@ -30,14 +30,14 @@ export class scheduleControllers {
   )
   async addSchedule(@Req() req: Request, @Res() res: Response) {
     const { doctorId, servicesId, price, dates } = req.body;
-    const schedule = await scheduleServices.addSchedule(
+    return await scheduleServices.addSchedule(
+      res,
       req.user?.id,
       doctorId,
       servicesId,
       price,
       dates
     );
-    return res.status(200).json(schedule);
   }
 
   @Get("/")
@@ -56,24 +56,13 @@ export class scheduleControllers {
       doctorId: parsedDoctorId,
       servicesId: parsedServicesId,
     };
-    const data = await scheduleServices.listSchedules(query);
-
-    return res.status(200).json({
-      data: data.result,
-      pagination: data.pagination,
-      count: data.result.length,
-    });
+    return await scheduleServices.listSchedules(res, query);
   }
 
   @Get("/dates/:id")
   @UseBefore(...secureRouteWithPermissions("listDates"))
-  async listDates(
-    @Req() req: Request,
-    @Param("id") id: number,
-    @Res() res: Response
-  ) {
-    let dates = await scheduleServices.listOfDates(id);
-    return res.status(200).json(dates);
+  async listDates(@Param("id") id: number, @Res() res: Response) {
+    return await scheduleServices.listOfDates(res, id);
   }
 
   @Get("/:id")
@@ -83,11 +72,7 @@ export class scheduleControllers {
     @Param("id") id: number,
     @Res() res: Response
   ) {
-    let schedule = await scheduleServices.showDetailsOfSchedule(id);
-    if (!schedule) {
-      throw new ApiError("schedule not found", 404);
-    }
-    return res.status(200).json(schedule);
+    return await scheduleServices.showDetailsOfSchedule(res, id);
   }
 
   @Put("/:id")
@@ -101,39 +86,20 @@ export class scheduleControllers {
     @Res() res: Response
   ) {
     const { doctorId, servicesId, price, dates } = req.body;
-    const schedule = await scheduleServices.findScheduleById(id);
-    if (dates) {
-      await scheduleServices.deleteDates(id);
-    }
-    if (!schedule) {
-      throw new ApiError("schedule not found", 404);
-    }
 
-    await scheduleServices.updateSchedule(
+    return await scheduleServices.updateSchedule(
+      res,
       id,
       doctorId,
       servicesId,
       price,
       dates
     );
-    let updatedSchedule = await scheduleServices.findScheduleById(id);
-
-    // Return the updated schedules
-    return res.status(200).json(updatedSchedule);
   }
 
   @Delete("/:id")
   @UseBefore(...secureRouteWithPermissions("deleteSchedule"))
   async deleteSchedule(@Param("id") id: number, @Res() res: Response) {
-    // Check if the schedule exists
-    const schedule = await scheduleServices.findScheduleById(id);
-
-    if (!schedule) {
-      throw new ApiError("schedule not found", 404);
-    }
-    await scheduleServices.deleteDates(id);
-    await scheduleServices.deleteSchedule(id);
-
-    return res.status(200).json({ message: "Schedule deleted successfully" });
+    return await scheduleServices.deleteSchedule(res, id);
   }
 }

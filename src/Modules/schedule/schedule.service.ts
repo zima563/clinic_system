@@ -1,14 +1,25 @@
+import { Response } from "express";
 import { prisma } from "../../prismaClient";
 import ApiFeatures from "../../utils/ApiFeatures";
+import ApiError from "../../utils/ApiError";
+
+export const findScheduleById = async (id: number) => {
+  return await prisma.schedule.findUnique({
+    where: {
+      id,
+    },
+  });
+};
 
 export const addSchedule = async (
+  res: Response,
   createdBy: any,
   doctorId: number,
   servicesId: number,
   price: any,
   dates: any
 ) => {
-  return await prisma.schedule.create({
+  const schedule = await prisma.schedule.create({
     data: {
       createdBy,
       doctorId,
@@ -25,9 +36,10 @@ export const addSchedule = async (
       },
     },
   });
+  return res.status(200).json(schedule);
 };
 
-export const listSchedules = async (query: any) => {
+export const listSchedules = async (res: Response, query: any) => {
   const apiFeatures = new ApiFeatures(prisma.schedule, query);
   await apiFeatures.filter().limitedFields().sort().search("schedule");
   await apiFeatures.paginateWithCount();
@@ -37,22 +49,24 @@ export const listSchedules = async (query: any) => {
     result.doctor.image = process.env.base_url + result.doctor.image;
   });
 
-  return {
-    result,
-    pagination,
-  };
+  return res.status(200).json({
+    data: result,
+    pagination: pagination,
+    count: result.length,
+  });
 };
 
-export const listOfDates = async (id: number) => {
-  return prisma.date.findMany({
+export const listOfDates = async (res: Response, id: number) => {
+  const dates = await prisma.date.findMany({
     where: {
       scheduleId: id,
     },
   });
+  return res.status(200).json(dates);
 };
 
-export const showDetailsOfSchedule = async (id: number) => {
-  return await prisma.schedule.findUnique({
+export const showDetailsOfSchedule = async (res: Response, id: number) => {
+  const schedule = await prisma.schedule.findUnique({
     where: { id },
     select: {
       id: true,
@@ -87,14 +101,10 @@ export const showDetailsOfSchedule = async (id: number) => {
       },
     },
   });
-};
-
-export const findScheduleById = async (id: number) => {
-  return await prisma.schedule.findUnique({
-    where: {
-      id,
-    },
-  });
+  if (!schedule) {
+    throw new ApiError("schedule not found", 404);
+  }
+  return res.status(200).json(schedule);
 };
 
 export const deleteDates = async (id: number) => {
@@ -106,13 +116,21 @@ export const deleteDates = async (id: number) => {
 };
 
 export const updateSchedule = async (
+  res: Response,
   id: number,
   doctorId: number,
   servicesId: number,
   price: any,
   dates: any
 ) => {
-  return await prisma.schedule.update({
+  const schedule = await findScheduleById(id);
+  if (dates) {
+    await deleteDates(id);
+  }
+  if (!schedule) {
+    throw new ApiError("schedule not found", 404);
+  }
+  await prisma.schedule.update({
     where: {
       id,
     },
@@ -131,10 +149,23 @@ export const updateSchedule = async (
       },
     },
   });
+  let updatedSchedule = await findScheduleById(id);
+
+  // Return the updated schedules
+  return res.status(200).json(updatedSchedule);
 };
 
-export const deleteSchedule = async (id: number) => {
-  return await prisma.schedule.delete({
+export const deleteSchedule = async (res: Response, id: number) => {
+  // Check if the schedule exists
+  const schedule = await findScheduleById(id);
+
+  if (!schedule) {
+    throw new ApiError("schedule not found", 404);
+  }
+  await deleteDates(id);
+  await prisma.schedule.delete({
     where: { id },
   });
+
+  return res.status(200).json({ message: "Schedule deleted successfully" });
 };

@@ -53,15 +53,11 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.scheduleControllers = void 0;
 const routing_controllers_1 = require("routing-controllers");
 const validation_1 = require("../../middlewares/validation");
 const schedule_validations_1 = require("./schedule.validations");
-const ApiError_1 = __importDefault(require("../../utils/ApiError"));
 const secureRoutesMiddleware_1 = require("../../middlewares/secureRoutesMiddleware");
 const scheduleServices = __importStar(require("./schedule.service"));
 let scheduleControllers = class scheduleControllers {
@@ -69,8 +65,7 @@ let scheduleControllers = class scheduleControllers {
         return __awaiter(this, void 0, void 0, function* () {
             var _a;
             const { doctorId, servicesId, price, dates } = req.body;
-            const schedule = yield scheduleServices.addSchedule((_a = req.user) === null || _a === void 0 ? void 0 : _a.id, doctorId, servicesId, price, dates);
-            return res.status(200).json(schedule);
+            return yield scheduleServices.addSchedule(res, (_a = req.user) === null || _a === void 0 ? void 0 : _a.id, doctorId, servicesId, price, dates);
         });
     }
     listSchedules(req, res, doctorId, servicesId) {
@@ -78,55 +73,28 @@ let scheduleControllers = class scheduleControllers {
             const parsedDoctorId = doctorId ? parseInt(doctorId, 10) : undefined;
             const parsedServicesId = servicesId ? parseInt(servicesId, 10) : undefined;
             const query = Object.assign(Object.assign({}, req.query), { doctorId: parsedDoctorId, servicesId: parsedServicesId });
-            const data = yield scheduleServices.listSchedules(query);
-            return res.status(200).json({
-                data: data.result,
-                pagination: data.pagination,
-                count: data.result.length,
-            });
+            return yield scheduleServices.listSchedules(res, query);
         });
     }
-    listDates(req, id, res) {
+    listDates(id, res) {
         return __awaiter(this, void 0, void 0, function* () {
-            let dates = yield scheduleServices.listOfDates(id);
-            return res.status(200).json(dates);
+            return yield scheduleServices.listOfDates(res, id);
         });
     }
     showScheduleDetails(req, id, res) {
         return __awaiter(this, void 0, void 0, function* () {
-            let schedule = yield scheduleServices.showDetailsOfSchedule(id);
-            if (!schedule) {
-                throw new ApiError_1.default("schedule not found", 404);
-            }
-            return res.status(200).json(schedule);
+            return yield scheduleServices.showDetailsOfSchedule(res, id);
         });
     }
     updateSchedule(id, req, res) {
         return __awaiter(this, void 0, void 0, function* () {
             const { doctorId, servicesId, price, dates } = req.body;
-            const schedule = yield scheduleServices.findScheduleById(id);
-            if (dates) {
-                yield scheduleServices.deleteDates(id);
-            }
-            if (!schedule) {
-                throw new ApiError_1.default("schedule not found", 404);
-            }
-            yield scheduleServices.updateSchedule(id, doctorId, servicesId, price, dates);
-            let updatedSchedule = yield scheduleServices.findScheduleById(id);
-            // Return the updated schedules
-            return res.status(200).json(updatedSchedule);
+            return yield scheduleServices.updateSchedule(res, id, doctorId, servicesId, price, dates);
         });
     }
     deleteSchedule(id, res) {
         return __awaiter(this, void 0, void 0, function* () {
-            // Check if the schedule exists
-            const schedule = yield scheduleServices.findScheduleById(id);
-            if (!schedule) {
-                throw new ApiError_1.default("schedule not found", 404);
-            }
-            yield scheduleServices.deleteDates(id);
-            yield scheduleServices.deleteSchedule(id);
-            return res.status(200).json({ message: "Schedule deleted successfully" });
+            return yield scheduleServices.deleteSchedule(res, id);
         });
     }
 };
@@ -154,11 +122,10 @@ __decorate([
 __decorate([
     (0, routing_controllers_1.Get)("/dates/:id"),
     (0, routing_controllers_1.UseBefore)(...(0, secureRoutesMiddleware_1.secureRouteWithPermissions)("listDates")),
-    __param(0, (0, routing_controllers_1.Req)()),
-    __param(1, (0, routing_controllers_1.Param)("id")),
-    __param(2, (0, routing_controllers_1.Res)()),
+    __param(0, (0, routing_controllers_1.Param)("id")),
+    __param(1, (0, routing_controllers_1.Res)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Object, Number, Object]),
+    __metadata("design:paramtypes", [Number, Object]),
     __metadata("design:returntype", Promise)
 ], scheduleControllers.prototype, "listDates", null);
 __decorate([
