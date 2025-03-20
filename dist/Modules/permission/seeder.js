@@ -61,66 +61,37 @@ exports.PermissionController = void 0;
 const routing_controllers_1 = require("routing-controllers");
 const joi_1 = __importDefault(require("joi"));
 const validation_1 = require("../../middlewares/validation");
-const ApiError_1 = __importDefault(require("../../utils/ApiError"));
 const permissionService = __importStar(require("./permission.service"));
 const secureRoutesMiddleware_1 = require("../../middlewares/secureRoutesMiddleware");
 let PermissionController = class PermissionController {
     seedPermissions(res) {
         return __awaiter(this, void 0, void 0, function* () {
-            yield permissionService.seeder();
-            return res.status(201).json({
-                status: "success",
-                message: "Permissions seeded successfully",
-            });
+            return yield permissionService.seeder(res);
         });
     }
     assignPermissionsToUser(req, id, body, res) {
         return __awaiter(this, void 0, void 0, function* () {
-            yield permissionService.assignPermissionToUser(id, body, req.user.id);
-            return res.status(200).json({
-                message: "Permissions assigned to user successfully",
-            });
+            return yield permissionService.assignPermissionToUser(res, id, body, req.user.id);
         });
     }
-    assignPermissionsToRole(req, id, body, res) {
+    assignPermissionsToRole(id, body, res) {
         return __awaiter(this, void 0, void 0, function* () {
-            yield permissionService.assignPermissionToRole(id, body);
-            return res.status(200).json({
-                message: "Permissions assigned to role successfully",
-            });
+            return yield permissionService.assignPermissionToRole(res, id, body);
         });
     }
     ListPermissions(req, res) {
         return __awaiter(this, void 0, void 0, function* () {
-            let permissions = yield permissionService.listPermissions();
-            return res.status(200).json({
-                data: permissions,
-                count: permissions.length,
-            });
+            return yield permissionService.listPermissions(res);
         });
     }
-    ListUserPermissions(req, userId, res) {
+    ListUserPermissions(userId, res) {
         return __awaiter(this, void 0, void 0, function* () {
-            if (!(yield permissionService.getUser(userId))) {
-                throw new ApiError_1.default("user not found", 404);
-            }
-            let permissions = yield permissionService.listPermissionOfUser(userId);
-            return res.status(200).json({
-                data: permissions,
-                count: permissions.length,
-            });
+            return yield permissionService.listPermissionOfUser(res, userId);
         });
     }
-    ListRolePermissions(req, roleId, res) {
+    ListRolePermissions(roleId, res) {
         return __awaiter(this, void 0, void 0, function* () {
-            if (!(yield permissionService.getRole(roleId))) {
-                throw new ApiError_1.default("role not found", 404);
-            }
-            let permissions = yield permissionService.listPermissionOfRole(roleId);
-            return res.status(200).json({
-                data: permissions,
-                count: permissions.length,
-            });
+            return yield permissionService.listPermissionOfRole(res, roleId);
         });
     }
 };
@@ -166,12 +137,11 @@ __decorate([
 __decorate([
     (0, routing_controllers_1.Post)("/assignToRole/:id"),
     (0, routing_controllers_1.UseBefore)(...(0, secureRoutesMiddleware_1.secureRouteWithPermissions)("assignPermissionsToRole"), (0, validation_1.createValidationMiddleware)(PermissionController.permissionSchema)),
-    __param(0, (0, routing_controllers_1.Req)()),
-    __param(1, (0, routing_controllers_1.Param)("id")),
-    __param(2, (0, routing_controllers_1.Body)()),
-    __param(3, (0, routing_controllers_1.Res)()),
+    __param(0, (0, routing_controllers_1.Param)("id")),
+    __param(1, (0, routing_controllers_1.Body)()),
+    __param(2, (0, routing_controllers_1.Res)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Request, Number, Object, Object]),
+    __metadata("design:paramtypes", [Number, Object, Object]),
     __metadata("design:returntype", Promise)
 ], PermissionController.prototype, "assignPermissionsToRole", null);
 __decorate([
@@ -186,21 +156,19 @@ __decorate([
 __decorate([
     (0, routing_controllers_1.Get)("/user/:id"),
     (0, routing_controllers_1.UseBefore)(...(0, secureRoutesMiddleware_1.secureRouteWithPermissions)("ListUserPermissions")),
-    __param(0, (0, routing_controllers_1.Req)()),
-    __param(1, (0, routing_controllers_1.Param)("id")),
-    __param(2, (0, routing_controllers_1.Res)()),
+    __param(0, (0, routing_controllers_1.Param)("id")),
+    __param(1, (0, routing_controllers_1.Res)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Request, Number, Object]),
+    __metadata("design:paramtypes", [Number, Object]),
     __metadata("design:returntype", Promise)
 ], PermissionController.prototype, "ListUserPermissions", null);
 __decorate([
     (0, routing_controllers_1.Get)("/role/:id"),
     (0, routing_controllers_1.UseBefore)(...(0, secureRoutesMiddleware_1.secureRouteWithPermissions)("ListRolePermissions")),
-    __param(0, (0, routing_controllers_1.Req)()),
-    __param(1, (0, routing_controllers_1.Param)("id")),
-    __param(2, (0, routing_controllers_1.Res)()),
+    __param(0, (0, routing_controllers_1.Param)("id")),
+    __param(1, (0, routing_controllers_1.Res)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Request, Number, Object]),
+    __metadata("design:paramtypes", [Number, Object]),
     __metadata("design:returntype", Promise)
 ], PermissionController.prototype, "ListRolePermissions", null);
 exports.PermissionController = PermissionController = __decorate([

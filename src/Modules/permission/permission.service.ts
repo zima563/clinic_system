@@ -1,8 +1,17 @@
+import { Response } from "express";
 import { prisma } from "../../prismaClient";
 import ApiError from "../../utils/ApiError";
 import { permissions } from "./permissions";
 
-export const seeder = async () => {
+export const getUser = async (userId: number) => {
+  return prisma.user.findUnique({ where: { id: userId } });
+};
+
+export const getRole = async (roleId: number) => {
+  return prisma.role.findUnique({ where: { id: roleId } });
+};
+
+export const seeder = async (res: Response) => {
   await prisma.$transaction(async (tx) => {
     await tx.rolePermission.deleteMany();
     await tx.userPermission.deleteMany();
@@ -16,9 +25,14 @@ export const seeder = async () => {
       });
     }
   });
+  return res.status(201).json({
+    status: "success",
+    message: "Permissions seeded successfully",
+  });
 };
 
 export const assignPermissionToUser = async (
+  res: Response,
   id: number,
   body: any,
   userId: number
@@ -57,9 +71,16 @@ export const assignPermissionToUser = async (
       data: userPermissions,
     });
   });
+  return res.status(200).json({
+    message: "Permissions assigned to user successfully",
+  });
 };
 
-export const assignPermissionToRole = async (id: number, body: any) => {
+export const assignPermissionToRole = async (
+  res: Response,
+  id: number,
+  body: any
+) => {
   const role = await prisma.role.findUnique({
     where: { id },
     include: {
@@ -91,34 +112,47 @@ export const assignPermissionToRole = async (id: number, body: any) => {
       data: rolePermissions,
     });
   });
+  return res.status(200).json({
+    message: "Permissions assigned to role successfully",
+  });
 };
 
-export const listPermissions = async () => {
-  return prisma.permission.findMany();
+export const listPermissions = async (res: Response) => {
+  let permissions = await prisma.permission.findMany();
+  return res.status(200).json({
+    data: permissions,
+    count: permissions.length,
+  });
 };
 
-export const listPermissionOfUser = async (userId: number) => {
-  return prisma.userPermission.findMany({
+export const listPermissionOfUser = async (res: Response, userId: number) => {
+  if (!(await getUser(userId))) {
+    throw new ApiError("user not found", 404);
+  }
+  const permissions = await prisma.userPermission.findMany({
     where: { userId },
     include: {
       permission: true,
     },
   });
+  return res.status(200).json({
+    data: permissions,
+    count: permissions.length,
+  });
 };
 
-export const listPermissionOfRole = async (roleId: number) => {
-  return prisma.rolePermission.findMany({
+export const listPermissionOfRole = async (res: Response, roleId: number) => {
+  if (!(await getRole(roleId))) {
+    throw new ApiError("role not found", 404);
+  }
+  let permissions = await prisma.rolePermission.findMany({
     where: { roleId },
     include: {
       permission: true,
     },
   });
-};
-
-export const getUser = async (userId: number) => {
-  return prisma.user.findUnique({ where: { id: userId } });
-};
-
-export const getRole = async (roleId: number) => {
-  return prisma.role.findUnique({ where: { id: roleId } });
+  return res.status(200).json({
+    data: permissions,
+    count: permissions.length,
+  });
 };

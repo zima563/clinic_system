@@ -12,11 +12,19 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getRole = exports.getUser = exports.listPermissionOfRole = exports.listPermissionOfUser = exports.listPermissions = exports.assignPermissionToRole = exports.assignPermissionToUser = exports.seeder = void 0;
+exports.listPermissionOfRole = exports.listPermissionOfUser = exports.listPermissions = exports.assignPermissionToRole = exports.assignPermissionToUser = exports.seeder = exports.getRole = exports.getUser = void 0;
 const prismaClient_1 = require("../../prismaClient");
 const ApiError_1 = __importDefault(require("../../utils/ApiError"));
 const permissions_1 = require("./permissions");
-const seeder = () => __awaiter(void 0, void 0, void 0, function* () {
+const getUser = (userId) => __awaiter(void 0, void 0, void 0, function* () {
+    return prismaClient_1.prisma.user.findUnique({ where: { id: userId } });
+});
+exports.getUser = getUser;
+const getRole = (roleId) => __awaiter(void 0, void 0, void 0, function* () {
+    return prismaClient_1.prisma.role.findUnique({ where: { id: roleId } });
+});
+exports.getRole = getRole;
+const seeder = (res) => __awaiter(void 0, void 0, void 0, function* () {
     yield prismaClient_1.prisma.$transaction((tx) => __awaiter(void 0, void 0, void 0, function* () {
         yield tx.rolePermission.deleteMany();
         yield tx.userPermission.deleteMany();
@@ -29,9 +37,13 @@ const seeder = () => __awaiter(void 0, void 0, void 0, function* () {
             });
         }
     }));
+    return res.status(201).json({
+        status: "success",
+        message: "Permissions seeded successfully",
+    });
 });
 exports.seeder = seeder;
-const assignPermissionToUser = (id, body, userId) => __awaiter(void 0, void 0, void 0, function* () {
+const assignPermissionToUser = (res, id, body, userId) => __awaiter(void 0, void 0, void 0, function* () {
     if (userId === id) {
         throw new ApiError_1.default("you not allow to change your Permissions ..!", 401);
     }
@@ -63,9 +75,12 @@ const assignPermissionToUser = (id, body, userId) => __awaiter(void 0, void 0, v
             data: userPermissions,
         });
     }));
+    return res.status(200).json({
+        message: "Permissions assigned to user successfully",
+    });
 });
 exports.assignPermissionToUser = assignPermissionToUser;
-const assignPermissionToRole = (id, body) => __awaiter(void 0, void 0, void 0, function* () {
+const assignPermissionToRole = (res, id, body) => __awaiter(void 0, void 0, void 0, function* () {
     const role = yield prismaClient_1.prisma.role.findUnique({
         where: { id },
         include: {
@@ -94,35 +109,48 @@ const assignPermissionToRole = (id, body) => __awaiter(void 0, void 0, void 0, f
             data: rolePermissions,
         });
     }));
+    return res.status(200).json({
+        message: "Permissions assigned to role successfully",
+    });
 });
 exports.assignPermissionToRole = assignPermissionToRole;
-const listPermissions = () => __awaiter(void 0, void 0, void 0, function* () {
-    return prismaClient_1.prisma.permission.findMany();
+const listPermissions = (res) => __awaiter(void 0, void 0, void 0, function* () {
+    let permissions = yield prismaClient_1.prisma.permission.findMany();
+    return res.status(200).json({
+        data: permissions,
+        count: permissions.length,
+    });
 });
 exports.listPermissions = listPermissions;
-const listPermissionOfUser = (userId) => __awaiter(void 0, void 0, void 0, function* () {
-    return prismaClient_1.prisma.userPermission.findMany({
+const listPermissionOfUser = (res, userId) => __awaiter(void 0, void 0, void 0, function* () {
+    if (!(yield (0, exports.getUser)(userId))) {
+        throw new ApiError_1.default("user not found", 404);
+    }
+    const permissions = yield prismaClient_1.prisma.userPermission.findMany({
         where: { userId },
         include: {
             permission: true,
         },
     });
+    return res.status(200).json({
+        data: permissions,
+        count: permissions.length,
+    });
 });
 exports.listPermissionOfUser = listPermissionOfUser;
-const listPermissionOfRole = (roleId) => __awaiter(void 0, void 0, void 0, function* () {
-    return prismaClient_1.prisma.rolePermission.findMany({
+const listPermissionOfRole = (res, roleId) => __awaiter(void 0, void 0, void 0, function* () {
+    if (!(yield (0, exports.getRole)(roleId))) {
+        throw new ApiError_1.default("role not found", 404);
+    }
+    let permissions = yield prismaClient_1.prisma.rolePermission.findMany({
         where: { roleId },
         include: {
             permission: true,
         },
     });
+    return res.status(200).json({
+        data: permissions,
+        count: permissions.length,
+    });
 });
 exports.listPermissionOfRole = listPermissionOfRole;
-const getUser = (userId) => __awaiter(void 0, void 0, void 0, function* () {
-    return prismaClient_1.prisma.user.findUnique({ where: { id: userId } });
-});
-exports.getUser = getUser;
-const getRole = (roleId) => __awaiter(void 0, void 0, void 0, function* () {
-    return prismaClient_1.prisma.role.findUnique({ where: { id: roleId } });
-});
-exports.getRole = getRole;
