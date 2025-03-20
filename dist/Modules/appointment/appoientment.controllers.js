@@ -53,82 +53,43 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.appointmentController = void 0;
 const routing_controllers_1 = require("routing-controllers");
 const validation_1 = require("../../middlewares/validation");
 const appointment_validation_1 = require("./appointment.validation");
-const ApiError_1 = __importDefault(require("../../utils/ApiError"));
 const secureRoutesMiddleware_1 = require("../../middlewares/secureRoutesMiddleware");
-const validators_1 = require("./validators");
 const appointmentService = __importStar(require("./appoientment.service"));
 let appointmentController = class appointmentController {
     addAppointment(req, body, res) {
         return __awaiter(this, void 0, void 0, function* () {
             var _a;
-            yield (0, validators_1.validatePatient)(body.patientId);
-            yield (0, validators_1.validateSchedule)(body.scheduleId);
-            let appointment = yield appointmentService.createAppointment(Object.assign(Object.assign({}, body), { dateTime: new Date(body.dateTime).toISOString(), createdBy: (_a = req.user) === null || _a === void 0 ? void 0 : _a.id }));
-            return res.status(200).json(appointment);
+            return yield appointmentService.createAppointment(Object.assign(Object.assign({}, body), { dateTime: new Date(body.dateTime).toISOString(), createdBy: (_a = req.user) === null || _a === void 0 ? void 0 : _a.id }), res);
         });
     }
     getPatientAppointment(req, res, patientId) {
         return __awaiter(this, void 0, void 0, function* () {
-            if (!patientId)
-                throw new ApiError_1.default("patientId must exist", 401);
-            let appointments = yield appointmentService.getAllAppoientmentPatient(patientId);
-            return res.status(200).json({
-                data: appointments,
-                count: appointments.length,
-            });
+            return yield appointmentService.getAllAppoientmentPatient(patientId, res);
         });
     }
     getAppointment(req, res) {
         return __awaiter(this, void 0, void 0, function* () {
-            let appointments = yield appointmentService.getAppointments(req.query);
-            appointments.result.map((app) => {
-                app.schedule.doctor.image =
-                    process.env.base_url + app.schedule.doctor.image;
-            });
-            return res.status(200).json({
-                data: appointments.result,
-                count: appointments.result.length,
-            });
+            return yield appointmentService.getAppointments(req.query, res);
         });
     }
     showAppointmnetDetail(req, id, res) {
         return __awaiter(this, void 0, void 0, function* () {
-            let appointment = yield appointmentService.showAppointmnetDetail(id);
-            if (!appointment) {
-                throw new ApiError_1.default("appointment not found", 404);
-            }
-            return res.status(200).json(appointment);
+            return yield appointmentService.showAppointmnetDetail(id, res);
         });
     }
     updateStatus(req, id, body, res) {
         return __awaiter(this, void 0, void 0, function* () {
-            yield (0, validators_1.validateAppoientment)(id);
-            yield appointmentService.updateStatus(id, body);
-            return res
-                .status(200)
-                .json({ message: `appointment updated successfully to ${body.status}` });
+            return yield appointmentService.updateStatus(id, body, res);
         });
     }
     updateAppointment(req, id, body, res) {
         return __awaiter(this, void 0, void 0, function* () {
-            yield (0, validators_1.validatePatient)(body.patientId);
-            yield (0, validators_1.validateSchedule)(body.scheduleId);
-            yield (0, validators_1.validateAppoientment)(id);
-            if (body.date) {
-                body.date = new Date(body.date);
-            }
-            yield appointmentService.updateAppointment(id, body);
-            return res
-                .status(200)
-                .json({ message: `appointment updated successfully` });
+            return yield appointmentService.updateAppointment(id, body, res);
         });
     }
 };

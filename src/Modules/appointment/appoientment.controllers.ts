@@ -18,13 +18,8 @@ import {
   updateAppointmentStatusSchema,
 } from "./appointment.validation";
 import { Request, Response } from "express";
-import ApiError from "../../utils/ApiError";
 import { secureRouteWithPermissions } from "../../middlewares/secureRoutesMiddleware";
-import {
-  validateAppoientment,
-  validatePatient,
-  validateSchedule,
-} from "./validators";
+
 import * as appointmentService from "./appoientment.service";
 
 @JsonController("/api/appointment")
@@ -39,14 +34,14 @@ export class appointmentController {
     @Body() body: any,
     @Res() res: Response
   ) {
-    await validatePatient(body.patientId);
-    await validateSchedule(body.scheduleId);
-    let appointment = await appointmentService.createAppointment({
-      ...body,
-      dateTime: new Date(body.dateTime).toISOString(),
-      createdBy: req.user?.id,
-    });
-    return res.status(200).json(appointment);
+    return await appointmentService.createAppointment(
+      {
+        ...body,
+        dateTime: new Date(body.dateTime).toISOString(),
+        createdBy: req.user?.id,
+      },
+      res
+    );
   }
 
   @Get("/patient")
@@ -54,31 +49,15 @@ export class appointmentController {
   async getPatientAppointment(
     @Req() req: Request,
     @Res() res: Response,
-    @QueryParam("patientId") patientId?: number
+    @QueryParam("patientId") patientId: number
   ) {
-    if (!patientId) throw new ApiError("patientId must exist", 401);
-
-    let appointments = await appointmentService.getAllAppoientmentPatient(
-      patientId
-    );
-    return res.status(200).json({
-      data: appointments,
-      count: appointments.length,
-    });
+    return await appointmentService.getAllAppoientmentPatient(patientId, res);
   }
 
   @Get("/")
   @UseBefore(...secureRouteWithPermissions("getAppointment"))
   async getAppointment(@Req() req: Request, @Res() res: Response) {
-    let appointments = await appointmentService.getAppointments(req.query);
-    appointments.result.map((app: any) => {
-      app.schedule.doctor.image =
-        process.env.base_url + app.schedule.doctor.image;
-    });
-    return res.status(200).json({
-      data: appointments.result,
-      count: appointments.result.length,
-    });
+    return await appointmentService.getAppointments(req.query, res);
   }
 
   @Get("/:id")
@@ -88,11 +67,7 @@ export class appointmentController {
     @Param("id") id: number,
     @Res() res: Response
   ) {
-    let appointment = await appointmentService.showAppointmnetDetail(id);
-    if (!appointment) {
-      throw new ApiError("appointment not found", 404);
-    }
-    return res.status(200).json(appointment);
+    return await appointmentService.showAppointmnetDetail(id, res);
   }
 
   @Patch("/:id")
@@ -106,11 +81,7 @@ export class appointmentController {
     @Body() body: any,
     @Res() res: Response
   ) {
-    await validateAppoientment(id);
-    await appointmentService.updateStatus(id, body);
-    return res
-      .status(200)
-      .json({ message: `appointment updated successfully to ${body.status}` });
+    return await appointmentService.updateStatus(id, body, res);
   }
 
   @Put("/:id")
@@ -124,15 +95,6 @@ export class appointmentController {
     @Body() body: any,
     @Res() res: Response
   ) {
-    await validatePatient(body.patientId);
-    await validateSchedule(body.scheduleId);
-    await validateAppoientment(id);
-    if (body.date) {
-      body.date = new Date(body.date);
-    }
-    await appointmentService.updateAppointment(id, body);
-    return res
-      .status(200)
-      .json({ message: `appointment updated successfully` });
+    return await appointmentService.updateAppointment(id, body, res);
   }
 }
