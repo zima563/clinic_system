@@ -12,7 +12,6 @@ import { Response } from "express";
 
 import Joi from "joi";
 import { createValidationMiddleware } from "../../middlewares/validation";
-import ApiError from "../../utils/ApiError";
 import * as permissionService from "./permission.service";
 import { secureRouteWithPermissions } from "../../middlewares/secureRoutesMiddleware";
 
