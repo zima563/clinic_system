@@ -53,67 +53,38 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.patientController = void 0;
 const routing_controllers_1 = require("routing-controllers");
 const validation_1 = require("../../middlewares/validation");
 const patient_validation_1 = require("./patient.validation");
-const ApiError_1 = __importDefault(require("../../utils/ApiError"));
-const validators_1 = require("./validators");
 const secureRoutesMiddleware_1 = require("../../middlewares/secureRoutesMiddleware");
 const patientService = __importStar(require("./patient.service"));
 let patientController = class patientController {
     addPatient(req, body, res) {
         return __awaiter(this, void 0, void 0, function* () {
             var _a;
-            yield (0, validators_1.patientExist)(body.phone, 0);
-            const birthdate = new Date(body.birthdate);
-            body.birthdate = birthdate.toISOString();
-            let patient = yield patientService.createPatient(Object.assign({ createdBy: (_a = req.user) === null || _a === void 0 ? void 0 : _a.id }, body));
-            return res.status(200).json(patient);
+            return yield patientService.createPatient(res, Object.assign({ createdBy: (_a = req.user) === null || _a === void 0 ? void 0 : _a.id }, body));
         });
     }
-    updatePatient(req, id, body, res) {
+    updatePatient(id, body, res) {
         return __awaiter(this, void 0, void 0, function* () {
-            yield (0, validators_1.patientExist)(body.phone, id);
-            if (body.birthdate) {
-                const birthdate = new Date(body.birthdate);
-                body.birthdate = birthdate.toISOString(); // Ensure it’s in ISO 8601 format
-            }
-            yield patientService.updatePatient(id, body);
-            return res.status(200).json({ message: "patient updated successfully" });
+            yield patientService.updatePatient(res, id, body);
         });
     }
-    listPatient(req, query, body, res) {
+    listPatient(query, body, res) {
         return __awaiter(this, void 0, void 0, function* () {
-            const data = yield patientService.listPatient(query);
-            // Return the result along with pagination information
-            return res.status(200).json({
-                data: data.result,
-                pagination: data.pagination, // Use the pagination here
-                count: data.result.length,
-            });
+            return yield patientService.listPatient(res, query);
         });
     }
-    getPatient(req, id, res) {
+    getPatient(id, res) {
         return __awaiter(this, void 0, void 0, function* () {
-            let patient = yield patientService.getPatient(id);
-            if (!patient) {
-                throw new ApiError_1.default("patient not found", 404);
-            }
-            return res.status(200).json(patient);
+            return yield patientService.getPatient(res, id);
         });
     }
-    deletePatient(req, id, res) {
+    deletePatient(id, res) {
         return __awaiter(this, void 0, void 0, function* () {
-            let patient = yield patientService.getPatient(id);
-            if (!patient)
-                throw new ApiError_1.default("patient not found", 404);
-            yield patientService.deletePatient(id);
-            return res.status(200).json({ message: "patient deleted successfully!" });
+            return yield patientService.deletePatient(res, id);
         });
     }
 };
@@ -131,42 +102,38 @@ __decorate([
 __decorate([
     (0, routing_controllers_1.Put)("/:id"),
     (0, routing_controllers_1.UseBefore)(...(0, secureRoutesMiddleware_1.secureRouteWithPermissions)("updatePatient"), (0, validation_1.createValidationMiddleware)(patient_validation_1.UpdatePatientSchema)),
-    __param(0, (0, routing_controllers_1.Req)()),
-    __param(1, (0, routing_controllers_1.Param)("id")),
-    __param(2, (0, routing_controllers_1.Body)()),
-    __param(3, (0, routing_controllers_1.Res)()),
+    __param(0, (0, routing_controllers_1.Param)("id")),
+    __param(1, (0, routing_controllers_1.Body)()),
+    __param(2, (0, routing_controllers_1.Res)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Object, Number, Object, Object]),
+    __metadata("design:paramtypes", [Number, Object, Object]),
     __metadata("design:returntype", Promise)
 ], patientController.prototype, "updatePatient", null);
 __decorate([
     (0, routing_controllers_1.Get)("/"),
     (0, routing_controllers_1.UseBefore)(...(0, secureRoutesMiddleware_1.secureRouteWithPermissions)("listPatient")),
-    __param(0, (0, routing_controllers_1.Req)()),
-    __param(1, (0, routing_controllers_1.QueryParams)()),
-    __param(2, (0, routing_controllers_1.Body)()),
-    __param(3, (0, routing_controllers_1.Res)()),
+    __param(0, (0, routing_controllers_1.QueryParams)()),
+    __param(1, (0, routing_controllers_1.Body)()),
+    __param(2, (0, routing_controllers_1.Res)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Object, Object, Object, Object]),
+    __metadata("design:paramtypes", [Object, Object, Object]),
     __metadata("design:returntype", Promise)
 ], patientController.prototype, "listPatient", null);
 __decorate([
     (0, routing_controllers_1.Get)("/:id"),
     (0, routing_controllers_1.UseBefore)(...(0, secureRoutesMiddleware_1.secureRouteWithPermissions)("getPatient")),
-    __param(0, (0, routing_controllers_1.Req)()),
-    __param(1, (0, routing_controllers_1.Param)("id")),
-    __param(2, (0, routing_controllers_1.Res)()),
+    __param(0, (0, routing_controllers_1.Param)("id")),
+    __param(1, (0, routing_controllers_1.Res)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Object, Number, Object]),
+    __metadata("design:paramtypes", [Number, Object]),
     __metadata("design:returntype", Promise)
 ], patientController.prototype, "getPatient", null);
 __decorate([
     (0, routing_controllers_1.Delete)("/:id"),
-    __param(0, (0, routing_controllers_1.Req)()),
-    __param(1, (0, routing_controllers_1.Param)("id")),
-    __param(2, (0, routing_controllers_1.Res)()),
+    __param(0, (0, routing_controllers_1.Param)("id")),
+    __param(1, (0, routing_controllers_1.Res)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Object, Number, Object]),
+    __metadata("design:paramtypes", [Number, Object]),
     __metadata("design:returntype", Promise)
 ], patientController.prototype, "deletePatient", null);
 exports.patientController = patientController = __decorate([

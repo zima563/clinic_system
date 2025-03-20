@@ -14,8 +14,6 @@ import {
 import { createValidationMiddleware } from "../../middlewares/validation";
 import { addPatientSchema, UpdatePatientSchema } from "./patient.validation";
 import { Request, Response } from "express";
-import ApiError from "../../utils/ApiError";
-import { patientExist } from "./validators";
 import { secureRouteWithPermissions } from "../../middlewares/secureRoutesMiddleware";
 import * as patientService from "./patient.service";
 
@@ -31,15 +29,10 @@ export class patientController {
     @Body() body: any,
     @Res() res: Response
   ) {
-    await patientExist(body.phone, 0);
-    const birthdate = new Date(body.birthdate);
-    body.birthdate = birthdate.toISOString();
-
-    let patient = await patientService.createPatient({
+    return await patientService.createPatient(res, {
       createdBy: req.user?.id,
       ...body,
     });
-    return res.status(200).json(patient);
   }
 
   @Put("/:id")
@@ -48,61 +41,31 @@ export class patientController {
     createValidationMiddleware(UpdatePatientSchema)
   )
   async updatePatient(
-    @Req() req: Request,
     @Param("id") id: number,
     @Body() body: any,
     @Res() res: Response
   ) {
-    await patientExist(body.phone, id);
-    if (body.birthdate) {
-      const birthdate = new Date(body.birthdate);
-      body.birthdate = birthdate.toISOString(); // Ensure it’s in ISO 8601 format
-    }
-    await patientService.updatePatient(id, body);
-    return res.status(200).json({ message: "patient updated successfully" });
+    await patientService.updatePatient(res, id, body);
   }
 
   @Get("/")
   @UseBefore(...secureRouteWithPermissions("listPatient"))
   async listPatient(
-    @Req() req: any,
     @QueryParams() query: any,
     @Body() body: any,
     @Res() res: any
   ) {
-    const data = await patientService.listPatient(query);
-    // Return the result along with pagination information
-    return res.status(200).json({
-      data: data.result,
-      pagination: data.pagination, // Use the pagination here
-      count: data.result.length,
-    });
+    return await patientService.listPatient(res, query);
   }
 
   @Get("/:id")
   @UseBefore(...secureRouteWithPermissions("getPatient"))
-  async getPatient(
-    @Req() req: Request,
-    @Param("id") id: number,
-    @Res() res: Response
-  ) {
-    let patient = await patientService.getPatient(id);
-    if (!patient) {
-      throw new ApiError("patient not found", 404);
-    }
-    return res.status(200).json(patient);
+  async getPatient(@Param("id") id: number, @Res() res: Response) {
+    return await patientService.getPatient(res, id);
   }
 
   @Delete("/:id")
-  async deletePatient(
-    @Req() req: Request,
-    @Param("id") id: number,
-    @Res() res: Response
-  ) {
-    let patient = await patientService.getPatient(id);
-
-    if (!patient) throw new ApiError("patient not found", 404);
-    await patientService.deletePatient(id);
-    return res.status(200).json({ message: "patient deleted successfully!" });
+  async deletePatient(@Param("id") id: number, @Res() res: Response) {
+    return await patientService.deletePatient(res, id);
   }
 }
