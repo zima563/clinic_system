@@ -61,64 +61,33 @@ exports.serviceController = void 0;
 const routing_controllers_1 = require("routing-controllers");
 const validation_1 = require("../../middlewares/validation");
 const services_validation_1 = require("./services.validation");
-const client_1 = require("@prisma/client");
-const ApiError_1 = __importDefault(require("../../utils/ApiError"));
 const uploadFile_1 = __importDefault(require("../../middlewares/uploadFile"));
 const secureRoutesMiddleware_1 = require("../../middlewares/secureRoutesMiddleware");
 const services = __importStar(require("./services.service"));
-const prisma = new client_1.PrismaClient();
 let serviceController = class serviceController {
     addService(req, body, res) {
         return __awaiter(this, void 0, void 0, function* () {
-            var _a;
-            if (yield prisma.service.findFirst({ where: { title: body.title } })) {
-                throw new ApiError_1.default("service title already exists", 409);
-            }
-            body.icon = (_a = (yield services.uploadFile(req, res, "service"))) !== null && _a !== void 0 ? _a : "";
-            let service = yield services.createService(Object.assign(Object.assign({}, body), { createdBy: req.user.id }));
-            return res.status(200).json(service);
+            return yield services.createService(req, res, Object.assign(Object.assign({}, body), { createdBy: req.user.id }));
         });
     }
     allServices(query, res) {
         return __awaiter(this, void 0, void 0, function* () {
-            const baseFilter = {
-                isDeleted: false,
-            };
-            let data = yield services.listServices(baseFilter, query);
-            return res.status(200).json({
-                data: data.result,
-                pagination: data.pagination,
-            });
+            return yield services.listServices(res, query);
         });
     }
     updateService(req, id, body, res) {
         return __awaiter(this, void 0, void 0, function* () {
-            let service = yield services.getServiceById(id);
-            yield services.CheckTitleExist(id, body.title);
-            let fileName = yield services.uploadFileForUpdate(req, service);
-            yield services.updateService(id, body, service, fileName);
-            return res.status(200).json({ message: "service updated successfully" });
+            return yield services.updateService(req, res, id, body);
         });
     }
     getService(id, res) {
         return __awaiter(this, void 0, void 0, function* () {
-            let service = yield services.getServiceById(id);
-            if (!service) {
-                throw new ApiError_1.default("service not found", 404);
-            }
-            service.img = process.env.base_url + service.img;
-            return res.status(200).json(service);
+            return yield services.getService(res, id);
         });
     }
     deactiveService(id, res) {
         return __awaiter(this, void 0, void 0, function* () {
-            let service = yield services.getServiceById(id);
-            if (!service) {
-                throw new ApiError_1.default("service not found", 404);
-            }
-            yield services.deactiveService(id, service);
-            let updatedService = yield services.getServiceById(id);
-            return res.status(200).json(updatedService);
+            return yield services.deactiveService(res, id);
         });
     }
 };

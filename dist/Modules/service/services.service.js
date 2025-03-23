@@ -12,7 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.deactiveService = exports.updateService = exports.uploadFileForUpdate = exports.CheckTitleExist = exports.getServiceById = exports.listServices = exports.createService = exports.uploadFile = void 0;
+exports.deactiveService = exports.updateService = exports.uploadFileForUpdate = exports.CheckTitleExist = exports.getService = exports.getServiceById = exports.listServices = exports.createService = exports.uploadFile = exports.validateService = void 0;
 const fs_1 = __importDefault(require("fs"));
 const path_1 = __importDefault(require("path"));
 const sharp_1 = __importDefault(require("sharp"));
@@ -20,6 +20,14 @@ const uuid_1 = require("uuid");
 const prismaClient_1 = require("../../prismaClient");
 const ApiFeatures_1 = __importDefault(require("../../utils/ApiFeatures"));
 const ApiError_1 = __importDefault(require("../../utils/ApiError"));
+const validateService = (id) => __awaiter(void 0, void 0, void 0, function* () {
+    let service = yield (0, exports.getServiceById)(id);
+    if (!service) {
+        throw new ApiError_1.default("service not found", 404);
+    }
+    return service;
+});
+exports.validateService = validateService;
 const uploadFile = (req, res, modelName) => __awaiter(void 0, void 0, void 0, function* () {
     if (!req.file && modelName === "doctor") {
         return "avatar.png";
@@ -41,9 +49,13 @@ const uploadFile = (req, res, modelName) => __awaiter(void 0, void 0, void 0, fu
     return iconFilename;
 });
 exports.uploadFile = uploadFile;
-const createService = (body) => __awaiter(void 0, void 0, void 0, function* () {
-    console.log(body);
-    return yield prismaClient_1.prisma.service.create({
+const createService = (req, res, body) => __awaiter(void 0, void 0, void 0, function* () {
+    var _a;
+    if (yield prismaClient_1.prisma.service.findFirst({ where: { title: body.title } })) {
+        throw new ApiError_1.default("service title already exists", 409);
+    }
+    body.icon = (_a = (yield (0, exports.uploadFile)(req, res, "service"))) !== null && _a !== void 0 ? _a : "";
+    const service = yield prismaClient_1.prisma.service.create({
         data: {
             title: body.title,
             desc: body.desc,
@@ -51,9 +63,13 @@ const createService = (body) => __awaiter(void 0, void 0, void 0, function* () {
             createdBy: body.createdBy,
         },
     });
+    return res.status(200).json(service);
 });
 exports.createService = createService;
-const listServices = (baseFilter, query) => __awaiter(void 0, void 0, void 0, function* () {
+const listServices = (res, query) => __awaiter(void 0, void 0, void 0, function* () {
+    const baseFilter = {
+        isDeleted: false,
+    };
     const apiFeatures = new ApiFeatures_1.default(prismaClient_1.prisma.service, query);
     yield apiFeatures.filter(baseFilter).sort().limitedFields().search("service");
     yield apiFeatures.paginateWithCount();
@@ -61,10 +77,10 @@ const listServices = (baseFilter, query) => __awaiter(void 0, void 0, void 0, fu
     result.map((doc) => {
         doc.img = process.env.base_url + doc.img;
     });
-    return {
-        result,
-        pagination,
-    };
+    return res.status(200).json({
+        data: result,
+        pagination: pagination,
+    });
 });
 exports.listServices = listServices;
 const getServiceById = (id) => __awaiter(void 0, void 0, void 0, function* () {
@@ -80,6 +96,15 @@ const getServiceById = (id) => __awaiter(void 0, void 0, void 0, function* () {
     });
 });
 exports.getServiceById = getServiceById;
+const getService = (res, id) => __awaiter(void 0, void 0, void 0, function* () {
+    let service = yield (0, exports.getServiceById)(id);
+    if (!service) {
+        throw new ApiError_1.default("service not found", 404);
+    }
+    service.img = process.env.base_url + service.img;
+    return res.status(200).json(service);
+});
+exports.getService = getService;
 const CheckTitleExist = (id, title) => __awaiter(void 0, void 0, void 0, function* () {
     if (yield prismaClient_1.prisma.service.findFirst({
         where: { title, NOT: { id } },
@@ -113,8 +138,11 @@ const uploadFileForUpdate = (req, service) => __awaiter(void 0, void 0, void 0, 
     return fileName;
 });
 exports.uploadFileForUpdate = uploadFileForUpdate;
-const updateService = (id, body, service, fileName) => __awaiter(void 0, void 0, void 0, function* () {
-    prismaClient_1.prisma.service.update({
+const updateService = (req, res, id, body) => __awaiter(void 0, void 0, void 0, function* () {
+    let service = yield (0, exports.validateService)(id);
+    yield (0, exports.CheckTitleExist)(id, body.title);
+    let fileName = yield (0, exports.uploadFileForUpdate)(req, service);
+    yield prismaClient_1.prisma.service.update({
         where: { id },
         data: {
             title: body.title || (service === null || service === void 0 ? void 0 : service.title),
@@ -122,9 +150,11 @@ const updateService = (id, body, service, fileName) => __awaiter(void 0, void 0,
             img: fileName || (service === null || service === void 0 ? void 0 : service.img),
         },
     });
+    return res.status(200).json({ message: "service updated successfully" });
 });
 exports.updateService = updateService;
-const deactiveService = (id, service) => __awaiter(void 0, void 0, void 0, function* () {
+const deactiveService = (res, id) => __awaiter(void 0, void 0, void 0, function* () {
+    let service = yield (0, exports.validateService)(id);
     if (service.status) {
         yield prismaClient_1.prisma.service.update({
             where: { id },
@@ -137,5 +167,7 @@ const deactiveService = (id, service) => __awaiter(void 0, void 0, void 0, funct
             data: { status: true },
         });
     }
+    let updatedService = yield (0, exports.getServiceById)(id);
+    return res.status(200).json(updatedService);
 });
 exports.deactiveService = deactiveService;

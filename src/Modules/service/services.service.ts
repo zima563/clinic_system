@@ -5,6 +5,15 @@ import { v4 as uuidv4 } from "uuid";
 import { prisma } from "../../prismaClient";
 import ApiFeatures from "../../utils/ApiFeatures";
 import ApiError from "../../utils/ApiError";
+import { Request, Response } from "express";
+
+export const validateService = async (id: number) => {
+  let service = await getServiceById(id);
+  if (!service) {
+    throw new ApiError("service not found", 404);
+  }
+  return service;
+};
 
 export const uploadFile = async (req: any, res: any, modelName: string) => {
   if (!req.file && modelName === "doctor") {
@@ -32,10 +41,14 @@ export const uploadFile = async (req: any, res: any, modelName: string) => {
   return iconFilename;
 };
 
-export const createService = async (body: any) => {
-  console.log(body);
+export const createService = async (req: Request, res: Response, body: any) => {
+  if (await prisma.service.findFirst({ where: { title: body.title } })) {
+    throw new ApiError("service title already exists", 409);
+  }
 
-  return await prisma.service.create({
+  body.icon = (await uploadFile(req, res, "service")) ?? "";
+
+  const service = await prisma.service.create({
     data: {
       title: body.title,
       desc: body.desc,
@@ -43,9 +56,13 @@ export const createService = async (body: any) => {
       createdBy: body.createdBy,
     },
   });
+  return res.status(200).json(service);
 };
 
-export const listServices = async (baseFilter: any, query: any) => {
+export const listServices = async (res: Response, query: any) => {
+  const baseFilter = {
+    isDeleted: false,
+  };
   const apiFeatures = new ApiFeatures(prisma.service, query);
 
   await apiFeatures.filter(baseFilter).sort().limitedFields().search("service");
@@ -57,10 +74,10 @@ export const listServices = async (baseFilter: any, query: any) => {
     doc.img = process.env.base_url + doc.img;
   });
 
-  return {
-    result,
-    pagination,
-  };
+  return res.status(200).json({
+    data: result,
+    pagination: pagination,
+  });
 };
 
 export const getServiceById = async (id: number) => {
@@ -74,6 +91,15 @@ export const getServiceById = async (id: number) => {
       },
     },
   });
+};
+
+export const getService = async (res: Response, id: number) => {
+  let service = await getServiceById(id);
+  if (!service) {
+    throw new ApiError("service not found", 404);
+  }
+  service.img = process.env.base_url + service.img;
+  return res.status(200).json(service);
 };
 
 export const CheckTitleExist = async (id: number, title: string) => {
@@ -117,12 +143,15 @@ export const uploadFileForUpdate = async (req: any, service: any) => {
 };
 
 export const updateService = async (
+  req: Request,
+  res: Response,
   id: number,
-  body: any,
-  service: any,
-  fileName: any
+  body: any
 ) => {
-  prisma.service.update({
+  let service = await validateService(id);
+  await CheckTitleExist(id, body.title);
+  let fileName = await uploadFileForUpdate(req, service);
+  await prisma.service.update({
     where: { id },
     data: {
       title: body.title || service?.title,
@@ -130,9 +159,11 @@ export const updateService = async (
       img: fileName || service?.img,
     },
   });
+  return res.status(200).json({ message: "service updated successfully" });
 };
 
-export const deactiveService = async (id: number, service: any) => {
+export const deactiveService = async (res: Response, id: number) => {
+  let service = await validateService(id);
   if (service.status) {
     await prisma.service.update({
       where: { id },
@@ -144,4 +175,6 @@ export const deactiveService = async (id: number, service: any) => {
       data: { status: true },
     });
   }
+  let updatedService = await getServiceById(id);
+  return res.status(200).json(updatedService);
 };

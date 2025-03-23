@@ -17,12 +17,10 @@ import {
   addServiceValidation,
   updateServiceValidation,
 } from "./services.validation";
-import { PrismaClient } from "@prisma/client";
 import ApiError from "../../utils/ApiError";
 import createUploadMiddleware from "../../middlewares/uploadFile";
 import { secureRouteWithPermissions } from "../../middlewares/secureRoutesMiddleware";
 import * as services from "./services.service";
-const prisma = new PrismaClient();
 
 @JsonController("/api/services")
 export class serviceController {
@@ -33,31 +31,16 @@ export class serviceController {
     createValidationMiddleware(addServiceValidation)
   )
   async addService(@Req() req: any, @Body() body: any, @Res() res: Response) {
-    if (await prisma.service.findFirst({ where: { title: body.title } })) {
-      throw new ApiError("service title already exists", 409);
-    }
-
-    body.icon = (await services.uploadFile(req, res, "service")) ?? "";
-
-    let service = await services.createService({
+    return await services.createService(req, res, {
       ...body,
       createdBy: req.user.id,
     });
-    return res.status(200).json(service);
   }
 
   @Get("/all")
   @UseBefore(...secureRouteWithPermissions("allServices"))
   async allServices(@QueryParams() query: any, @Res() res: Response) {
-    const baseFilter = {
-      isDeleted: false,
-    };
-    let data = await services.listServices(baseFilter, query);
-
-    return res.status(200).json({
-      data: data.result,
-      pagination: data.pagination,
-    });
+    return await services.listServices(res, query);
   }
 
   @Put("/:id")
@@ -72,12 +55,7 @@ export class serviceController {
     @Body() body: any,
     @Res() res: Response
   ) {
-    let service = await services.getServiceById(id);
-
-    await services.CheckTitleExist(id, body.title);
-    let fileName = await services.uploadFileForUpdate(req, service);
-    await services.updateService(id, body, service, fileName);
-    return res.status(200).json({ message: "service updated successfully" });
+    return await services.updateService(req, res, id, body);
   }
 
   @Get("/:id")
@@ -86,23 +64,12 @@ export class serviceController {
     createValidationMiddleware(updateServiceValidation)
   )
   async getService(@Param("id") id: number, @Res() res: Response) {
-    let service = await services.getServiceById(id);
-    if (!service) {
-      throw new ApiError("service not found", 404);
-    }
-    service.img = process.env.base_url + service.img;
-    return res.status(200).json(service);
+    return await services.getService(res, id);
   }
 
   @Patch("/:id")
   @UseBefore(...secureRouteWithPermissions("deactiveService"))
   async deactiveService(@Param("id") id: number, @Res() res: Response) {
-    let service = await services.getServiceById(id);
-    if (!service) {
-      throw new ApiError("service not found", 404);
-    }
-    await services.deactiveService(id, service);
-    let updatedService = await services.getServiceById(id);
-    return res.status(200).json(updatedService);
+    return await services.deactiveService(res, id);
   }
 }
