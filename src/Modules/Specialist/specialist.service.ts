@@ -5,6 +5,7 @@ import { v4 as uuidv4 } from "uuid";
 import { prisma } from "../../prismaClient";
 import ApiError from "../../utils/ApiError";
 import ApiFeatures from "../../utils/ApiFeatures";
+import { Response } from "express";
 
 export const uploadFileForSpecialty = async (req: any, res: any) => {
   if (!req.file) {
@@ -29,17 +30,21 @@ export const uploadFileForSpecialty = async (req: any, res: any) => {
 };
 
 export const createSpecialty = async (
-  icon: any,
+  req: Request,
+  res: Response,
   body: any,
   createdBy: number
 ) => {
-  return await prisma.specialty.create({
+  await checkSpecialtyExist(body);
+  let iconFilename = await uploadFileForSpecialty(req, res);
+  let specialty = await prisma.specialty.create({
     data: {
       title: body.title,
-      icon: icon ?? "",
+      icon: iconFilename ?? "",
       createdBy,
     },
   });
+  return res.status(200).json(specialty);
 };
 
 export const checkSpecialtyExist = async (body: any) => {
@@ -59,6 +64,15 @@ export const findSpecialtyById = async (id: number) => {
       },
     },
   });
+};
+
+export const getSpecialty = async (res: Response, id: number) => {
+  let specialty = await findSpecialtyById(id);
+  if (!specialty) {
+    throw new ApiError("specialty not found");
+  }
+  specialty.icon = process.env.base_url + specialty.icon;
+  return res.status(200).json(specialty);
 };
 
 export const uploadFileForSpecialtyUpdate = async (
@@ -95,17 +109,29 @@ export const uploadFileForSpecialtyUpdate = async (
   return fileName;
 };
 
-export const updateSpecialty = async (id: number, fileName: any, body: any) => {
-  return await prisma.specialty.update({
+export const updateSpecialty = async (
+  req: Request,
+  res: Response,
+  id: number,
+  body: any
+) => {
+  let specialty = await findSpecialtyById(id);
+  if (!specialty) {
+    throw new ApiError("specialty not found", 404);
+  }
+  await checkSpecialtyExist(body);
+  let fileName = await uploadFileForSpecialtyUpdate(req, specialty);
+  await prisma.specialty.update({
     where: { id },
     data: {
       icon: fileName ?? "",
       ...body,
     },
   });
+  return res.status(200).json({ message: "specialty updated successfully" });
 };
 
-export const getListSpecial = async (query: any) => {
+export const getListSpecial = async (res: Response, query: any) => {
   const apiFeatures = new ApiFeatures(prisma.specialty, query);
 
   await apiFeatures.filter().sort().limitedFields().search("specialty");
@@ -120,13 +146,18 @@ export const getListSpecial = async (query: any) => {
     doc.icon = process.env.base_url + doc.icon;
   });
 
-  return {
-    result,
-    pagination,
-  };
+  return res.status(200).json({
+    data: result,
+    pagination: pagination,
+    count: result.length,
+  });
 };
 
-export const deleteSpecialty = async (id: number, specialty: any) => {
+export const deleteSpecialty = async (res: Response, id: number) => {
+  let specialty = await findSpecialtyById(id);
+  if (!specialty) {
+    throw new ApiError("specialty not found");
+  }
   await prisma.doctor.deleteMany({ where: { specialtyId: id } });
   if (specialty.icon) {
     const oldImagePath = path.join("uploads", specialty.icon);
@@ -137,4 +168,5 @@ export const deleteSpecialty = async (id: number, specialty: any) => {
   await prisma.specialty.delete({
     where: { id },
   });
+  return res.status(200).json({ message: "specialty deleted succesfully" });
 };

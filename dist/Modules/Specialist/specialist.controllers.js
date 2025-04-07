@@ -62,59 +62,32 @@ const routing_controllers_1 = require("routing-controllers");
 const uploadFile_1 = __importDefault(require("../../middlewares/uploadFile")); // Correct import
 const validation_1 = require("../../middlewares/validation"); // Correct import
 const specialist_validation_1 = require("./specialist.validation");
-const ApiError_1 = __importDefault(require("../../utils/ApiError"));
 const secureRoutesMiddleware_1 = require("../../middlewares/secureRoutesMiddleware");
 const specialtyServices = __importStar(require("./specialist.service"));
 let specialtyControllers = class specialtyControllers {
     createSpecialty(req, body, res) {
         return __awaiter(this, void 0, void 0, function* () {
-            yield specialtyServices.checkSpecialtyExist(body);
-            let iconFilename = yield specialtyServices.uploadFileForSpecialty(req, res);
-            // Save the specialty to the database
-            const specialty = yield specialtyServices.createSpecialty(iconFilename, body, req.user.id);
-            return res.status(200).json(specialty);
+            return yield specialtyServices.createSpecialty(req, res, body, req.user.id);
         });
     }
     updateSpecialty(req, body, id, res) {
         return __awaiter(this, void 0, void 0, function* () {
-            let specialty = yield specialtyServices.findSpecialtyById(id);
-            if (!specialty) {
-                throw new ApiError_1.default("specialty not found", 404);
-            }
-            yield specialtyServices.checkSpecialtyExist(body);
-            let fileName = yield specialtyServices.uploadFileForSpecialtyUpdate(req, specialty);
-            yield specialtyServices.updateSpecialty(id, fileName, body);
-            return res.status(200).json({ message: "specialty updated successfully" });
+            return yield specialtyServices.updateSpecialty(req, res, id, body);
         });
     }
     allSpecialtys(query, res) {
         return __awaiter(this, void 0, void 0, function* () {
-            let data = yield specialtyServices.getListSpecial(query);
-            return res.status(200).json({
-                data: data.result,
-                pagination: data.pagination,
-                count: data.result.length,
-            });
+            return yield specialtyServices.getListSpecial(res, query);
         });
     }
     getOneSpecialty(id, res) {
         return __awaiter(this, void 0, void 0, function* () {
-            let specialty = yield specialtyServices.findSpecialtyById(id);
-            if (!specialty) {
-                throw new ApiError_1.default("specialty not found");
-            }
-            specialty.icon = process.env.base_url + specialty.icon;
-            return res.status(200).json(specialty);
+            return yield specialtyServices.getSpecialty(res, id);
         });
     }
     DeleteSpecialty(id, res) {
         return __awaiter(this, void 0, void 0, function* () {
-            let specialty = yield specialtyServices.findSpecialtyById(id);
-            if (!specialty) {
-                throw new ApiError_1.default("specialty not found");
-            }
-            yield specialtyServices.deleteSpecialty(id, specialty);
-            return res.status(200).json({ message: "specialty deleted succesfully" });
+            yield specialtyServices.deleteSpecialty(res, id);
         });
     }
 };

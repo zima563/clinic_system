@@ -1,5 +1,3 @@
-import bcrypt from "bcrypt";
-import jwt from "jsonwebtoken";
 import { NextFunction, Response } from "express";
 import {
   Body,
@@ -9,7 +7,6 @@ import {
   Patch,
   Post,
   Put,
-  QueryParam,
   QueryParams,
   Req,
   Res,
@@ -24,7 +21,6 @@ import {
   UpdateUserProfile,
 } from "./user.validations";
 import { CheckEmailMiddleware } from "../../middlewares/emailExists";
-import ApiError from "../../utils/ApiError";
 import { CheckPhoneMiddleware } from "../../middlewares/phoneExist";
 import { secureRouteWithPermissions } from "../../middlewares/secureRoutesMiddleware";
 import * as userServices from "./user.service";
@@ -40,35 +36,25 @@ export class userControllers {
     CheckPhoneMiddleware
   )
   async addUser(@Body() body: any, @Res() res: Response) {
-    body.password = bcrypt.hashSync(body.password, 10);
-    let user = await userServices.addUser(body);
-    return res.status(201).json(user);
+    return await userServices.addUser(res, body);
   }
 
   @Get("/all")
   @UseBefore(...secureRouteWithPermissions("allUsers"))
   async allUsers(@QueryParams() query: any, @Res() res: Response) {
-    let data = await userServices.getAllUser(query);
-    return res.status(200).json({
-      data: data.result,
-      pagination: data.pagination,
-    });
+    return await userServices.getAllUser(res, query);
   }
 
   @Get("/profile")
   @UseBefore(...secureRouteWithPermissions("profile"))
   async getUserProfile(@Req() req: any, @Res() res: Response) {
-    let user = await userServices.getUserById(req.user.id);
-    if (!user) throw new ApiError("user not found", 404);
-    return res.status(201).json(user);
+    return await userServices.profile(req, res);
   }
 
   @Get("/:id")
   @UseBefore(...secureRouteWithPermissions("getOneUser"))
   async getOneUser(@Param("id") id: number, @Res() res: Response) {
-    let user = await userServices.getUserById(id);
-    if (!user) throw new ApiError("user not found", 404);
-    return res.status(201).json(user);
+    return await userServices.getUser(res, id);
   }
 
   @Put("/updateProfile")
@@ -81,11 +67,7 @@ export class userControllers {
     @Body() body: any,
     @Res() res: Response
   ) {
-    let user = await userServices.getUserById(req.user.id);
-    if (!user) throw new ApiError("user not found", 404);
-    await userServices.updateUser(req.user.id, body);
-
-    return res.status(201).json({ message: "user updated successfully", user });
+    await userServices.updateUser(res, req.user.id, body);
   }
 
   @Patch("/ChangePassword")
@@ -98,11 +80,7 @@ export class userControllers {
     @Body() body: any,
     @Res() res: Response
   ) {
-    let user = await userServices.getUserById(req.user.id);
-    if (!user) throw new ApiError("user not found", 404);
-    await userServices.changePassword(req.user.id, body, user);
-
-    return res.status(201).json({ message: "user updated successfully", user });
+    return await userServices.changePassword(res, req.user.id, body);
   }
 
   @Put("/:id")
@@ -115,11 +93,7 @@ export class userControllers {
     @Body() body: any,
     @Res() res: Response
   ) {
-    let user = await userServices.getUserById(id);
-    if (!user) throw new ApiError("user not found", 404);
-    await userServices.updateUser(id, body);
-
-    return res.status(201).json({ message: "user updated successfully", user });
+    return await userServices.updateUser(res, id, body);
   }
 
   @Patch("/:id")
@@ -130,14 +104,7 @@ export class userControllers {
     @Body() body: any,
     @Res() res: Response
   ) {
-    let user = await userServices.getUserById(id);
-    if (!user) throw new ApiError("user not found", 404);
-    await userServices.deactiveUser(id, user, req?.user.id);
-    let updatedUser = await userServices.getUserById(id);
-
-    return res
-      .status(201)
-      .json({ message: "user Deactivated successfully", updatedUser });
+    return await userServices.deactiveUser(res, id, req?.user.id);
   }
 
   @Patch("/soft/:id")
@@ -148,49 +115,12 @@ export class userControllers {
     @Body() body: any,
     @Res() res: Response
   ) {
-    let user = await userServices.getUserById(id);
-    if (!user) throw new ApiError("user not found", 404);
-    await userServices.deleteUser(id, user, req.user.id);
-    let updatedUser = await userServices.getUserById(id);
-
-    return res
-      .status(201)
-      .json({ message: "user Deleted successfully", updatedUser });
+    return await userServices.deleteUser(res, id, req.user.id);
   }
 
   @Post("/login")
   @UseBefore(createValidationMiddleware(loginValidation))
   async login(@Body() body: any, @Res() res: Response) {
-    let user = await userServices.findUser(body);
-
-    if (!(user && bcrypt.compareSync(body.password, user.password))) {
-      throw new ApiError("email or password incorrect");
-    } else {
-      // Generate JWT token
-      let token = jwt.sign({ userId: user.id }, process.env.JWT_KEY!);
-
-      // Fetch user's direct permissions
-      const userPermissions = await userServices.getUserPermissions(user);
-
-      // Fetch user's role
-      const userRole = await userServices.getUserRole(user);
-
-      // Fetch permissions related to the user's role
-      const rolePermissions = userRole
-        ? await userServices.getPermissionRelatedWithRole(userRole)
-        : [];
-
-      // Extract unique permissions for the response
-      const allPermissions = new Set([
-        ...userPermissions.map((up) => up.permission.name),
-        ...rolePermissions.map((rp) => rp.permission.name),
-      ]);
-
-      // Return response with token and combined unique permissions
-      return res.status(200).json({
-        token,
-        permissions: Array.from(allPermissions),
-      });
-    }
+    return await userServices.login(res, body);
   }
 }

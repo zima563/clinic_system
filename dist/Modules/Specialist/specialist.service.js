@@ -12,7 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.deleteSpecialty = exports.getListSpecial = exports.updateSpecialty = exports.uploadFileForSpecialtyUpdate = exports.findSpecialtyById = exports.checkSpecialtyExist = exports.createSpecialty = exports.uploadFileForSpecialty = void 0;
+exports.deleteSpecialty = exports.getListSpecial = exports.updateSpecialty = exports.uploadFileForSpecialtyUpdate = exports.getSpecialty = exports.findSpecialtyById = exports.checkSpecialtyExist = exports.createSpecialty = exports.uploadFileForSpecialty = void 0;
 const sharp_1 = __importDefault(require("sharp"));
 const path_1 = __importDefault(require("path"));
 const fs_1 = __importDefault(require("fs"));
@@ -36,14 +36,17 @@ const uploadFileForSpecialty = (req, res) => __awaiter(void 0, void 0, void 0, f
     return iconFilename;
 });
 exports.uploadFileForSpecialty = uploadFileForSpecialty;
-const createSpecialty = (icon, body, createdBy) => __awaiter(void 0, void 0, void 0, function* () {
-    return yield prismaClient_1.prisma.specialty.create({
+const createSpecialty = (req, res, body, createdBy) => __awaiter(void 0, void 0, void 0, function* () {
+    yield (0, exports.checkSpecialtyExist)(body);
+    let iconFilename = yield (0, exports.uploadFileForSpecialty)(req, res);
+    let specialty = yield prismaClient_1.prisma.specialty.create({
         data: {
             title: body.title,
-            icon: icon !== null && icon !== void 0 ? icon : "",
+            icon: iconFilename !== null && iconFilename !== void 0 ? iconFilename : "",
             createdBy,
         },
     });
+    return res.status(200).json(specialty);
 });
 exports.createSpecialty = createSpecialty;
 const checkSpecialtyExist = (body) => __awaiter(void 0, void 0, void 0, function* () {
@@ -65,6 +68,15 @@ const findSpecialtyById = (id) => __awaiter(void 0, void 0, void 0, function* ()
     });
 });
 exports.findSpecialtyById = findSpecialtyById;
+const getSpecialty = (res, id) => __awaiter(void 0, void 0, void 0, function* () {
+    let specialty = yield (0, exports.findSpecialtyById)(id);
+    if (!specialty) {
+        throw new ApiError_1.default("specialty not found");
+    }
+    specialty.icon = process.env.base_url + specialty.icon;
+    return res.status(200).json(specialty);
+});
+exports.getSpecialty = getSpecialty;
 const uploadFileForSpecialtyUpdate = (req, specialty) => __awaiter(void 0, void 0, void 0, function* () {
     let fileName = specialty.icon;
     // Process image if provided
@@ -91,14 +103,21 @@ const uploadFileForSpecialtyUpdate = (req, specialty) => __awaiter(void 0, void 
     return fileName;
 });
 exports.uploadFileForSpecialtyUpdate = uploadFileForSpecialtyUpdate;
-const updateSpecialty = (id, fileName, body) => __awaiter(void 0, void 0, void 0, function* () {
-    return yield prismaClient_1.prisma.specialty.update({
+const updateSpecialty = (req, res, id, body) => __awaiter(void 0, void 0, void 0, function* () {
+    let specialty = yield (0, exports.findSpecialtyById)(id);
+    if (!specialty) {
+        throw new ApiError_1.default("specialty not found", 404);
+    }
+    yield (0, exports.checkSpecialtyExist)(body);
+    let fileName = yield (0, exports.uploadFileForSpecialtyUpdate)(req, specialty);
+    yield prismaClient_1.prisma.specialty.update({
         where: { id },
         data: Object.assign({ icon: fileName !== null && fileName !== void 0 ? fileName : "" }, body),
     });
+    return res.status(200).json({ message: "specialty updated successfully" });
 });
 exports.updateSpecialty = updateSpecialty;
-const getListSpecial = (query) => __awaiter(void 0, void 0, void 0, function* () {
+const getListSpecial = (res, query) => __awaiter(void 0, void 0, void 0, function* () {
     const apiFeatures = new ApiFeatures_1.default(prismaClient_1.prisma.specialty, query);
     yield apiFeatures.filter().sort().limitedFields().search("specialty");
     // Get the count of documents and apply pagination
@@ -108,13 +127,18 @@ const getListSpecial = (query) => __awaiter(void 0, void 0, void 0, function* ()
     result.map((doc) => {
         doc.icon = process.env.base_url + doc.icon;
     });
-    return {
-        result,
-        pagination,
-    };
+    return res.status(200).json({
+        data: result,
+        pagination: pagination,
+        count: result.length,
+    });
 });
 exports.getListSpecial = getListSpecial;
-const deleteSpecialty = (id, specialty) => __awaiter(void 0, void 0, void 0, function* () {
+const deleteSpecialty = (res, id) => __awaiter(void 0, void 0, void 0, function* () {
+    let specialty = yield (0, exports.findSpecialtyById)(id);
+    if (!specialty) {
+        throw new ApiError_1.default("specialty not found");
+    }
     yield prismaClient_1.prisma.doctor.deleteMany({ where: { specialtyId: id } });
     if (specialty.icon) {
         const oldImagePath = path_1.default.join("uploads", specialty.icon);
@@ -125,5 +149,6 @@ const deleteSpecialty = (id, specialty) => __awaiter(void 0, void 0, void 0, fun
     yield prismaClient_1.prisma.specialty.delete({
         where: { id },
     });
+    return res.status(200).json({ message: "specialty deleted succesfully" });
 });
 exports.deleteSpecialty = deleteSpecialty;

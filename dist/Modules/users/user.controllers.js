@@ -53,18 +53,12 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.userControllers = void 0;
-const bcrypt_1 = __importDefault(require("bcrypt"));
-const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const routing_controllers_1 = require("routing-controllers");
 const validation_1 = require("../../middlewares/validation");
 const user_validations_1 = require("./user.validations");
 const emailExists_1 = require("../../middlewares/emailExists");
-const ApiError_1 = __importDefault(require("../../utils/ApiError"));
 const phoneExist_1 = require("../../middlewares/phoneExist");
 const secureRoutesMiddleware_1 = require("../../middlewares/secureRoutesMiddleware");
 const userServices = __importStar(require("./user.service"));
@@ -72,115 +66,52 @@ let userControllers = class userControllers {
     // Apply CheckEmailMiddleware only for the POST route (user creation)
     addUser(body, res) {
         return __awaiter(this, void 0, void 0, function* () {
-            body.password = bcrypt_1.default.hashSync(body.password, 10);
-            let user = yield userServices.addUser(body);
-            return res.status(201).json(user);
+            return yield userServices.addUser(res, body);
         });
     }
     allUsers(query, res) {
         return __awaiter(this, void 0, void 0, function* () {
-            let data = yield userServices.getAllUser(query);
-            return res.status(200).json({
-                data: data.result,
-                pagination: data.pagination,
-            });
+            return yield userServices.getAllUser(res, query);
         });
     }
     getUserProfile(req, res) {
         return __awaiter(this, void 0, void 0, function* () {
-            let user = yield userServices.getUserById(req.user.id);
-            if (!user)
-                throw new ApiError_1.default("user not found", 404);
-            return res.status(201).json(user);
+            return yield userServices.profile(req, res);
         });
     }
     getOneUser(id, res) {
         return __awaiter(this, void 0, void 0, function* () {
-            let user = yield userServices.getUserById(id);
-            if (!user)
-                throw new ApiError_1.default("user not found", 404);
-            return res.status(201).json(user);
+            return yield userServices.getUser(res, id);
         });
     }
     updateUserProfile(req, body, res) {
         return __awaiter(this, void 0, void 0, function* () {
-            let user = yield userServices.getUserById(req.user.id);
-            if (!user)
-                throw new ApiError_1.default("user not found", 404);
-            yield userServices.updateUser(req.user.id, body);
-            return res.status(201).json({ message: "user updated successfully", user });
+            yield userServices.updateUser(res, req.user.id, body);
         });
     }
     ChangePassword(req, body, res) {
         return __awaiter(this, void 0, void 0, function* () {
-            let user = yield userServices.getUserById(req.user.id);
-            if (!user)
-                throw new ApiError_1.default("user not found", 404);
-            yield userServices.changePassword(req.user.id, body, user);
-            return res.status(201).json({ message: "user updated successfully", user });
+            return yield userServices.changePassword(res, req.user.id, body);
         });
     }
     updateUser(id, body, res) {
         return __awaiter(this, void 0, void 0, function* () {
-            let user = yield userServices.getUserById(id);
-            if (!user)
-                throw new ApiError_1.default("user not found", 404);
-            yield userServices.updateUser(id, body);
-            return res.status(201).json({ message: "user updated successfully", user });
+            return yield userServices.updateUser(res, id, body);
         });
     }
     deactiveUser(req, id, body, res) {
         return __awaiter(this, void 0, void 0, function* () {
-            let user = yield userServices.getUserById(id);
-            if (!user)
-                throw new ApiError_1.default("user not found", 404);
-            yield userServices.deactiveUser(id, user, req === null || req === void 0 ? void 0 : req.user.id);
-            let updatedUser = yield userServices.getUserById(id);
-            return res
-                .status(201)
-                .json({ message: "user Deactivated successfully", updatedUser });
+            return yield userServices.deactiveUser(res, id, req === null || req === void 0 ? void 0 : req.user.id);
         });
     }
     DeleteUser(req, id, body, res) {
         return __awaiter(this, void 0, void 0, function* () {
-            let user = yield userServices.getUserById(id);
-            if (!user)
-                throw new ApiError_1.default("user not found", 404);
-            yield userServices.deleteUser(id, user, req.user.id);
-            let updatedUser = yield userServices.getUserById(id);
-            return res
-                .status(201)
-                .json({ message: "user Deleted successfully", updatedUser });
+            return yield userServices.deleteUser(res, id, req.user.id);
         });
     }
     login(body, res) {
         return __awaiter(this, void 0, void 0, function* () {
-            let user = yield userServices.findUser(body);
-            if (!(user && bcrypt_1.default.compareSync(body.password, user.password))) {
-                throw new ApiError_1.default("email or password incorrect");
-            }
-            else {
-                // Generate JWT token
-                let token = jsonwebtoken_1.default.sign({ userId: user.id }, process.env.JWT_KEY);
-                // Fetch user's direct permissions
-                const userPermissions = yield userServices.getUserPermissions(user);
-                // Fetch user's role
-                const userRole = yield userServices.getUserRole(user);
-                // Fetch permissions related to the user's role
-                const rolePermissions = userRole
-                    ? yield userServices.getPermissionRelatedWithRole(userRole)
-                    : [];
-                // Extract unique permissions for the response
-                const allPermissions = new Set([
-                    ...userPermissions.map((up) => up.permission.name),
-                    ...rolePermissions.map((rp) => rp.permission.name),
-                ]);
-                // Return response with token and combined unique permissions
-                return res.status(200).json({
-                    token,
-                    permissions: Array.from(allPermissions),
-                });
-            }
+            return yield userServices.login(res, body);
         });
     }
 };
