@@ -58,9 +58,6 @@ clinic_system/
 ├── README.md
 └── package.json
 
-yaml
-Copy
-Edit
 
 ---
 
@@ -78,6 +75,9 @@ User (id, email, password, role)
 ├── Patient (userId, ...patientData)
 └── Doctor (userId, ...doctorData)
 Appointment (id, patientId, doctorId, date, status, ...)
+
+![ERD](./erd.svg)
+
 
 ---
 
