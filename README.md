@@ -79,31 +79,7 @@ User (id, email, password, role)
 └── Doctor (userId, ...doctorData)
 Appointment (id, patientId, doctorId, date, status, ...)
 
-yaml
-Copy
-Edit
-
 ---
-
-## 📦 Installation & Running
-
-```bash
-# 1. Clone the repository
-git clone https://github.com/zima563/clinic_system.git
-
-# 2. Install dependencies
-npm install
-
-# 3. Configure environment variables
-cp .env.example .env
-# Edit .env with your DB credentials
-
-# 4. Run Prisma generate & migrations
-npx prisma generate
-npx prisma migrate dev
-
-# 5. Start the development server
-npm run start:dev
 
 # Optional: Run with Docker
 docker-compose up --build
@@ -148,5 +124,29 @@ Pull requests are welcome! For major changes, please open an issue first to disc
 
 📬 Contact
 For questions or support, please open an issue or contact the repo owner.
+
+
+## 📦 Installation & Running
+
+```bash
+# 1. Clone the repository
+git clone https://github.com/zima563/clinic_system.git
+
+# 2. Install dependencies
+npm install
+
+# 3. Configure environment variables
+cp .env.example .env
+# Edit .env with your DB credentials
+
+# 4. Run Prisma generate & migrations
+npx prisma generate
+npx prisma migrate dev
+
+# 5. Start the development server
+npm run start:dev
+
+
+
 
 
