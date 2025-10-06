@@ -10,7 +10,7 @@ import express from "express";
 import { createValidationMiddleware } from "./src/middlewares/validation";
 import { userControllers } from "./src/modules/users/user.controllers";
 import { roleControllers } from "./src/modules/roles/role.controllers";
-import { serviceController } from "./src/modules/service/service.controlers";
+import { ServiceController } from "./src/modules/service/service.controllers";
 import { specialtyControllers } from "./src/modules/Specialist/specialist.controllers";
 import { invoiceControllers } from "./src/modules/invoice/invoice.controllers";
 import { doctorControllers } from "./src/modules/doctor/doctor.controllers";
@@ -41,7 +41,7 @@ useExpressServer(app, {
   controllers: [
     userControllers,
     roleControllers,
-    serviceController,
+    ServiceController,
     specialtyControllers,
     invoiceControllers,
     doctorControllers,

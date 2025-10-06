@@ -23,7 +23,7 @@ import { secureRouteWithPermissions } from "../../middlewares/secureRoutesMiddle
 import * as services from "./services.service";
 
 @JsonController("/api/services")
-export class serviceController {
+export class ServiceController {
   @Post("/")
   @UseBefore(
     ...secureRouteWithPermissions("addService"),
