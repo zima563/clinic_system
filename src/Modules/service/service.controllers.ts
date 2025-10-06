@@ -13,14 +13,12 @@ import {
 } from "routing-controllers";
 import { Response } from "express";
 import { createValidationMiddleware } from "../../middlewares/validation";
-import {
-  addServiceValidation,
-  updateServiceValidation,
-} from "./services.validation";
+
 import ApiError from "../../utils/ApiError";
 import createUploadMiddleware from "../../middlewares/uploadFile";
 import { secureRouteWithPermissions } from "../../middlewares/secureRoutesMiddleware";
 import * as services from "./services.service";
+import { addServiceValidation, updateServiceValidation } from "./services.validation";
 
 @JsonController("/api/services")
 export class ServiceController {

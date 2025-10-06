@@ -41,10 +41,10 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.ServiceController = void 0;
 const routing_controllers_1 = require("routing-controllers");
 const validation_1 = require("../../middlewares/validation");
-const services_validation_1 = require("./services.validation");
 const uploadFile_1 = __importDefault(require("../../middlewares/uploadFile"));
 const secureRoutesMiddleware_1 = require("../../middlewares/secureRoutesMiddleware");
 const services = __importStar(require("./services.service"));
+const services_validation_1 = require("./services.validation");
 let ServiceController = class ServiceController {
     async addService(req, body, res) {
         return await services.createService(req, res, {
