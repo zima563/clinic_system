@@ -7,11 +7,10 @@ import dotenv from "dotenv";
 import { ErrorHandler } from "./src/middlewares/ErrorHandler";
 dotenv.config();
 import express from "express";
-import { createValidationMiddleware } from "./src/middlewares/validation";
 import { userControllers } from "./src/modules/users/user.controllers";
 import { roleControllers } from "./src/modules/roles/role.controllers";
 import { ServiceController } from "./src/modules/service/service.controllers";
-import { specialtyControllers } from "./src/modules/Specialist/specialist.controllers";
+
 import { invoiceControllers } from "./src/modules/invoice/invoice.controllers";
 import { doctorControllers } from "./src/modules/doctor/doctor.controllers";
 import { patientController } from "./src/modules/patient/patient.controllers";
@@ -20,7 +19,10 @@ import { appointmentController } from "./src/modules/appointment/appoientment.co
 import { visitController } from "./src/modules/visit/visit.controllers";
 import { PermissionController } from "./src/modules/permission/seeder";
 import { searchControllers } from "./src/modules/searchEngine/searchEngine";
+
 import expressListRoutes from "express-list-routes";
+import { createValidationMiddleware } from "./src/middlewares/validation";
+import { specialtyControllers } from "./src/modules/specialist/specialist.controllers";
 
 const app = express();
 
