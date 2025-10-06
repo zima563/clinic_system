@@ -12,11 +12,11 @@
     "allowSyntheticDefaultImports": true,
     "resolveJsonModule": true,
     "moduleResolution": "node",
-    "typeRoots": ["./node_modules/@types", "./types"],
+    "typeRoots": ["./node_modules/@types", "src/types"],
     "types": ["node", "express"],
     "sourceMap": true,
     "forceConsistentCasingInFileNames": true
   },
-  "include": ["src/**/*", "server.ts", "types/**/*"],
+  "include": ["src/**/*", "server.ts", "src/types"],
   "exclude": ["node_modules", "dist"]
 }
