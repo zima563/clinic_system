@@ -56,6 +56,7 @@ useExpressServer(app, {
 });
 
 console.log("✅ Controllers loaded successfully");
+console.log(app._router.stack.map((r:any) => r.route && r.route.path).filter(Boolean));
 
 
 app.use("/", express.static("uploads"));
