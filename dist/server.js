@@ -14,7 +14,7 @@ const express_1 = __importDefault(require("express"));
 const validation_1 = require("./src/middlewares/validation");
 const user_controllers_1 = require("./src/modules/users/user.controllers");
 const role_controllers_1 = require("./src/modules/roles/role.controllers");
-const service_controlers_1 = require("./src/modules/service/service.controlers");
+const service_controllers_1 = require("./src/modules/service/service.controllers");
 const specialist_controllers_1 = require("./src/modules/Specialist/specialist.controllers");
 const invoice_controllers_1 = require("./src/modules/invoice/invoice.controllers");
 const doctor_controllers_1 = require("./src/modules/doctor/doctor.controllers");
@@ -24,6 +24,7 @@ const appoientment_controllers_1 = require("./src/modules/appointment/appoientme
 const visit_controllers_1 = require("./src/modules/visit/visit.controllers");
 const seeder_1 = require("./src/modules/permission/seeder");
 const searchEngine_1 = require("./src/modules/searchEngine/searchEngine");
+const express_list_routes_1 = __importDefault(require("express-list-routes"));
 const app = (0, express_1.default)();
 // Add body parser middleware
 app.use(express_1.default.json({ limit: "50mb" })); // Parses application/json request bodies
@@ -39,7 +40,7 @@ app.use((0, cors_1.default)({
     controllers: [
         user_controllers_1.userControllers,
         role_controllers_1.roleControllers,
-        service_controlers_1.serviceController,
+        service_controllers_1.ServiceController,
         specialist_controllers_1.specialtyControllers,
         invoice_controllers_1.invoiceControllers,
         doctor_controllers_1.doctorControllers,
@@ -53,8 +54,10 @@ app.use((0, cors_1.default)({
     middlewares: [validation_1.createValidationMiddleware, ErrorHandler_1.ErrorHandler],
     defaultErrorHandler: false,
 });
+console.log("✅ Controllers loaded successfully");
+(0, express_list_routes_1.default)(app, { prefix: "" });
 app.use("/", express_1.default.static("uploads"));
-const port = process.env.PORT || 3000;
+const port = process.env.PORT || 4000;
 app.listen(port, () => console.log(`App listening on port ${port}!`));
 exports.default = app;
 //# sourceMappingURL=server.js.map

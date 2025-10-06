@@ -1,0 +1,98 @@
+"use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.loginValidation = exports.UpdateUserProfile = exports.changePassword = exports.UpdateUser = exports.addUser = void 0;
+const joi_1 = __importDefault(require("joi"));
+exports.addUser = joi_1.default.object({
+    userName: joi_1.default.string().min(3).max(50).required().messages({
+        "string.min": "Username must be at least 3 characters long.",
+        "string.max": "Username must be at most 50 characters long.",
+        "any.required": "Username is required.",
+    }),
+    email: joi_1.default.string()
+        .pattern(/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/)
+        .required()
+        .messages({
+        "string.pattern.base": "Invalid email format.",
+        "any.required": "Email is required.",
+    }),
+    password: joi_1.default.string()
+        .pattern(/^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[@$!%*?&])[A-Za-z0-9@$!%*?&]{8,}$/)
+        .required()
+        .messages({
+        "string.pattern.base": "Password must be at least 8 characters long, including uppercase, lowercase, a number, and a special character.",
+        "any.required": "Password is required.",
+    }),
+    phone: joi_1.default.string()
+        .pattern(/^\+?[0-9]{10,15}$/)
+        .required()
+        .messages({
+        "string.pattern.base": "Invalid email format.",
+        "any.required": "Phone is required. ",
+    }),
+});
+exports.UpdateUser = joi_1.default.object({
+    id: joi_1.default.string().required(),
+    userName: joi_1.default.string().min(3).max(50).messages({
+        "string.min": "Username must be at least 3 characters long.",
+        "string.max": "Username must be at most 50 characters long.",
+    }),
+    email: joi_1.default.string()
+        .pattern(/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/)
+        .messages({
+        "string.pattern.base": "Invalid email format.",
+    }),
+    phone: joi_1.default.string()
+        .pattern(/^\+?[0-9]{10,15}$/)
+        .messages({
+        "string.pattern.base": "Invalid email format.",
+    }),
+});
+exports.changePassword = joi_1.default.object({
+    currentPassword: joi_1.default.string().required().messages({
+        "any.required": "Current password is required.",
+    }),
+    password: joi_1.default.string()
+        .pattern(/^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[@$!%*?&])[A-Za-z0-9@$!%*?&]{8,}$/)
+        .required()
+        .messages({
+        "string.pattern.base": "Password must be at least 8 characters long, including uppercase, lowercase, a number, and a special character.",
+        "any.required": "New password is required.",
+    }),
+    repassword: joi_1.default.string().valid(joi_1.default.ref("password")).required().messages({
+        "any.only": "Re-entered password must match the new password.",
+        "any.required": "Repassword is required.",
+    }),
+});
+exports.UpdateUserProfile = joi_1.default.object({
+    userName: joi_1.default.string().min(3).max(50).messages({
+        "string.min": "Username must be at least 3 characters long.",
+        "string.max": "Username must be at most 50 characters long.",
+    }),
+    email: joi_1.default.string()
+        .pattern(/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/)
+        .messages({
+        "string.pattern.base": "Invalid email format.",
+    }),
+    phone: joi_1.default.string()
+        .pattern(/^\+?[0-9]{10,15}$/)
+        .messages({
+        "string.pattern.base": "Invalid email format.",
+    }),
+});
+exports.loginValidation = joi_1.default.object({
+    emailOrPhone: joi_1.default.string().required().messages({
+        "string.empty": "Email or Phone is required",
+        "any.required": "Email or Phone is required",
+    }),
+    password: joi_1.default.string()
+        .pattern(/^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[@$!%*?&])[A-Za-z0-9@$!%*?&]{8,}$/)
+        .required()
+        .messages({
+        "string.pattern.base": "Password must be at least 8 characters long, including uppercase, lowercase, a number, and a special character.",
+        "any.required": "Password is required.",
+    }),
+});
+//# sourceMappingURL=user.validations.js.map
