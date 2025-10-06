@@ -20,6 +20,7 @@ import { appointmentController } from "./src/modules/appointment/appoientment.co
 import { visitController } from "./src/modules/visit/visit.controllers";
 import { PermissionController } from "./src/modules/permission/seeder";
 import { searchControllers } from "./src/modules/searchEngine/searchEngine";
+import expressListRoutes from "express-list-routes";
 
 const app = express();
 
@@ -56,8 +57,7 @@ useExpressServer(app, {
 });
 
 console.log("✅ Controllers loaded successfully");
-console.log(app._router.stack.map((r:any) => r.route && r.route.path).filter(Boolean));
-
+expressListRoutes(app, { prefix: "" });
 
 app.use("/", express.static("uploads"));
 const port = process.env.PORT || 4000;
