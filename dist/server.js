@@ -11,11 +11,9 @@ const dotenv_1 = __importDefault(require("dotenv"));
 const ErrorHandler_1 = require("./src/middlewares/ErrorHandler");
 dotenv_1.default.config();
 const express_1 = __importDefault(require("express"));
-const validation_1 = require("./src/middlewares/validation");
 const user_controllers_1 = require("./src/modules/users/user.controllers");
 const role_controllers_1 = require("./src/modules/roles/role.controllers");
 const service_controllers_1 = require("./src/modules/service/service.controllers");
-const specialist_controllers_1 = require("./src/modules/Specialist/specialist.controllers");
 const invoice_controllers_1 = require("./src/modules/invoice/invoice.controllers");
 const doctor_controllers_1 = require("./src/modules/doctor/doctor.controllers");
 const patient_controllers_1 = require("./src/modules/patient/patient.controllers");
@@ -25,6 +23,8 @@ const visit_controllers_1 = require("./src/modules/visit/visit.controllers");
 const seeder_1 = require("./src/modules/permission/seeder");
 const searchEngine_1 = require("./src/modules/searchEngine/searchEngine");
 const express_list_routes_1 = __importDefault(require("express-list-routes"));
+const validation_1 = require("./src/middlewares/validation");
+const specialist_controllers_1 = require("./src/modules/specialist/specialist.controllers");
 const app = (0, express_1.default)();
 // Add body parser middleware
 app.use(express_1.default.json({ limit: "50mb" })); // Parses application/json request bodies
