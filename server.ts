@@ -59,8 +59,8 @@ console.log("✅ Controllers loaded successfully");
 
 
 app.use("/", express.static("uploads"));
+const port = process.env.PORT || 4000;
 
-const port = process.env.PORT || 3000;
 app.listen(port, () => console.log(`App listening on port ${port}!`));
 
 export default app;
