@@ -60,7 +60,8 @@ export default function Login () {
       navigate('/') // Redirect to Dashboard
     } catch (error) {
       console.error('Login failed:', error)
-      toast.error('Login failed')
+      const errorMsg = error.response?.data?.message || 'Login failed'
+      toast.error(errorMsg)
     }
   }
 

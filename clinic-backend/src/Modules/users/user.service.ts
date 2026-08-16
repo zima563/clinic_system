@@ -168,7 +168,7 @@ export const login = async (res: Response, body: any) => {
   let user = await findUser(body);
 
   if (!(user && bcrypt.compareSync(body.password, user.password))) {
-    throw new ApiError("email or password incorrect");
+    throw new ApiError("email or password incorrect", 400);
   } else {
     // Generate JWT token
     let token = jwt.sign({ userId: user.id }, process.env.JWT_KEY!);
