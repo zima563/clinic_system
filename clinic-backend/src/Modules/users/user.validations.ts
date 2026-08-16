@@ -92,14 +92,8 @@ export const loginValidation = Joi.object({
     "string.empty": "Email or Phone is required",
     "any.required": "Email or Phone is required",
   }),
-  password: Joi.string()
-    .pattern(
-      /^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[@$!%*?&])[A-Za-z0-9@$!%*?&]{8,}$/
-    )
-    .required()
-    .messages({
-      "string.pattern.base":
-        "Password must be at least 8 characters long, including uppercase, lowercase, a number, and a special character.",
-      "any.required": "Password is required.",
-    }),
+  password: Joi.string().required().messages({
+    "string.empty": "Password is required.",
+    "any.required": "Password is required.",
+  }),
 });

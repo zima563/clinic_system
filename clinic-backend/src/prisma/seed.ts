@@ -91,7 +91,7 @@ async function main() {
 
   // 2. Create Default Admin User
   console.log('👤 Seeding default Admin user...');
-  const hashedPassword = bcrypt.hashSync('admin123', 10);
+  const hashedPassword = bcrypt.hashSync('Admin@123', 10);
   
   const adminUser = await prisma.user.upsert({
     where: { email: 'admin@clinic.com' },
@@ -109,7 +109,7 @@ async function main() {
       isDeleted: false,
     },
   });
-  console.log(`✅ Admin user ready (ID: ${adminUser.id}, Email: admin@clinic.com, Password: admin123).`);
+  console.log(`✅ Admin user ready (ID: ${adminUser.id}, Email: admin@clinic.com, Password: Admin@123).`);
 
   // 3. Create Default Admin Role
   console.log('🛡️ Seeding Admin role...');
