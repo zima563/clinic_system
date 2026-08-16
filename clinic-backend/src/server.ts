@@ -30,11 +30,13 @@ app.use(express.urlencoded({ extended: true })); // Parses application/x-www-for
 app.use(compression()); // Add GZIP compression
 app.use(
   cors({
-    origin: "*", // adjust this to fit your use case
-    methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
-    allowedHeaders: ["Content-Type", "Authorization", "Accept-Language"],
+    origin: (origin, callback) => callback(null, true),
+    credentials: true,
+    methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization", "Accept-Language", "ngrok-skip-browser-warning", "X-Requested-With", "*"],
   })
-); // Add CORS
+);
+app.options("*", cors()); // Handle pre-flight OPTIONS requests
 
 // Set up routing-controllers
 useExpressServer(app, {
