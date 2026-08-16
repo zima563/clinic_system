@@ -1,0 +1,28 @@
+.sideBar {
+  background-color: #fff; /* Adjust background color */
+  position: relative;
+  box-shadow: 0px 16px 44px 0px #00000012;
+}
+
+.sideBar button {
+  transition: transform 0.3s ease;
+}
+
+.sideBar img {
+  transition: width 0.3s ease;
+}
+
+.sideBar button {
+  position: absolute;
+  right: -15px; /* Adjusts the button position outside the sidebar */
+  top: 20px;
+  background-color: #ffffff;
+  border: 1px solid #f2f2f2;
+  border-radius: 50%;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+button:hover {
+  background-color: #ffeded;
+  transform: scale(1.1);
+}

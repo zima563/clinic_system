@@ -1,0 +1,23 @@
+
+.LoginPageContainer {
+    font-family: "Cairo", sans-serif;
+  }
+  
+  .LeftSection .FormContainer {
+    height: 51%;
+    width: 74%;
+    margin: auto;
+  }
+  
+  .LeftSection .FormContainer .content {
+    width: 59%;
+    height: 25%;
+  }
+  
+  .LeftSection .FormContainer p {
+    font-weight: 400;
+    font-size: 21.35px;
+    line-height: 40px;
+    color: #878787;
+  }
+  
