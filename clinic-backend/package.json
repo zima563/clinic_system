@@ -6,10 +6,10 @@
     "dev": "ts-node src/server.ts",
     "build": "tsc",
     "start": "node dist/server.js",
-    "seed": "ts-node src/prisma/seed.ts"
+    "seed": "node dist/prisma/seed.js"
   },
   "prisma": {
-    "seed": "ts-node src/prisma/seed.ts"
+    "seed": "node dist/prisma/seed.js"
   },
   "keywords": [],
   "author": "",

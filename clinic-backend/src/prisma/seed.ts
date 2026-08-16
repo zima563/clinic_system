@@ -1,19 +1,89 @@
 import { PrismaClient } from '@prisma/client';
 import bcrypt from 'bcryptjs';
-import { permissions } from '../Modules/permission/permissions';
 
 const prisma = new PrismaClient();
+
+const permissionsList = [
+  "addAppointment",
+  "getPatientAppointment",
+  "getAppointment",
+  "showAppointmnetDetail",
+  "updateStatus",
+  "updateAppointment",
+  "addDoctor",
+  "updateDoctor",
+  "listDoctors",
+  "showDoctorDetails",
+  "DeactiveDoctor",
+  "createInvoice",
+  "listInvoice",
+  "updateInvoiceDetail",
+  "Show_Invoice_Details",
+  "List_Invoice_Details",
+  "Append_Invoice_Details",
+  "Remove_Invoice_Details",
+  "addPatient",
+  "updatePatient",
+  "listPatient",
+  "getPatient",
+  "createRole",
+  "allRoles",
+  "assignRoleToUser",
+  "getAllRoleUsers",
+  "updateRole",
+  "deleteRole",
+  "addSchedule",
+  "listSchedules",
+  "showScheduleDetails",
+  "updateSchedule",
+  "deleteSchedule",
+  "addService",
+  "allServices",
+  "updateService",
+  "getService",
+  "deactiveService",
+  "createSpecialty",
+  "updateSpecialty",
+  "allSpecialtys",
+  "getOneSpecialty",
+  "addUser",
+  "allUsers",
+  "getOneUser",
+  "updateUser",
+  "deactiveUser",
+  "DeleteUser",
+  "createVisit",
+  "showVisitDetails",
+  "getAllVisits",
+  "appendVisitDetails",
+  "removeVisitDetails",
+  "deleteVisit",
+  "summarized_report",
+  "downloadPdf",
+  "listDates",
+  "search",
+  "seedPermissions",
+  "assignPermissionsToUser",
+  "assignPermissionsToRole",
+  "ListPermissions",
+  "ListUserPermissions",
+  "ListRolePermissions",
+  "deleteInvoice",
+  "profile",
+  "updateUserProfile",
+  "ChangePassword"
+];
 
 async function main() {
   console.log('🌱 Starting database seeding...');
 
   // 1. Seed Permissions
   console.log('🔑 Seeding permissions...');
-  for (const perm of permissions) {
+  for (const permName of permissionsList) {
     await prisma.permission.upsert({
-      where: { name: perm.name },
+      where: { name: permName },
       update: {},
-      create: { name: perm.name },
+      create: { name: permName },
     });
   }
   const allPermissions = await prisma.permission.findMany();

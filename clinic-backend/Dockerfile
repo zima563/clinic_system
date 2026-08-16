@@ -30,11 +30,11 @@ RUN apk add --no-cache openssl libc6-compat
 # Set node environment
 ENV NODE_ENV=production
 
-# Copy built dist, node_modules, package manifests, and prisma
+# Copy built dist, node_modules, package manifests, and src
 COPY --from=builder /app/package*.json ./
 COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/dist ./dist
-COPY --from=builder /app/src/prisma ./src/prisma
+COPY --from=builder /app/src ./src
 
 # Expose backend port
 EXPOSE 4000
