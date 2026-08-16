@@ -18,6 +18,7 @@ import { appointmentController } from "./Modules/appointment/appoientment.contro
 import { visitController } from "./Modules/visit/visit.controllers";
 import { PermissionController } from "./Modules/permission/seeder";
 import { searchControllers } from "./Modules/searchEngine/searchEngine";
+import { dashboardControllers } from "./Modules/dashboard/dashboard.controllers";
 import expressListRoutes from "express-list-routes";
 import { createValidationMiddleware } from "./middlewares/validation";
 import { specialtyControllers } from "./Modules/Specialist/specialist.controllers";
@@ -53,6 +54,7 @@ useExpressServer(app, {
     visitController,
     PermissionController,
     searchControllers,
+    dashboardControllers,
   ], // Adjust path to your controllers
   middlewares: [createValidationMiddleware, ErrorHandler],
   defaultErrorHandler: false,

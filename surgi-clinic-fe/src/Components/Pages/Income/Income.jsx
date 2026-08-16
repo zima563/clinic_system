@@ -27,8 +27,8 @@ function Income () {
     try {
       const formattedDate = selectedDate ? formatDate(selectedDate) : null
       const url = formattedDate
-        ? `${API_URL}/api/invoice?ex=1&createdAt=${formattedDate}`
-        : `${API_URL}/api/invoice?ex=1`
+        ? `${API_URL}/api/invoice?ex=false&createdAt=${formattedDate}`
+        : `${API_URL}/api/invoice?ex=false`
 
       const TOKEN = getToken()
       console.log(url)

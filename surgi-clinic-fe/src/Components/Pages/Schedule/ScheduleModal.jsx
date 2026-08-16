@@ -1,16 +1,38 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
+import axios from 'axios'
+import { API_URL, getToken } from '../../../config'
 
-const ScheduleModal = ({ onClose }) => {
+const ScheduleModal = ({ onClose, onSave }) => {
   const [formData, setFormData] = useState({
-    doctor: '',
-    service: '',
-    availableDate: '',
+    doctorId: '',
+    servicesId: '',
+    day: 'Sunday',
     timeFrom: '09:00 AM',
     timeTo: '12:00 PM',
     price: ''
   })
 
+  const [doctors, setDoctors] = useState([])
+  const [services, setServices] = useState([])
   const [errors, setErrors] = useState({})
+
+  useEffect(() => {
+    fetchDoctorsAndServices()
+  }, [])
+
+  const fetchDoctorsAndServices = async () => {
+    try {
+      const token = getToken()
+      const [docRes, servRes] = await Promise.all([
+        axios.get(`${API_URL}/api/doctor/all`, { headers: { Authorization: `Bearer ${token}` } }),
+        axios.get(`${API_URL}/api/service/all`, { headers: { Authorization: `Bearer ${token}` } })
+      ])
+      setDoctors(docRes.data.data || [])
+      setServices(servRes.data.data || [])
+    } catch (err) {
+      console.error('Error fetching doctors or services:', err)
+    }
+  }
 
   const handleChange = e => {
     setFormData({
@@ -21,10 +43,8 @@ const ScheduleModal = ({ onClose }) => {
 
   const validateForm = () => {
     const newErrors = {}
-    if (!formData.doctor) newErrors.doctor = 'Doctor is required.'
-    if (!formData.service) newErrors.service = 'Service is required.'
-    if (!formData.availableDate)
-      newErrors.availableDate = 'Available date is required.'
+    if (!formData.doctorId) newErrors.doctorId = 'Doctor is required.'
+    if (!formData.servicesId) newErrors.servicesId = 'Service is required.'
     if (!formData.price) newErrors.price = 'Price is required.'
     setErrors(newErrors)
     return Object.keys(newErrors).length === 0
@@ -35,125 +55,142 @@ const ScheduleModal = ({ onClose }) => {
     if (!validateForm()) return
 
     try {
-      const token = 'your_token_here' // Replace with your token
-      await axios.post('https://your-api-url.com/api/schedule', formData, {
+      const token = getToken()
+      const payload = {
+        doctorId: Number(formData.doctorId),
+        servicesId: Number(formData.servicesId),
+        price: Number(formData.price),
+        dates: [
+          {
+            day: formData.day,
+            fromTime: formData.timeFrom,
+            toTime: formData.timeTo
+          }
+        ]
+      }
+
+      await axios.post(`${API_URL}/api/schedule`, payload, {
         headers: {
           Authorization: `Bearer ${token}`
         }
       })
-      onSave() // Refresh data or perform action after saving
-      onClose() // Close modal
+      if (onSave) onSave()
+      onClose()
     } catch (error) {
       console.error('Error saving schedule:', error)
     }
   }
+
   return (
     <div className='fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50'>
       <div className='bg-white w-full max-w-lg rounded-md p-6 relative'>
-        <h2 className='text-xl font-bold text-red-600 mb-4'>Add Schedule</h2>
+        <h2 className='text-xl font-bold text-[#BF6159] mb-4'>Add Schedule</h2>
         <form onSubmit={handleSubmit}>
           {/* Doctor */}
           <div className='mb-4'>
             <label className='block text-sm font-medium mb-1'>Doctor</label>
             <select
-              name='doctor'
-              value={formData.doctor}
+              name='doctorId'
+              value={formData.doctorId}
               onChange={handleChange}
-              className='w-full border border-gray-300 rounded-md px-4 py-2 focus:ring-2 focus:ring-red-600'
+              className='w-full border border-gray-300 rounded-md px-4 py-2 focus:ring-2 focus:ring-[#BF6159]'
             >
-              <option value=''>Select</option>
-              <option value='1'>Dr. Ahmed Ragab</option>
-              <option value='2'>Dr. Marina Ehab</option>
+              <option value=''>Select Doctor</option>
+              {doctors.map(doc => (
+                <option key={doc.id} value={doc.id}>
+                  {doc.name}
+                </option>
+              ))}
             </select>
-            {errors.doctor && (
-              <p className='text-red-500 text-sm'>{errors.doctor}</p>
+            {errors.doctorId && (
+              <p className='text-red-500 text-sm'>{errors.doctorId}</p>
             )}
           </div>
 
           {/* Service */}
           <div className='mb-4'>
-            <label className='block text-sm font-medium mb-1'>Services</label>
+            <label className='block text-sm font-medium mb-1'>Service</label>
             <select
-              name='service'
-              value={formData.service}
+              name='servicesId'
+              value={formData.servicesId}
               onChange={handleChange}
-              className='w-full border border-gray-300 rounded-md px-4 py-2 focus:ring-2 focus:ring-red-600'
+              className='w-full border border-gray-300 rounded-md px-4 py-2 focus:ring-2 focus:ring-[#BF6159]'
             >
-              <option value=''>Select</option>
-              <option value='Facial Treatments'>Facial Treatments</option>
-              <option value='Botox Injections'>Botox Injections</option>
+              <option value=''>Select Service</option>
+              {services.map(serv => (
+                <option key={serv.id} value={serv.id}>
+                  {serv.title}
+                </option>
+              ))}
             </select>
-            {errors.service && (
-              <p className='text-red-500 text-sm'>{errors.service}</p>
+            {errors.servicesId && (
+              <p className='text-red-500 text-sm'>{errors.servicesId}</p>
             )}
           </div>
 
-          {/* Available Date */}
+          {/* Day */}
           <div className='mb-4'>
-            <label className='block text-sm font-medium mb-1'>
-              Available Date
-            </label>
-            <input
-              type='date'
-              name='availableDate'
-              value={formData.availableDate}
+            <label className='block text-sm font-medium mb-1'>Day</label>
+            <select
+              name='day'
+              value={formData.day}
               onChange={handleChange}
-              className='w-full border border-gray-300 rounded-md px-4 py-2 focus:ring-2 focus:ring-red-600'
-            />
-            {errors.availableDate && (
-              <p className='text-red-500 text-sm'>{errors.availableDate}</p>
-            )}
+              className='w-full border border-gray-300 rounded-md px-4 py-2 focus:ring-2 focus:ring-[#BF6159]'
+            >
+              <option value='Sunday'>Sunday</option>
+              <option value='Monday'>Monday</option>
+              <option value='Tuesday'>Tuesday</option>
+              <option value='Wednesday'>Wednesday</option>
+              <option value='Thursday'>Thursday</option>
+              <option value='Friday'>Friday</option>
+              <option value='Saturday'>Saturday</option>
+            </select>
           </div>
 
           {/* Time */}
           <div className='mb-4 flex gap-4'>
-            <div>
-              <label className='block text-sm font-medium mb-1'>From</label>
+            <div className='flex-1'>
+              <label className='block text-sm font-medium mb-1'>From Time</label>
               <input
-                type='time'
+                type='text'
                 name='timeFrom'
                 value={formData.timeFrom}
                 onChange={handleChange}
-                className='w-full border border-gray-300 rounded-md px-4 py-2 focus:ring-2 focus:ring-red-600'
+                placeholder='e.g. 09:00 AM'
+                className='w-full border border-gray-300 rounded-md px-4 py-2 focus:ring-2 focus:ring-[#BF6159]'
               />
             </div>
-            <div>
-              <label className='block text-sm font-medium mb-1'>To</label>
+            <div className='flex-1'>
+              <label className='block text-sm font-medium mb-1'>To Time</label>
               <input
-                type='time'
+                type='text'
                 name='timeTo'
                 value={formData.timeTo}
                 onChange={handleChange}
-                className='w-full border border-gray-300 rounded-md px-4 py-2 focus:ring-2 focus:ring-red-600'
+                placeholder='e.g. 12:00 PM'
+                className='w-full border border-gray-300 rounded-md px-4 py-2 focus:ring-2 focus:ring-[#BF6159]'
               />
             </div>
           </div>
 
           {/* Price */}
           <div className='mb-4'>
-            <label className='block text-sm font-medium mb-1'>Price</label>
+            <label className='block text-sm font-medium mb-1'>Price (L.E)</label>
             <input
               type='number'
               name='price'
               value={formData.price}
               onChange={handleChange}
-              className='w-full border border-gray-300 rounded-md px-4 py-2 focus:ring-2 focus:ring-red-600'
+              placeholder='e.g. 250'
+              className='w-full border border-gray-300 rounded-md px-4 py-2 focus:ring-2 focus:ring-[#BF6159]'
             />
             {errors.price && (
               <p className='text-red-500 text-sm'>{errors.price}</p>
             )}
           </div>
 
-          {/* Add Another Date */}
-          <button
-            type='button'
-            className='text-red-600 text-sm hover:underline mb-4'
-          >
-            + Add another Date
-          </button>
-
           {/* Buttons */}
-          <div className='flex justify-end gap-4'>
+          <div className='flex justify-end gap-4 mt-6'>
             <button
               type='button'
               onClick={onClose}
@@ -163,9 +200,9 @@ const ScheduleModal = ({ onClose }) => {
             </button>
             <button
               type='submit'
-              className='px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700'
+              className='px-4 py-2 bg-[#BF6159] text-white rounded-md hover:bg-red-700'
             >
-              Save
+              Save Schedule
             </button>
           </div>
         </form>

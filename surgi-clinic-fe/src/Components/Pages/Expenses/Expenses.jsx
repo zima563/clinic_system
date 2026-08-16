@@ -27,8 +27,8 @@ function Expenses () {
     try {
       const formattedDate = selectedDate ? formatDate(selectedDate) : null
       const url = formattedDate
-        ? `${API_URL}/api/invoice?ex=0&createdAt=${formattedDate}`
-        : `${API_URL}/api/invoice?ex=0`
+        ? `${API_URL}/api/invoice?ex=true&createdAt=${formattedDate}`
+        : `${API_URL}/api/invoice?ex=true`
 
       const response = await axios.get(url, {
         headers: {

@@ -33,10 +33,14 @@ export const createInvoiceDetails = async (
 };
 
 export const listInvoice = async (query: any) => {
+  const baseFilter: any = {};
+  if (query.ex !== undefined) {
+    baseFilter.ex = query.ex === "true" || query.ex === true;
+  }
   const apiFeatures = new ApiFeatures(prisma.invoice, query);
 
   // Apply filtering, sorting, and pagination
-  await apiFeatures.filter().sort().paginateWithCount();
+  await apiFeatures.filter(baseFilter).sort().paginateWithCount();
 
   const { result, pagination } = await apiFeatures.exec("invoice");
 
