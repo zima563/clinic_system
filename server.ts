@@ -1,26 +1,28 @@
-/// <reference path="./custom.d.ts" />
+
 import "reflect-metadata";
 import { useExpressServer } from "routing-controllers";
 import compression from "compression";
 import cors from "cors";
 import dotenv from "dotenv";
-import { ErrorHandler } from "./middlewares/ErrorHandler";
+import { ErrorHandler } from "./src/middlewares/ErrorHandler";
 dotenv.config();
 import express from "express";
-import { userControllers } from "./Modules/users/user.controllers";
-import { roleControllers } from "./Modules/roles/role.controllers";
-import { ServiceController } from "./Modules/service/service.controllers";
-import { invoiceControllers } from "./Modules/invoice/invoice.controllers";
-import { doctorControllers } from "./Modules/doctor/doctor.controllers";
-import { patientController } from "./Modules/patient/patient.controllers";
-import { scheduleControllers } from "./Modules/schedule/schedule.controllers";
-import { appointmentController } from "./Modules/appointment/appoientment.controllers";
-import { visitController } from "./Modules/visit/visit.controllers";
-import { PermissionController } from "./Modules/permission/seeder";
-import { searchControllers } from "./Modules/searchEngine/searchEngine";
+import { userControllers } from "./src/modules/users/user.controllers";
+import { roleControllers } from "./src/modules/roles/role.controllers";
+import { ServiceController } from "./src/modules/service/service.controllers";
+
+import { invoiceControllers } from "./src/modules/invoice/invoice.controllers";
+import { doctorControllers } from "./src/modules/doctor/doctor.controllers";
+import { patientController } from "./src/modules/patient/patient.controllers";
+import { scheduleControllers } from "./src/modules/schedule/schedule.controllers";
+import { appointmentController } from "./src/modules/appointment/appoientment.controllers";
+import { visitController } from "./src/modules/visit/visit.controllers";
+import { PermissionController } from "./src/modules/permission/seeder";
+import { searchControllers } from "./src/modules/searchEngine/searchEngine";
+
 import expressListRoutes from "express-list-routes";
-import { createValidationMiddleware } from "./middlewares/validation";
-import { specialtyControllers } from "./Modules/Specialist/specialist.controllers";
+import { createValidationMiddleware } from "./src/middlewares/validation";
+import { specialtyControllers } from "./src/modules/specialist/specialist.controllers";
 
 const app = express();
 
@@ -32,7 +34,7 @@ app.use(
   cors({
     origin: "*", // adjust this to fit your use case
     methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
-    allowedHeaders: ["Content-Type", "Authorization", "Accept-Language"],
+    allowedHeaders: ["Content-Type", "Authorization"],
   })
 ); // Add CORS
 
@@ -57,11 +59,7 @@ useExpressServer(app, {
 });
 
 console.log("✅ Controllers loaded successfully");
-try {
-  expressListRoutes(app, { prefix: "" });
-} catch (e) {
-  // Ignore route listing errors if any
-}
+expressListRoutes(app, { prefix: "" });
 
 app.use("/", express.static("uploads"));
 const port = process.env.PORT || 4000;

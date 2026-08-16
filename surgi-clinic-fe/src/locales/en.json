@@ -1,0 +1,51 @@
+{
+  "nav": {
+    "search": "Search...",
+    "profile": "Profile",
+    "settings": "Settings",
+    "admin": "Admin",
+    "language": "Language",
+    "english": "English",
+    "arabic": "العربية"
+  },
+  "sidebar": {
+    "appName": "Marina Clinic",
+    "dashboard": "Dashboard",
+    "patients": "Patients",
+    "doctors": "Doctors",
+    "specialties": "Specialties",
+    "services": "Services",
+    "appointments": "Appointments",
+    "schedule": "Schedule",
+    "visits": "Visits",
+    "invoices": "Invoices",
+    "income": "Income",
+    "expenses": "Expenses",
+    "account": "Account",
+    "settings": "Settings",
+    "requests": "Requests",
+    "logout": "Logout"
+  },
+  "dashboard": {
+    "welcome": "Welcome back",
+    "totalPatients": "Total Patients",
+    "totalDoctors": "Total Doctors",
+    "totalAppointments": "Total Appointments",
+    "totalIncome": "Total Income"
+  },
+  "common": {
+    "actions": "Actions",
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit",
+    "add": "Add",
+    "status": "Status",
+    "active": "Active",
+    "inactive": "Inactive",
+    "phone": "Phone",
+    "email": "Email",
+    "name": "Name",
+    "date": "Date"
+  }
+}

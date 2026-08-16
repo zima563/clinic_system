@@ -1,0 +1,7 @@
+node_modules
+dist
+.env
+clinic-backend/dist
+clinic-backend/node_modules
+surgi-clinic-fe/dist
+surgi-clinic-fe/node_modules

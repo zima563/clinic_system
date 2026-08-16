@@ -1,0 +1,3 @@
+-- AlterTable
+ALTER TABLE `date` MODIFY `fromTime` VARCHAR(191) NOT NULL,
+    MODIFY `toTime` VARCHAR(191) NOT NULL;

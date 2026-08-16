@@ -1,0 +1,318 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "debian-openssl-1.1.x"]
+}
+
+model User {
+  id        Int      @id @default(autoincrement())
+  userName  String
+  email     String   @unique
+  phone     String   @unique
+  password  String
+  isActive  Boolean  @default(true)
+  isDeleted Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  userRoles       UserRole[]
+  userPermissions UserPermission[]
+  Role            Role[]
+  Service         Service[]
+  Schedule        Schedule[]
+  Specialty       Specialty[]
+  Invoice         Invoice[]
+  InvoiceDetail   InvoiceDetail[]
+  Doctor          Doctor[]
+  Patient         Patient[]
+  Appointment     Appointment[]
+  Visit           Visit[]
+  VisitDetail     VisitDetail[]
+  VisitInvoice    VisitInvoice[]
+
+  @@map("user")
+}
+
+model Permission {
+  id   Int    @id @default(autoincrement())
+  name String @unique
+
+  rolePermissions RolePermission[]
+  userPermissions UserPermission[]
+
+  @@map("permission")
+}
+
+model Role {
+  id        Int    @id @default(autoincrement())
+  name      String @unique
+  createdBy Int
+
+  creator         User             @relation(fields: [createdBy], references: [id])
+  rolePermissions RolePermission[]
+  userRoles       UserRole[]
+
+  @@map("role")
+}
+
+model RolePermission {
+  id           Int @id @default(autoincrement())
+  permissionId Int
+  roleId       Int
+
+  permission Permission @relation(fields: [permissionId], references: [id])
+  role       Role       @relation(fields: [roleId], references: [id])
+
+  @@map("rolepermission")
+}
+
+model UserPermission {
+  id           Int @id @default(autoincrement())
+  permissionId Int
+  userId       Int
+
+  permission Permission @relation(fields: [permissionId], references: [id])
+  user       User       @relation(fields: [userId], references: [id])
+
+  @@map("userpermission")
+}
+
+model UserRole {
+  id     Int @id @default(autoincrement())
+  roleId Int
+  userId Int
+
+  role Role @relation(fields: [roleId], references: [id])
+  user User @relation(fields: [userId], references: [id])
+
+  @@map("userrole")
+}
+
+model Service {
+  id        Int        @id @default(autoincrement())
+  title     String
+  desc      String
+  img       String
+  status    Boolean    @default(true)
+  isDeleted Boolean    @default(false)
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+  createdBy Int
+  creator   User       @relation(fields: [createdBy], references: [id])
+  schedules Schedule[]
+
+  @@map("service")
+}
+
+model Schedule {
+  id         Int      @id @default(autoincrement())
+  doctorId   Int
+  servicesId Int
+  price      Decimal  @db.Decimal(18, 2)
+  isDeleted  Boolean  @default(false)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  createdBy  Int
+  creator    User     @relation(fields: [createdBy], references: [id])
+
+  dates        Date[]
+  doctor       Doctor        @relation(fields: [doctorId], references: [id])
+  service      Service       @relation(fields: [servicesId], references: [id])
+  visits       VisitDetail[]
+  appointments Appointment[]
+
+  @@map("schedule")
+}
+
+model Date {
+  id         Int    @id @default(autoincrement())
+  day        String
+  fromTime   String
+  toTime     String
+  scheduleId Int
+
+  schedule    Schedule      @relation(fields: [scheduleId], references: [id])
+  Appointment Appointment[]
+  VisitDetail VisitDetail[]
+
+  @@map("date")
+}
+
+model Specialty {
+  id        Int      @id @default(autoincrement())
+  title     String   @unique
+  icon      String
+  isDeleted Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  createdBy Int
+
+  creator User     @relation(fields: [createdBy], references: [id])
+  doctors Doctor[]
+
+  @@map("specialty")
+}
+
+model Invoice {
+  id            Int             @id @default(autoincrement())
+  rf            String          @unique @default(uuid())
+  ex            Boolean
+  paymentMethod payment_Method  @default(Cash)
+  total         Decimal         @default(0) @db.Decimal(18, 2)
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+  createdBy     Int
+  creator       User            @relation(fields: [createdBy], references: [id])
+  details       InvoiceDetail[]
+  patient       Patient?
+  VisitInvoice  VisitInvoice[]
+
+  @@map("invoice")
+}
+
+model InvoiceDetail {
+  id             Int          @id @default(autoincrement())
+  invoiceId      Int
+  description    String
+  amount         Decimal      @db.Decimal(18, 2)
+  visitDetailsId Int?
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+  createdBy      Int
+  creator        User         @relation(fields: [createdBy], references: [id])
+  invoice        Invoice      @relation(fields: [invoiceId], references: [id])
+  visitDetail    VisitDetail? @relation(fields: [visitDetailsId], references: [id])
+
+  @@map("invoicedetail")
+}
+
+model Doctor {
+  id          Int      @id @default(autoincrement())
+  name        String
+  phone       String
+  image       String
+  isActive    Boolean  @default(true)
+  specialtyId Int
+  info        String
+  isDeleted   Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  createdBy   Int
+  creator     User     @relation(fields: [createdBy], references: [id])
+
+  specialty Specialty  @relation(fields: [specialtyId], references: [id])
+  schedules Schedule[]
+
+  @@map("doctor")
+}
+
+model Patient {
+  id             Int           @id @default(autoincrement())
+  name           String
+  phone          String        @unique
+  birthdate      DateTime
+  gender         Gender
+  medicalHistory String
+  info           String
+  isDeleted      Boolean       @default(false)
+  invoiceId      Int?          @unique
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+  createdBy      Int
+  creator        User          @relation(fields: [createdBy], references: [id])
+  invoices       Invoice?      @relation(fields: [invoiceId], references: [id])
+  appointments   Appointment[]
+  VisitDetail    VisitDetail[]
+
+  @@map("patient")
+}
+
+model Appointment {
+  id         Int               @id @default(autoincrement())
+  dateTime   DateTime
+  patientId  Int
+  status     AppointmentStatus @default(pending)
+  scheduleId Int
+  dateId     Int
+  createdBy  Int
+  creator    User              @relation(fields: [createdBy], references: [id])
+  patient    Patient           @relation(fields: [patientId], references: [id])
+  schedule   Schedule          @relation(fields: [scheduleId], references: [id])
+  date       Date              @relation(fields: [dateId], references: [id])
+
+  @@map("appointment")
+}
+
+model Visit {
+  id            Int            @id @default(autoincrement())
+  rf            String         @unique @default(uuid())
+  total         Decimal        @db.Decimal(18, 2)
+  paymentMethod payment_Method @default(Cash)
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  createdBy     Int
+  creator       User           @relation(fields: [createdBy], references: [id])
+  details       VisitDetail[]
+  VisitInvoice  VisitInvoice[]
+
+  @@map("visit")
+}
+
+model VisitDetail {
+  id            Int             @id @default(autoincrement())
+  visitId       Int
+  patientId     Int
+  price         Decimal         @db.Decimal(18, 2)
+  scheduleId    Int
+  dateId        Int
+  createdBy     Int
+  creator       User            @relation(fields: [createdBy], references: [id])
+  visit         Visit           @relation(fields: [visitId], references: [id])
+  patient       Patient         @relation(fields: [patientId], references: [id])
+  schedule      Schedule        @relation(fields: [scheduleId], references: [id])
+  date          Date            @relation(fields: [dateId], references: [id])
+  invoiceDetail InvoiceDetail[]
+
+  @@map("visitdetail")
+}
+
+model VisitInvoice {
+  visitId   Int
+  invoiceId Int
+  createdBy Int
+  creator   User    @relation(fields: [createdBy], references: [id])
+  visit     Visit   @relation(fields: [visitId], references: [id])
+  invoice   Invoice @relation(fields: [invoiceId], references: [id])
+
+  @@id([visitId, invoiceId])
+  @@map("visitinvoice")
+}
+
+enum Gender {
+  male
+  female
+}
+
+enum AppointmentStatus {
+  pending
+  confirmed
+  canceled
+}
+
+enum payment_Method {
+  Cash
+  Visa
+  instaPay
+  Wallet
+  payPal
+  CreditCard
+}

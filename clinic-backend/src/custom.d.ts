@@ -1,5 +1,4 @@
 import { User } from "@prisma/client";
-import { Request } from "express";
 
 declare global {
   namespace Express {
@@ -8,3 +7,5 @@ declare global {
     }
   }
 }
+
+declare module "express-list-routes";

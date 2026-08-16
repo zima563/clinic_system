@@ -1,0 +1,51 @@
+{
+  "nav": {
+    "search": "بحث...",
+    "profile": "الملف الشخصي",
+    "settings": "الإعدادات",
+    "admin": "مسؤول النظام",
+    "language": "اللغة",
+    "english": "English",
+    "arabic": "العربية"
+  },
+  "sidebar": {
+    "appName": "عيادة مارينا",
+    "dashboard": "اللوحة الرئيسية",
+    "patients": "المرضى",
+    "doctors": "الأطباء",
+    "specialties": "التخصصات",
+    "services": "الخدمات الطبية",
+    "appointments": "المواعيد",
+    "schedule": "جدول العمل",
+    "visits": "الزيارات",
+    "invoices": "الفواتير",
+    "income": "الإيرادات",
+    "expenses": "المصروفات",
+    "account": "الحساب",
+    "settings": "الإعدادات",
+    "requests": "الطلبات",
+    "logout": "تسجيل الخروج"
+  },
+  "dashboard": {
+    "welcome": "مرحباً بك",
+    "totalPatients": "إجمالي المرضى",
+    "totalDoctors": "إجمالي الأطباء",
+    "totalAppointments": "إجمالي المواعيد",
+    "totalIncome": "إجمالي الإيرادات"
+  },
+  "common": {
+    "actions": "الإجراءات",
+    "save": "حفظ",
+    "cancel": "إلغاء",
+    "delete": "حذف",
+    "edit": "تعديل",
+    "add": "إضافة",
+    "status": "الحالة",
+    "active": "نشط",
+    "inactive": "غير نشط",
+    "phone": "رقم الهاتف",
+    "email": "البريد الإلكتروني",
+    "name": "الاسم",
+    "date": "التاريخ"
+  }
+}
