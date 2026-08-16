@@ -3,6 +3,9 @@ FROM node:20-alpine AS builder
 
 WORKDIR /app
 
+# Install openssl for Prisma binary compatibility
+RUN apk add --no-cache openssl libc6-compat
+
 # Copy package manifests and install dependencies
 COPY package*.json ./
 COPY tsconfig*.json ./
@@ -20,6 +23,9 @@ RUN npm run build
 FROM node:20-alpine AS runner
 
 WORKDIR /app
+
+# Install runtime dependencies for Prisma and OpenSSL
+RUN apk add --no-cache openssl libc6-compat
 
 # Set node environment
 ENV NODE_ENV=production

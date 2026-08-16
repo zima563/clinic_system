@@ -3,7 +3,7 @@ import { Request, Response } from "express";
 import { prisma } from "../../prismaClient";
 import ApiError from "../../utils/ApiError";
 import ApiFeatures from "../../utils/ApiFeatures";
-import bcrypt from "bcrypt";
+import bcrypt from "bcryptjs";
 
 export const addUser = async (res: Response, body: any) => {
   body.password = bcrypt.hashSync(body.password, 10);
