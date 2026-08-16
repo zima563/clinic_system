@@ -33,7 +33,7 @@ app.use(
     origin: (origin, callback) => callback(null, true),
     credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization", "Accept-Language", "ngrok-skip-browser-warning", "X-Requested-With", "*"],
+    allowedHeaders: ["Content-Type", "Authorization", "Accept-Language", "X-Requested-With", "*"],
   })
 );
 app.options("*", cors()); // Handle pre-flight OPTIONS requests
