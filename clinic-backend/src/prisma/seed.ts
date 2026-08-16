@@ -216,6 +216,79 @@ async function main() {
   }
   console.log('✅ Services seeded successfully.');
 
+  // 6. Seed Doctors
+  console.log('👨‍⚕️ Seeding doctors...');
+  const firstSpecialty = await prisma.specialty.findFirst();
+  const doctors = [
+    {
+      name: 'Dr. Ahmed Ragab',
+      phone: '01011112222',
+      image: 'default-doctor.png',
+      info: 'Senior Consultant Surgeon',
+      specialtyId: firstSpecialty?.id || 1,
+    },
+    {
+      name: 'Dr. Marina Ehab',
+      phone: '01033334444',
+      image: 'default-doctor.png',
+      info: 'Specialist Physician',
+      specialtyId: firstSpecialty?.id || 1,
+    },
+    {
+      name: 'Dr. Mohamed Hassan',
+      phone: '01055556666',
+      image: 'default-doctor.png',
+      info: 'Consultant Specialist',
+      specialtyId: firstSpecialty?.id || 1,
+    },
+  ];
+
+  for (const doc of doctors) {
+    const existingDoc = await prisma.doctor.findFirst({ where: { phone: doc.phone } });
+    if (!existingDoc) {
+      await prisma.doctor.create({
+        data: {
+          name: doc.name,
+          phone: doc.phone,
+          image: doc.image,
+          info: doc.info,
+          specialtyId: doc.specialtyId,
+          createdBy: adminUser.id,
+        },
+      });
+    }
+  }
+  console.log('✅ Doctors seeded successfully.');
+
+  // 7. Seed Default Schedules
+  console.log('📅 Seeding default schedules...');
+  const firstDoc = await prisma.doctor.findFirst();
+  const firstServ = await prisma.service.findFirst();
+
+  if (firstDoc && firstServ) {
+    const existingSched = await prisma.schedule.findFirst({
+      where: { doctorId: firstDoc.id, servicesId: firstServ.id },
+    });
+
+    if (!existingSched) {
+      await prisma.schedule.create({
+        data: {
+          doctorId: firstDoc.id,
+          servicesId: firstServ.id,
+          price: 300,
+          createdBy: adminUser.id,
+          dates: {
+            create: [
+              { day: 'Sunday', fromTime: '09:00 AM', toTime: '01:00 PM' },
+              { day: 'Wednesday', fromTime: '02:00 PM', toTime: '06:00 PM' },
+            ],
+          },
+        },
+      });
+    }
+  }
+  console.log('✅ Schedules seeded successfully.');
+
   console.log('🎉 Seeding completed successfully!');
 }
 

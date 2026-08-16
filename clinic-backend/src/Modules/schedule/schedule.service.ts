@@ -45,14 +45,16 @@ export const listSchedules = async (res: Response, query: any) => {
   await apiFeatures.paginateWithCount();
 
   const { result, pagination } = await apiFeatures.exec("schedule");
-  result.map((result: any) => {
-    result.doctor.image = process.env.base_url + result.doctor.image;
+  result?.forEach((item: any) => {
+    if (item?.doctor?.image && process.env.base_url) {
+      item.doctor.image = process.env.base_url + item.doctor.image;
+    }
   });
 
   return res.status(200).json({
     data: result,
     pagination: pagination,
-    count: result.length,
+    count: result?.length || 0,
   });
 };
 
@@ -71,13 +73,12 @@ export const showDetailsOfSchedule = async (res: Response, id: number) => {
     select: {
       id: true,
       price: true,
-      doctorId: false,
-      servicesId: false,
       createdAt: true,
       updatedAt: true,
       dates: {
         select: {
           id: true,
+          day: true,
           fromTime: true,
           toTime: true,
         },
@@ -86,6 +87,7 @@ export const showDetailsOfSchedule = async (res: Response, id: number) => {
         select: {
           id: true,
           name: true,
+          image: true,
         },
       },
       service: {

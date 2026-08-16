@@ -24,7 +24,7 @@ const ScheduleModal = ({ onClose, onSave }) => {
     try {
       const token = getToken()
       const [docRes, servRes] = await Promise.all([
-        axios.get(`${API_URL}/api/doctor/all`, { headers: { Authorization: `Bearer ${token}` } }),
+        axios.get(`${API_URL}/api/doctors/all`, { headers: { Authorization: `Bearer ${token}` } }),
         axios.get(`${API_URL}/api/service/all`, { headers: { Authorization: `Bearer ${token}` } })
       ])
       setDoctors(docRes.data.data || [])

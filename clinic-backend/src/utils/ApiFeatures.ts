@@ -196,8 +196,6 @@ class ApiFeatures {
             userName: true,
           },
         },
-        doctorId: false,
-        servicesId: false,
         dates: {
           select: {
             id: true,

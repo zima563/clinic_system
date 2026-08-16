@@ -57,6 +57,7 @@ export class doctorControllers {
   }
 
   @Get("/")
+  @Get("/all")
   @UseBefore(...secureRouteWithPermissions("listDoctors"))
   async listDoctors(@QueryParams() query: any, @Res() res: any) {
     return await doctorServices.getDoctors(res, query);
