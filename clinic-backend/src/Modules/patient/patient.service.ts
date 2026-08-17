@@ -14,7 +14,7 @@ const getPatientById = async (id: number) => {
         },
       },
       appointments: {
-        orderBy: { createdAt: 'desc' },
+        orderBy: { id: 'desc' },
         include: {
           schedule: {
             include: {
