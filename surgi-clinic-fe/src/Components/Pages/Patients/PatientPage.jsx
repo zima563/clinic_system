@@ -143,7 +143,7 @@ const PatientPage = () => {
         <div className='card p-6 flex flex-col items-center text-center space-y-5 bg-white shadow-sm border border-gray-200'>
           <div className='relative'>
             <img
-              src={patientImage}
+              src={`https://ui-avatars.com/api/?name=${encodeURIComponent(patient.name)}&background=BF6159&color=fff&bold=true&size=128`}
               alt={patient.name}
               className='w-28 h-28 rounded-full border-4 border-red-50 object-cover shadow-md'
             />
@@ -217,46 +217,6 @@ const PatientPage = () => {
             ) : (
               <p className='text-xs text-gray-400 italic py-2'>No recorded medical history for this patient.</p>
             )}
-          </div>
-
-          {/* Health Vitals Overview Cards */}
-          <div className='card p-5 bg-white border border-gray-200 shadow-sm'>
-            <h3 className='text-sm font-bold text-gray-500 uppercase tracking-wider mb-4 flex items-center gap-2'>
-              <FaHeartbeat className='text-[#BF6159]' /> Standard Vitals Reference
-            </h3>
-            <div className='grid grid-cols-2 sm:grid-cols-4 gap-4'>
-              <div className='p-3 bg-red-50/50 rounded-xl border border-red-100 flex items-center gap-3'>
-                <FaWeight className='text-xl text-[#BF6159]' />
-                <div>
-                  <span className='block text-[11px] font-bold text-gray-500 uppercase'>Height</span>
-                  <span className='text-sm font-bold text-gray-800'>170 cm</span>
-                </div>
-              </div>
-
-              <div className='p-3 bg-red-50/50 rounded-xl border border-red-100 flex items-center gap-3'>
-                <FaWeight className='text-xl text-[#BF6159]' />
-                <div>
-                  <span className='block text-[11px] font-bold text-gray-500 uppercase'>Weight</span>
-                  <span className='text-sm font-bold text-gray-800'>72 kg</span>
-                </div>
-              </div>
-
-              <div className='p-3 bg-red-50/50 rounded-xl border border-red-100 flex items-center gap-3'>
-                <FaHeartbeat className='text-xl text-[#BF6159]' />
-                <div>
-                  <span className='block text-[11px] font-bold text-gray-500 uppercase'>Blood Press.</span>
-                  <span className='text-sm font-bold text-gray-800'>120/80</span>
-                </div>
-              </div>
-
-              <div className='p-3 bg-red-50/50 rounded-xl border border-red-100 flex items-center gap-3'>
-                <FaHeartbeat className='text-xl text-[#BF6159]' />
-                <div>
-                  <span className='block text-[11px] font-bold text-gray-500 uppercase'>Blood Type</span>
-                  <span className='text-sm font-bold text-gray-800'>O+</span>
-                </div>
-              </div>
-            </div>
           </div>
 
           {/* Patient Appointments History */}

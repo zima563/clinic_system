@@ -87,9 +87,10 @@ export default function DoctorPage() {
     )
   }
 
+  const avatarFallback = `https://ui-avatars.com/api/?name=${encodeURIComponent(doctor.name)}&background=BF6159&color=fff&bold=true&size=128`
   const doctorImgSrc = doctor.image && doctor.image.startsWith('http')
     ? doctor.image
-    : docImage
+    : avatarFallback
 
   return (
     <div style={{ maxHeight: 'calc(100vh - 50px)' }} className='p-6 overflow-y-auto custom-scroll space-y-6'>
@@ -118,7 +119,7 @@ export default function DoctorPage() {
               alt={doctor.name}
               className='w-32 h-32 rounded-full border-4 border-red-50 object-cover shadow-md'
               onError={e => {
-                e.target.src = docImage
+                e.target.src = avatarFallback
               }}
             />
             <span
