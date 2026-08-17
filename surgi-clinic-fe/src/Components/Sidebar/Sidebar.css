@@ -1,28 +1,26 @@
-.sideBar {
-  background-color: #fff; /* Adjust background color */
-  position: relative;
-  box-shadow: 0px 16px 44px 0px #00000012;
-}
+/* ============================================
+   SIDEBAR COMPONENT STYLES
+   ============================================ */
 
-.sideBar button {
-  transition: transform 0.3s ease;
-}
-
-.sideBar img {
-  transition: width 0.3s ease;
-}
-
-.sideBar button {
-  position: absolute;
-  right: -15px; /* Adjusts the button position outside the sidebar */
-  top: 20px;
+.sidebar-container {
   background-color: #ffffff;
-  border: 1px solid #f2f2f2;
-  border-radius: 50%;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  transition: width 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-button:hover {
-  background-color: #ffeded;
-  transform: scale(1.1);
+.toggle-btn {
+  cursor: pointer;
+  outline: none;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.toggle-btn:hover {
+  transform: scale(1.08);
+  border-color: #BF6159;
+}
+
+/* NavLink active & hover transitions */
+.sidebar-container a,
+.sidebar-container nav div {
+  user-select: none;
 }
