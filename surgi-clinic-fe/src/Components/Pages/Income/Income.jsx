@@ -1,27 +1,28 @@
 import React, { useState, useEffect } from 'react'
 import DatePicker from 'react-datepicker'
 import 'react-datepicker/dist/react-datepicker.css'
-
-import { FaCalendarAlt, FaWindowClose } from 'react-icons/fa'
-
+import {
+  FaCalendarAlt,
+  FaFileInvoiceDollar,
+  FaSearch,
+  FaEye,
+  FaWallet,
+  FaReceipt,
+  FaExchangeAlt
+} from 'react-icons/fa'
 import axios from 'axios'
-import payPal from '../../../assets/payPal.png'
-import ApplePay from '../../../assets/ApplePay.png'
-import Visa from '../../../assets/Visa.png'
-import Cash from '../../../assets/cash.png'
-import { FiEdit2 } from 'react-icons/fi'
-
 import { API_URL, getToken } from '../../../config'
 
-function Income () {
+function Income() {
   const [selectedDate, setSelectedDate] = useState(null)
   const [incomeList, setIncomeList] = useState([])
+  const [searchTerm, setSearchTerm] = useState('')
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [selectedRow, setSelectedRow] = useState(null)
 
-  const formatDate = date => {
-    return date ? date.toLocaleDateString('en-CA') : null // "en-CA" gives "YYYY-MM-DD"
-  }
+  const token = getToken()
+
+  const formatDate = date => (date ? date.toLocaleDateString('en-CA') : null)
 
   const fetchIncome = async () => {
     try {
@@ -30,34 +31,31 @@ function Income () {
         ? `${API_URL}/api/invoice?ex=false&createdAt=${formattedDate}`
         : `${API_URL}/api/invoice?ex=false`
 
-      const TOKEN = getToken()
-      console.log(url)
-
       const response = await axios.get(url, {
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${TOKEN}`
+          Authorization: `Bearer ${token}`
         }
       })
 
       if (response.status === 200) {
-        console.log(response.data.data)
-
-        const mappedData = response.data.data.map(item => ({
+        const mappedData = (response.data.data || []).map(item => ({
           id: item.id,
+          rf: item.rf || item.id,
           paymentFrom:
-            item.VisitInvoice[0]?.visit.details[0]?.patient.name || 'N/A',
-          date: new Date(item.createdAt).toLocaleDateString(),
-          amount: item.total,
-          method: item.paymentMethod
+            item.VisitInvoice?.[0]?.visit?.details?.[0]?.patient?.name || 'Walk-in Patient',
+          date: new Date(item.createdAt).toLocaleDateString('en-US', {
+            year: 'numeric',
+            month: 'short',
+            day: 'numeric'
+          }),
+          amount: item.total || 0,
+          method: item.paymentMethod || 'Cash'
         }))
-
         setIncomeList(mappedData)
-      } else {
-        console.error('Error fetching data:', response.statusText)
       }
     } catch (error) {
-      console.error('Error fetching data:', error)
+      console.error('Error fetching income data:', error)
     }
   }
 
@@ -65,185 +63,223 @@ function Income () {
     fetchIncome()
   }, [selectedDate])
 
-  const paymentMethodImages = {
-    payPal: payPal,
-    ApplePay: ApplePay,
-    Visa: Visa,
-    Cash: Cash
-  }
-
   const handleRowClick = async id => {
-    const TOKEN = getToken()
-
-    if (!id) return // Ensure the id is valid
+    if (!id) return
     try {
-      // Fetch related data using the item's ID
       const response = await axios.get(`${API_URL}/api/invoice/${id}`, {
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${TOKEN}`
+          Authorization: `Bearer ${token}`
         }
       })
 
       if (response.status === 200) {
-        // Set the fetched data to the selectedRow state
-        console.log(response.data)
-
-        const invoiceDetails = response.data.details || [] // Safeguard in case details is null
+        const invoiceDetails = response.data.details || []
         setSelectedRow({ ...response.data, details: invoiceDetails })
-        setIsModalOpen(true) // Open the modal
-      } else {
-        console.error('Error fetching related data:', response.statusText)
+        setIsModalOpen(true)
       }
     } catch (error) {
-      console.error('Error fetching related data:', error.message)
-    }
-  }
-
-  const onRowSelect = id => {
-    if (id) {
-      handleRowClick(id) // Fetch details for the selected row
+      console.error('Error fetching invoice details:', error)
     }
   }
 
   const closeModal = () => {
     setIsModalOpen(false)
-    setSelectedRow(null) // Clear selected row details
+    setSelectedRow(null)
   }
 
+  const filteredIncome = incomeList.filter(item => {
+    const fromStr = item.paymentFrom || ''
+    const rfStr = String(item.rf || item.id)
+    const term = searchTerm.toLowerCase()
+    return fromStr.toLowerCase().includes(term) || rfStr.includes(term)
+  })
+
+  // Financial Metrics
+  const totalIncomeSum = filteredIncome.reduce((acc, curr) => acc + (Number(curr.amount) || 0), 0)
+  const cashPayments = filteredIncome.filter(i => (i.method || '').toLowerCase() === 'cash').length
+  const digitalPayments = filteredIncome.length - cashPayments
+
   return (
-    <div
-      style={{ maxHeight: 'calc(100vh - 50px)' }}
-      className='p-4  custom-scroll '
-    >
-      <div className='flex justify-between items-center'>
-        <h3 className='text-[36px] text-[#BF6159]'>Income List</h3>
-        <div className='flex gap-4'>
-          {/* Date Picker Dropdown */}
+    <div style={{ maxHeight: 'calc(100vh - 50px)' }} className='p-6 overflow-y-auto custom-scroll space-y-6'>
+      {/* Top Header */}
+      <div className='flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 pb-3 border-b border-gray-200'>
+        <div>
+          <h2 className='page-title text-2xl'>
+            <FaFileInvoiceDollar className='text-[#BF6159]' /> Income & Financial Invoices
+          </h2>
+          <p className='text-xs text-gray-500 mt-0.5'>Track patient payments, consultation fees, and medical revenue</p>
+        </div>
+
+        <div className='flex items-center gap-3 w-full sm:w-auto justify-between sm:justify-end'>
+          <div className='search-wrap'>
+            <span className='search-icon'>🔍</span>
+            <input
+              type='text'
+              value={searchTerm}
+              onChange={e => setSearchTerm(e.target.value)}
+              placeholder='Search by Patient or RF #...'
+            />
+          </div>
+
+          {/* Date Picker Filter */}
           <div className='relative'>
             <DatePicker
               selected={selectedDate}
               onChange={date => setSelectedDate(date)}
-              placeholderText='Select Day'
-              className='pl-10 pr-4 py-2 focus:outline-none focus:ring-2 focus:ring-[#D5D5D5] border rounded-md'
+              placeholderText='Filter Date...'
+              isClearable
+              className='form-input pl-9 pr-8 text-xs py-2 w-36 cursor-pointer'
             />
-            <FaCalendarAlt className='absolute left-3 top-3 text-gray-400' />
+            <FaCalendarAlt className='absolute left-3 top-3 text-gray-400 text-xs pointer-events-none' />
           </div>
         </div>
       </div>
 
-      <table className='min-w-full mb-5 mt-10'>
-        <thead>
-          <tr>
-            <th className='p-2 border-b border-gray-300 text-center text-[20px] font-normal leading-[37px] '>
-              Invoice ID
-            </th>
-            <th className='p-2 border-b border-gray-300 text-center text-[20px] font-normal leading-[37px] '>
-              Payment From
-            </th>
-            <th className='p-2 border-b border-gray-300 text-center text-[20px] font-normal leading-[37px] '>
-              Date
-            </th>
-            <th className='p-2 border-b border-gray-300 text-center text-[20px] font-normal leading-[37px] '>
-              Amount
-            </th>
-            <th className='p-2 border-b border-gray-300 text-center text-[20px] font-normal leading-[37px] '>
-              Methods
-            </th>
-            {/* <th className="p-2 border-b border-gray-300 text-center text-[20px] font-normal leading-[37px] ">
-              Actions
-            </th> */}
-          </tr>
-        </thead>
-        <tbody>
-          {incomeList.map((item, index) => (
-            <tr
-              key={item.id}
-              className='p-t-r cursor-pointer  border-b border-gray-300'
-              onClick={() => onRowSelect(item.id)}
-            >
-              <td className='px-4 py-2 text-[20px] text-center text-black font-cairo'>
-                {index + 1}
-              </td>
-              <td className='px-4 py-2 text-[20px] text-center'>
-                {item.paymentFrom}
-              </td>
-              <td className='px-4 py-2 text-center'>{item.date}</td>
-              <td className='px-4 py-2 text-center'>{item.amount}</td>
-              <td className='px-4 py-2 text-center'>
-                <img
-                  src={paymentMethodImages[item.method]}
-                  alt={item.method}
-                  className='object-contain mx-auto w-8 h-8'
-                />
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+      {/* Financial Metric Cards */}
+      <div className='grid grid-cols-1 sm:grid-cols-3 gap-5'>
+        <div className='card p-5 bg-white border border-gray-200 shadow-sm flex items-center justify-between'>
+          <div className='space-y-1'>
+            <span className='text-xs font-bold text-gray-500 uppercase tracking-wider block'>Total Income</span>
+            <span className='text-2xl font-black text-[#BF6159]'>{totalIncomeSum.toLocaleString()} L.E</span>
+          </div>
+          <div className='w-12 h-12 rounded-2xl bg-red-50 text-[#BF6159] border border-red-100 flex items-center justify-center text-xl shadow-2xs'>
+            <FaWallet />
+          </div>
+        </div>
 
-      {/* Invoice Details Modal */}
+        <div className='card p-5 bg-white border border-gray-200 shadow-sm flex items-center justify-between'>
+          <div className='space-y-1'>
+            <span className='text-xs font-bold text-gray-500 uppercase tracking-wider block'>Total Invoices</span>
+            <span className='text-2xl font-extrabold text-gray-900'>{filteredIncome.length} Records</span>
+          </div>
+          <div className='w-12 h-12 rounded-2xl bg-blue-50 text-blue-600 border border-blue-100 flex items-center justify-center text-xl shadow-2xs'>
+            <FaReceipt />
+          </div>
+        </div>
+
+        <div className='card p-5 bg-white border border-gray-200 shadow-sm flex items-center justify-between'>
+          <div className='space-y-1'>
+            <span className='text-xs font-bold text-gray-500 uppercase tracking-wider block'>Payment Breakdown</span>
+            <div className='flex items-center gap-2 text-xs font-semibold text-gray-700'>
+              <span className='badge badge-confirmed text-[10px]'>Cash: {cashPayments}</span>
+              <span className='badge badge-info text-[10px]'>Card/Online: {digitalPayments}</span>
+            </div>
+          </div>
+          <div className='w-12 h-12 rounded-2xl bg-green-50 text-green-600 border border-green-100 flex items-center justify-center text-xl shadow-2xs'>
+            <FaExchangeAlt />
+          </div>
+        </div>
+      </div>
+
+      {/* Income Invoices Table */}
+      <div className='bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden'>
+        <table className='data-table'>
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>RF / Invoice ID</th>
+              <th>Payment Source</th>
+              <th>Issue Date</th>
+              <th>Payment Method</th>
+              <th>Amount (L.E)</th>
+              <th className='text-center'>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {filteredIncome.length > 0 ? (
+              filteredIncome.map((item, index) => (
+                <tr
+                  key={item.id}
+                  onClick={() => handleRowClick(item.id)}
+                  className='cursor-pointer hover:bg-red-50/40 transition'
+                >
+                  <td className='font-medium text-gray-600'>{index + 1}</td>
+                  <td className='font-mono font-bold text-gray-800'>#{item.rf}</td>
+                  <td className='font-bold text-gray-900'>{item.paymentFrom}</td>
+                  <td className='text-gray-600 text-xs'>{item.date}</td>
+                  <td>
+                    <span className='badge badge-primary uppercase text-[10px] font-bold'>
+                      💳 {item.method}
+                    </span>
+                  </td>
+                  <td className='font-extrabold text-[#BF6159]'>{item.amount} L.E</td>
+                  <td className='text-center' onClick={e => e.stopPropagation()}>
+                    <button
+                      onClick={() => handleRowClick(item.id)}
+                      className='btn-icon'
+                      title='View Invoice Receipt'
+                    >
+                      <FaEye />
+                    </button>
+                  </td>
+                </tr>
+              ))
+            ) : (
+              <tr>
+                <td colSpan='7' className='py-8 text-center text-gray-400'>
+                  No income records found matching your filters.
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+      </div>
+
+      {/* MODAL: INVOICE RECEIPT DETAILS */}
       {isModalOpen && selectedRow && (
-        <div className='fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 overflow-y-auto'>
-          <div className='bg-white w-full max-w-md rounded-2xl shadow-2xl p-6 relative border border-red-100 my-8'>
-            {/* Header */}
-            <div className='flex justify-between items-center pb-3 mb-4 border-b border-gray-100'>
-              <h2 className='text-2xl font-bold text-[#BF6159] flex items-center gap-2'>
-                📄 Invoice #{selectedRow.ref || selectedRow.id}
-              </h2>
-              <button
-                onClick={() => closeModal()}
-                className='modal-close'
-              >
+        <div className='modal-overlay'>
+          <div className='modal-panel max-w-md'>
+            <div className='modal-header'>
+              <div>
+                <h3 className='modal-title'>
+                  <FaReceipt /> Invoice Receipt #{selectedRow.ref || selectedRow.id}
+                </h3>
+                <p className='text-xs text-gray-500 mt-0.5'>Official Clinic Payment Breakdown</p>
+              </div>
+              <button onClick={closeModal} className='modal-close'>
                 ✕
               </button>
             </div>
 
-            {/* Patient Header */}
-            <div className='bg-red-50/50 p-3 rounded-xl border border-red-100 mb-4'>
-              <span className='block text-xs font-bold text-gray-500 uppercase tracking-wider'>Patient Name</span>
-              <h3 className='text-lg font-bold text-gray-900 mt-0.5'>
-                {selectedRow.details[0]?.visitDetail?.patient?.name || 'Walk-in Patient'}
+            {/* Patient Info Card */}
+            <div className='bg-red-50/60 p-3 rounded-xl border border-red-100 mb-4'>
+              <span className='text-[10px] font-bold text-gray-400 uppercase tracking-wider block'>Patient Name</span>
+              <h3 className='text-base font-bold text-gray-900 mt-0.5'>
+                {selectedRow.details?.[0]?.visitDetail?.patient?.name || 'Walk-in Patient'}
               </h3>
             </div>
 
-            {/* Details Section */}
-            <div className='space-y-3 mb-4 max-h-60 overflow-y-auto pr-1 custom-scroll'>
-              {selectedRow.details.map((detail, index) => (
+            {/* Line Items Breakdown */}
+            <div className='space-y-2.5 mb-4 max-h-56 overflow-y-auto pr-1 custom-scroll'>
+              {selectedRow.details?.map((detail, index) => (
                 <div key={index} className='bg-gray-50 p-3 rounded-xl border border-gray-200 flex justify-between items-center'>
                   <div>
-                    <h4 className='text-sm font-bold text-gray-900'>
+                    <h4 className='text-xs font-bold text-gray-900'>
                       {detail.visitDetail?.schedule?.service?.title || 'General Consultation'}
                     </h4>
-                    <p className='text-xs font-medium text-gray-500 mt-0.5'>
+                    <p className='text-[11px] font-medium text-gray-500 mt-0.5'>
                       Dr. {detail.visitDetail?.schedule?.doctor?.name || 'Attending Specialist'}
                     </p>
-                    {detail.visitDetail?.date && (
-                      <p className='text-[11px] text-gray-400 mt-0.5'>
-                        ⏰ {detail.visitDetail.date.fromTime} - {detail.visitDetail.date.toTime}
-                      </p>
-                    )}
                   </div>
-                  <div className='text-right'>
-                    <span className='text-sm font-bold text-[#BF6159] bg-white px-2.5 py-1 rounded-lg border border-red-100 shadow-sm block'>
-                      {detail.amount} L.E
-                    </span>
-                  </div>
+                  <span className='text-xs font-bold text-[#BF6159] bg-white px-2.5 py-1 rounded-lg border border-red-100 shadow-2xs'>
+                    {detail.amount} L.E
+                  </span>
                 </div>
               ))}
             </div>
 
             {/* Total Footer */}
-            <div className='flex justify-between items-center pt-3 border-t border-gray-100 bg-gray-50 p-4 rounded-xl border'>
+            <div className='flex justify-between items-center pt-3 border-t border-gray-100 bg-gray-50 p-3 rounded-xl border'>
               <div>
-                <span className='block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1'>Payment Method</span>
-                <span className='badge-active text-xs font-bold uppercase tracking-wider'>
+                <span className='text-[10px] font-bold text-gray-400 uppercase tracking-wider block mb-0.5'>Payment Method</span>
+                <span className='badge badge-confirmed text-[10px] uppercase font-bold'>
                   💳 {selectedRow.paymentMethod || 'Cash'}
                 </span>
               </div>
               <div className='text-right'>
-                <span className='block text-xs font-bold text-gray-500 uppercase tracking-wider'>Grand Total</span>
-                <span className='text-2xl font-black text-[#BF6159]'>
+                <span className='text-[10px] font-bold text-gray-400 uppercase tracking-wider block'>Grand Total</span>
+                <span className='text-xl font-black text-[#BF6159]'>
                   {selectedRow.total} L.E
                 </span>
               </div>

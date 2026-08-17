@@ -1,17 +1,23 @@
 import React, { useState, useEffect } from 'react'
 import DatePicker from 'react-datepicker'
 import 'react-datepicker/dist/react-datepicker.css'
-import { FaCalendarAlt, FaTrash, FaWindowClose } from 'react-icons/fa'
-import { RiDeleteBin6Line } from 'react-icons/ri'
-import { FiEdit2 } from 'react-icons/fi'
+import {
+  FaCalendarAlt,
+  FaTrash,
+  FaPlus,
+  FaEdit,
+  FaFileInvoiceDollar,
+  FaReceipt,
+  FaMoneyBillWave
+} from 'react-icons/fa'
 import axios from 'axios'
 import { API_URL, getToken } from '../../../config'
 
-function Expenses () {
+function Expenses() {
   const [selectedDate, setSelectedDate] = useState(null)
   const [expenses, setExpenses] = useState([])
+  const [searchTerm, setSearchTerm] = useState('')
   const [isModalOpen, setIsModalOpen] = useState(false)
-
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false)
   const [expenseToDelete, setExpenseToDelete] = useState(null)
 
@@ -20,10 +26,11 @@ function Expenses () {
   const [isEditing, setIsEditing] = useState(false)
   const [editingExpenseId, setEditingExpenseId] = useState(null)
 
+  const token = getToken()
+
   const formatDate = date => (date ? date.toLocaleDateString('en-CA') : null)
 
-  const fetchIncome = async () => {
-    const TOKEN = getToken()
+  const fetchExpenses = async () => {
     try {
       const formattedDate = selectedDate ? formatDate(selectedDate) : null
       const url = formattedDate
@@ -33,106 +40,42 @@ function Expenses () {
       const response = await axios.get(url, {
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${TOKEN}`
+          Authorization: `Bearer ${token}`
         }
       })
 
       if (response.status === 200) {
-        const mappedData = response.data.data.map(item => ({
+        const mappedData = (response.data.data || []).map(item => ({
           id: item.id,
-          ref: item.rf,
-          date: new Date(item.createdAt).toLocaleDateString(),
-          amount: item.total,
-          details: item.details[0]?.description
-            ? item.details[0].description
-            : undefined,
-          invoiceDetailsId: item.details[0]?.id
+          ref: item.rf || item.id,
+          date: new Date(item.createdAt).toLocaleDateString('en-US', {
+            year: 'numeric',
+            month: 'short',
+            day: 'numeric'
+          }),
+          amount: item.total || 0,
+          details: item.details?.[0]?.description || 'Operational Expense',
+          invoiceDetailsId: item.details?.[0]?.id
         }))
         setExpenses(mappedData)
-      } else {
-        console.error('Error fetching data:', response.statusText)
       }
     } catch (error) {
-      console.error('Error fetching data:', error)
+      console.error('Error fetching expenses:', error)
     }
   }
 
-  const handleSave = async e => {
-    const TOKEN = getToken()
-    e.preventDefault()
-    if (!expenseDetails || !expenseAmount) {
-      alert('Please fill in all fields.')
-      return
-    }
+  useEffect(() => {
+    fetchExpenses()
+  }, [selectedDate])
 
-    try {
-      if (isEditing) {
-        let updatedExpense = {
-          description: expenseDetails,
-          amount: parseFloat(expenseAmount)
-        }
-
-        const response = await axios.put(
-          `${API_URL}/api/invoice/${editingExpenseId}`,
-          updatedExpense,
-          {
-            headers: {
-              'Content-Type': 'application/json',
-              Authorization: `Bearer ${TOKEN}`
-            }
-          }
-        )
-
-        if (response.status === 200) {
-          console.log('Expense updated successfully:', response.data)
-          fetchIncome()
-          setIsModalOpen(false)
-          setExpenseDetails('')
-          setExpenseAmount('')
-          resetModal()
-        } else {
-          console.error('Failed to update the expense:', response)
-        }
-      } else {
-        const newExpense = {
-          description: expenseDetails,
-          amount: parseFloat(expenseAmount)
-        }
-
-        const response = await axios.post(
-          `${API_URL}/api/invoice`,
-          newExpense,
-          {
-            headers: {
-              'Content-Type': 'application/json',
-              Authorization: `Bearer ${TOKEN}`
-            }
-          }
-        )
-
-        if (response.status === 200) {
-          console.log('Expense saved successfully:', response.data)
-          fetchIncome()
-          setIsModalOpen(false)
-          resetModal()
-        } else {
-          console.error('Failed to save the expense:', response)
-        }
-      }
-    } catch (error) {
-      console.error('Error while saving the expense:', error)
-    }
+  const openModal = () => {
+    resetModal()
+    setIsModalOpen(true)
   }
 
-  const handleEdit = expenseId => {
-    const expense = expenses.find(item => item.invoiceDetailsId === expenseId)
-    if (expense) {
-      setExpenseDetails(expense.details)
-      setExpenseAmount(expense.amount)
-      setEditingExpenseId(expenseId)
-      setIsEditing(true)
-      setIsModalOpen(true)
-    }
+  const closeModal = () => {
+    setIsModalOpen(false)
+    resetModal()
   }
 
   const resetModal = () => {
@@ -142,191 +85,250 @@ function Expenses () {
     setIsEditing(false)
   }
 
+  const handleEdit = expenseId => {
+    const item = expenses.find(exp => exp.invoiceDetailsId === expenseId || exp.id === expenseId)
+    if (item) {
+      setExpenseDetails(item.details)
+      setExpenseAmount(item.amount)
+      setEditingExpenseId(item.invoiceDetailsId || item.id)
+      setIsEditing(true)
+      setIsModalOpen(true)
+    }
+  }
+
   const openDeleteModal = expenseId => {
     setExpenseToDelete(expenseId)
     setIsDeleteModalOpen(true)
   }
 
-  // Close delete modal
   const closeDeleteModal = () => {
     setIsDeleteModalOpen(false)
     setExpenseToDelete(null)
   }
 
-  const handleDelete = async () => {
-    const TOKEN = getToken()
-    if (!expenseToDelete) return // Safety check
+  const handleDeleteConfirmed = async () => {
+    if (!expenseToDelete) return
     try {
-      const response = await axios.delete(
-        `${API_URL}/api/invoice/${expenseToDelete}`,
-        {
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${TOKEN}`
-          }
-        }
-      )
-
-      if (response.status === 200) {
-        console.log('Expense deleted successfully')
-        fetchIncome()
-      } else {
-        console.error('Failed to delete the expense:', response)
-      }
+      await axios.delete(`${API_URL}/api/invoice/${expenseToDelete}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      })
+      fetchExpenses()
+      closeDeleteModal()
     } catch (error) {
-      console.error('Error while deleting the expense:', error)
-    } finally {
-      setIsDeleteModalOpen(false) // Close modal after action
-      setExpenseToDelete(null) // Reset the state
+      console.error('Error deleting expense:', error)
+      alert('Failed to delete expense record.')
     }
   }
 
-  useEffect(() => {
-    fetchIncome()
-  }, [selectedDate])
+  const handleSave = async e => {
+    e.preventDefault()
+    if (!expenseDetails.trim() || !expenseAmount) {
+      alert('Please fill in both description and amount.')
+      return
+    }
+
+    try {
+      if (isEditing) {
+        const payload = {
+          description: expenseDetails.trim(),
+          amount: parseFloat(expenseAmount)
+        }
+        await axios.put(`${API_URL}/api/invoice/${editingExpenseId}`, payload, {
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`
+          }
+        })
+      } else {
+        const payload = {
+          description: expenseDetails.trim(),
+          amount: parseFloat(expenseAmount)
+        }
+        await axios.post(`${API_URL}/api/invoice`, payload, {
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`
+          }
+        })
+      }
+      fetchExpenses()
+      closeModal()
+    } catch (error) {
+      console.error('Error saving expense:', error)
+      alert(error.response?.data?.message || 'Failed to save expense.')
+    }
+  }
+
+  const filteredExpenses = expenses.filter(item => {
+    const descStr = item.details || ''
+    const refStr = String(item.ref || item.id)
+    const term = searchTerm.toLowerCase()
+    return descStr.toLowerCase().includes(term) || refStr.includes(term)
+  })
+
+  // Financial Metrics
+  const totalExpensesSum = filteredExpenses.reduce((acc, curr) => acc + (Number(curr.amount) || 0), 0)
 
   return (
-    <div
-      style={{ maxHeight: 'calc(100vh - 50px)' }}
-      className='p-4 overflow-y-auto custom-scroll '
-    >
-      <div className='flex justify-between items-center'>
-        <h3 className='text-[36px] text-[#BF6159]'>Expenses List</h3>
-        <div className='flex gap-4'>
+    <div style={{ maxHeight: 'calc(100vh - 50px)' }} className='p-6 overflow-y-auto custom-scroll space-y-6'>
+      {/* Top Header */}
+      <div className='flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 pb-3 border-b border-gray-200'>
+        <div>
+          <h2 className='page-title text-2xl'>
+            <FaFileInvoiceDollar className='text-[#BF6159]' /> Clinic Expenses & Outgoings
+          </h2>
+          <p className='text-xs text-gray-500 mt-0.5'>Record clinic operational costs, medical inventory, and maintenance expenses</p>
+        </div>
+
+        <div className='flex items-center gap-3 w-full sm:w-auto justify-between sm:justify-end'>
+          <div className='search-wrap'>
+            <span className='search-icon'>🔍</span>
+            <input
+              type='text'
+              value={searchTerm}
+              onChange={e => setSearchTerm(e.target.value)}
+              placeholder='Search Expense Description...'
+            />
+          </div>
+
+          {/* Date Picker Filter */}
           <div className='relative'>
             <DatePicker
               selected={selectedDate}
               onChange={date => setSelectedDate(date)}
-              placeholderText='Select Day'
-              className='pl-10 pr-4 py-2 focus:outline-none focus:ring-2 focus:ring-[#D5D5D5] border rounded-md'
+              placeholderText='Filter Date...'
+              isClearable
+              className='form-input pl-9 pr-8 text-xs py-2 w-36 cursor-pointer'
             />
-            <FaCalendarAlt className='absolute left-3 top-3 text-gray-400' />
+            <FaCalendarAlt className='absolute left-3 top-3 text-gray-400 text-xs pointer-events-none' />
           </div>
-          <button
-            className='btn-primary'
-            onClick={() => {
-              resetModal()
-              setIsModalOpen(true)
-            }}
-          >
-            Add Expenses
+
+          <button onClick={openModal} className='btn-primary'>
+            <FaPlus /> Add Expense
           </button>
         </div>
       </div>
 
-      <table className='min-w-full ml-2 mb-5 mt-10'>
-        <thead>
-          <tr>
-            <th className='p-2 border-b border-gray-300 text-center text-[20px] font-normal leading-[37px] '>
-              ID
-            </th>
-            <th className='p-2 border-b border-gray-300 text-center text-[20px] font-normal leading-[37px] '>
-              Date
-            </th>
-            <th className='p-2 border-b border-gray-300 text-center text-[20px] font-normal leading-[37px] '>
-              Total
-            </th>
-            <th className='p-2 border-b border-gray-300 text-center text-[20px] font-normal leading-[37px] '>
-              Details
-            </th>
-            <th className='p-2 border-b border-gray-300 text-center text-[20px] font-normal leading-[37px] '>
-              Actions
-            </th>
-          </tr>
-        </thead>
-        <tbody>
-          {expenses.map((item, index) => (
-            <tr key={item.id} className=' p-t-r cursor-pointer border-b'>
-              <td className='px-4 py-2 text-center'>{index + 1}</td>
-              <td className='px-4 py-2 text-center'>{item.date}</td>
-              <td className='px-4 py-2 text-center'>{item.amount}</td>
-              <td className='px-4 py-2 text-center'>{item.details}</td>
-              <td className='px-4 py-2 text-center'>
-                <button
-                  className='btn-ghost'
-                  onClick={() => handleEdit(item.invoiceDetailsId)}
-                >
-                  <FiEdit2 size={24} />
-                </button>
-                <button
-                  className='btn-icon danger'
-                  onClick={() => openDeleteModal(item.id)}
-                >
-                  <FaTrash size={24} />
-                </button>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+      {/* Expense Metric Cards */}
+      <div className='grid grid-cols-1 sm:grid-cols-2 gap-5'>
+        <div className='card p-5 bg-white border border-gray-200 shadow-sm flex items-center justify-between'>
+          <div className='space-y-1'>
+            <span className='text-xs font-bold text-gray-500 uppercase tracking-wider block'>Total Outgoing Expenses</span>
+            <span className='text-2xl font-black text-red-600'>{totalExpensesSum.toLocaleString()} L.E</span>
+          </div>
+          <div className='w-12 h-12 rounded-2xl bg-red-50 text-red-600 border border-red-100 flex items-center justify-center text-xl shadow-2xs'>
+            <FaMoneyBillWave />
+          </div>
+        </div>
 
-      {/* Add / Edit Expense Modal */}
+        <div className='card p-5 bg-white border border-gray-200 shadow-sm flex items-center justify-between'>
+          <div className='space-y-1'>
+            <span className='text-xs font-bold text-gray-500 uppercase tracking-wider block'>Recorded Expense Items</span>
+            <span className='text-2xl font-extrabold text-gray-900'>{filteredExpenses.length} Records</span>
+          </div>
+          <div className='w-12 h-12 rounded-2xl bg-gray-100 text-gray-700 border border-gray-200 flex items-center justify-center text-xl shadow-2xs'>
+            <FaReceipt />
+          </div>
+        </div>
+      </div>
+
+      {/* Expenses Table */}
+      <div className='bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden'>
+        <table className='data-table'>
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Expense ID / Ref</th>
+              <th>Description / Category</th>
+              <th>Record Date</th>
+              <th>Amount (L.E)</th>
+              <th className='text-center'>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {filteredExpenses.length > 0 ? (
+              filteredExpenses.map((item, index) => (
+                <tr key={item.id}>
+                  <td className='font-medium text-gray-600'>{index + 1}</td>
+                  <td className='font-mono font-bold text-gray-800'>#{item.ref}</td>
+                  <td className='font-bold text-gray-900'>{item.details}</td>
+                  <td className='text-gray-600 text-xs'>{item.date}</td>
+                  <td className='font-extrabold text-red-600'>{item.amount} L.E</td>
+                  <td className='text-center'>
+                    <div className='flex items-center justify-center gap-2'>
+                      <button
+                        onClick={() => handleEdit(item.invoiceDetailsId || item.id)}
+                        className='btn-icon'
+                        title='Edit Expense'
+                      >
+                        <FaEdit />
+                      </button>
+                      <button
+                        onClick={() => openDeleteModal(item.id)}
+                        className='btn-icon danger'
+                        title='Delete Expense'
+                      >
+                        <FaTrash />
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))
+            ) : (
+              <tr>
+                <td colSpan='6' className='py-8 text-center text-gray-400'>
+                  No expense records found matching your filters.
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+      </div>
+
+      {/* MODAL 1: ADD / EDIT EXPENSE */}
       {isModalOpen && (
-        <div className='fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 overflow-y-auto'>
-          <div className='bg-white w-full max-w-lg rounded-2xl shadow-2xl p-6 relative border border-red-100 my-8'>
-            {/* Header */}
-            <div className='flex justify-between items-center pb-3 mb-4 border-b border-gray-100'>
-              <h2 className='text-2xl font-bold text-[#BF6159] flex items-center gap-2'>
-                💳 {isEditing ? 'Edit Expense Record' : 'Add New Expense'}
-              </h2>
-              <button
-                onClick={() => {
-                  setIsModalOpen(false)
-                  resetModal()
-                }}
-                className='modal-close'
-              >
+        <div className='modal-overlay'>
+          <div className='modal-panel max-w-md'>
+            <div className='modal-header'>
+              <h3 className='modal-title'>
+                <FaFileInvoiceDollar /> {isEditing ? 'Edit Expense Record' : 'Record New Expense'}
+              </h3>
+              <button onClick={closeModal} className='modal-close'>
                 ✕
               </button>
             </div>
 
             <form onSubmit={handleSave} className='space-y-4'>
               <div>
-                <label className='block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1'>
-                  Expense Amount (L.E)
-                </label>
+                <label className='form-label'>Expense Description</label>
                 <input
                   type='text'
-                  value={expenseAmount}
-                  placeholder='e.g. 500'
-                  onChange={e => {
-                    if (/^\d*\.?\d*$/.test(e.target.value)) {
-                      setExpenseAmount(e.target.value)
-                    }
-                  }}
-                  className='w-full border border-gray-300 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-[#BF6159] focus:outline-none bg-gray-50/50'
+                  required
+                  placeholder='e.g. Medical Gloves & Disposable Syringes'
+                  value={expenseDetails}
+                  onChange={e => setExpenseDetails(e.target.value)}
+                  className='form-input'
                 />
               </div>
 
               <div>
-                <label className='block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1'>
-                  Expense Details / Description
-                </label>
-                <textarea
-                  value={expenseDetails}
-                  onChange={e => setExpenseDetails(e.target.value)}
-                  placeholder='e.g. Medical supplies, electricity bill, maintenance...'
-                  rows='3'
-                  className='w-full border border-gray-300 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-[#BF6159] focus:outline-none bg-gray-50/50 resize-none'
+                <label className='form-label'>Expense Amount (L.E)</label>
+                <input
+                  type='number'
+                  step='0.01'
+                  required
+                  placeholder='e.g. 450.00'
+                  value={expenseAmount}
+                  onChange={e => setExpenseAmount(e.target.value)}
+                  className='form-input'
                 />
               </div>
 
-              {/* Actions */}
-              <div className='flex justify-end gap-3 pt-4 border-t border-gray-100'>
-                <button
-                  type='button'
-                  onClick={() => {
-                    setIsModalOpen(false)
-                    resetModal()
-                  }}
-                  className='btn-secondary'
-                >
+              <div className='modal-footer'>
+                <button type='button' onClick={closeModal} className='btn-secondary'>
                   Cancel
                 </button>
-                <button
-                  type='submit'
-                  className='btn-primary'
-                >
+                <button type='submit' className='btn-primary'>
                   {isEditing ? 'Update Expense' : 'Save Expense'}
                 </button>
               </div>
@@ -335,28 +337,23 @@ function Expenses () {
         </div>
       )}
 
-      {/* Delete Expense Modal */}
+      {/* MODAL 2: CONFIRM DELETE */}
       {isDeleteModalOpen && (
-        <div className='fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4'>
-          <div className='bg-white rounded-2xl shadow-2xl p-6 w-full max-w-md border border-red-100 relative'>
-            <h3 className='text-xl font-bold mb-3 text-gray-900'>
-              Confirm Expense Deletion
-            </h3>
-            <p className='text-sm text-gray-600 mb-6'>
+        <div className='modal-overlay'>
+          <div className='modal-panel max-w-sm text-center space-y-4'>
+            <div className='w-12 h-12 rounded-full bg-red-100 text-red-600 flex items-center justify-center mx-auto text-xl'>
+              ⚠️
+            </div>
+            <h3 className='text-lg font-bold text-gray-900'>Delete Expense Record?</h3>
+            <p className='text-xs text-gray-500'>
               Are you sure you want to delete this expense record? This action cannot be undone.
             </p>
-            <div className='flex justify-end gap-3'>
-              <button
-                onClick={() => setIsDeleteModalOpen(false)}
-                className='btn-secondary'
-              >
+            <div className='flex justify-center gap-3 pt-2'>
+              <button onClick={closeDeleteModal} className='btn-secondary'>
                 Cancel
               </button>
-              <button
-                onClick={handleDelete}
-                className='btn-danger'
-              >
-                Delete Expense
+              <button onClick={handleDeleteConfirmed} className='btn-danger'>
+                Yes, Delete Record
               </button>
             </div>
           </div>
