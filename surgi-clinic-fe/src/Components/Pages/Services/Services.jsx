@@ -191,34 +191,42 @@ export default function Services () {
       </div>
 
       {isModalOpen && (
-        <div className='fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50'>
-          <div className='bg-white rounded-lg shadow-lg w-full max-w-2xl p-6 relative'>
-            <button
-              onClick={closeModal}
-              className='absolute top-4 right-4 text-gray-400 hover:text-red-600'
-            >
-              <FaWindowClose className='text-2xl' />
-            </button>
-            <h2 className='text-2xl font-bold mb-6'>Add Service</h2>
-            <form onSubmit={formik.handleSubmit}>
-              <div className='relative w-[146px] h-[143px] mb-9 mx-auto border rounded-[50px]'>
-                <div className='relative w-full h-full flex items-center justify-center'>
-                  {image ? (
-                    <img
-                      src={URL.createObjectURL(image)} // Display the uploaded image
-                      alt='Selected'
-                      className='w-full h-full'
-                    />
-                  ) : (
-                    <div className='rounded-full overflow-hidden'>
-                      <img src={addDoctor} className='w-full h-full' alt='' />
-                    </div>
-                  )}
+        <div className='fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 overflow-y-auto'>
+          <div className='bg-white w-full max-w-xl rounded-2xl shadow-2xl p-6 relative border border-red-100 my-8'>
+            {/* Header */}
+            <div className='flex justify-between items-center pb-3 mb-4 border-b border-gray-100'>
+              <h2 className='text-2xl font-bold text-[#BF6159] flex items-center gap-2'>
+                <FaStethoscope /> Add New Service
+              </h2>
+              <button
+                onClick={closeModal}
+                className='text-gray-400 hover:text-gray-600 text-xl font-bold w-8 h-8 rounded-full hover:bg-gray-100 flex items-center justify-center transition'
+              >
+                ✕
+              </button>
+            </div>
+
+            <form onSubmit={formik.handleSubmit} className='space-y-4'>
+              {/* Image Upload */}
+              <div className='flex justify-center mb-6'>
+                <div className='relative w-24 h-24'>
+                  <div className='w-full h-full rounded-2xl bg-red-50 border-2 border-red-200 flex items-center justify-center overflow-hidden shadow-inner'>
+                    {image ? (
+                      <img
+                        src={URL.createObjectURL(image)}
+                        alt='Selected'
+                        className='w-full h-full object-cover'
+                      />
+                    ) : (
+                      <img src={addDoctor} className='w-12 h-12 object-contain opacity-70' alt='Placeholder' />
+                    )}
+                  </div>
                   <label
                     htmlFor='imageInput'
-                    className='absolute bottom-0 border-white  border-2 right-0 bg-[#BF6159] text-white p-2 rounded-full cursor-pointer'
+                    className='absolute bottom-0 right-0 bg-[#BF6159] hover:bg-red-700 text-white p-2 rounded-full cursor-pointer shadow-md transition'
+                    title='Upload Service Image'
                   >
-                    <IoCameraOutline />
+                    <IoCameraOutline className='text-base' />
                     <input
                       type='file'
                       id='imageInput'
@@ -230,10 +238,11 @@ export default function Services () {
                 </div>
               </div>
 
-              <div className='flex gap-4'>
-                <div className='flex-1 min-w-[calc(50%-1.5rem)] group'>
-                  <label className='block text-gray-700 mb-2 group-focus-within:text-[#BF6159]'>
-                    Title
+              <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
+                {/* Title */}
+                <div>
+                  <label className='block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1'>
+                    Service Title
                   </label>
                   <input
                     type='text'
@@ -241,24 +250,25 @@ export default function Services () {
                     value={formik.values.title}
                     onChange={formik.handleChange}
                     onBlur={formik.handleBlur}
-                    placeholder='eg: John Doe'
-                    className='add-p-i pl-6 pr-4 py-2 w-full focus:outline-none focus:ring-2 focus:ring-[#BF6159]'
+                    placeholder='e.g. General Dental Checkup'
+                    className='w-full border border-gray-300 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-[#BF6159] focus:outline-none bg-gray-50/50'
                   />
                   {formik.errors.title && formik.touched.title && (
-                    <div className='error'>{formik.errors.title}</div>
+                    <div className='text-red-500 text-xs mt-1'>{formik.errors.title}</div>
                   )}
                 </div>
 
-                <div className='flex-1 min-w-[calc(50%-1.5rem)] group'>
-                  <label className='block text-gray-700 mb-2 group-focus-within:text-[#BF6159]'>
-                    Status
+                {/* Status */}
+                <div>
+                  <label className='block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1'>
+                    Availability Status
                   </label>
                   <select
                     name='status'
                     value={formik.values.status}
                     onChange={formik.handleChange}
                     onBlur={formik.handleBlur}
-                    className='w-full add-p-i pl-6 py-2 focus:outline-none focus:ring-2 focus:ring-[#BF6159]'
+                    className='w-full border border-gray-300 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-[#BF6159] focus:outline-none bg-gray-50/50'
                   >
                     <option value='Available'>Available</option>
                     <option value='Not Available'>Not Available</option>
@@ -266,35 +276,40 @@ export default function Services () {
                 </div>
               </div>
 
-              <div className='flex-1 w-full group mt-5 mb-5'>
-                <label className='block text-gray-700 mb-2 group-focus-within:text-[#BF6159]'>
-                  Description
+              {/* Description */}
+              <div>
+                <label className='block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1'>
+                  Description & Medical Details
                 </label>
                 <textarea
                   name='desc'
                   value={formik.values.desc}
                   onChange={formik.handleChange}
                   onBlur={formik.handleBlur}
-                  placeholder='Info'
-                  className='add-p-i pl-6 pr-4 h-[110px] py-2 resize-none w-full focus:outline-none focus:ring-2 focus:ring-[#BF6159]'
+                  placeholder='Write a brief description of the medical service...'
+                  rows='3'
+                  className='w-full border border-gray-300 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-[#BF6159] focus:outline-none bg-gray-50/50 resize-none'
                 ></textarea>
                 {formik.errors.desc && formik.touched.desc && (
-                  <div className='error'>{formik.errors.desc}</div>
+                  <div className='text-red-500 text-xs mt-1'>{formik.errors.desc}</div>
                 )}
               </div>
 
-              <div className='mt-6'>
+              {/* Action Buttons */}
+              <div className='flex justify-end gap-3 pt-4 border-t border-gray-100'>
+                <button
+                  type='button'
+                  onClick={closeModal}
+                  className='px-5 py-2.5 bg-gray-100 text-gray-700 text-sm font-semibold rounded-xl hover:bg-gray-200 transition'
+                >
+                  Cancel
+                </button>
                 <button
                   type='submit'
                   disabled={loading}
-                  className={`bg-[#BF6159] text-white px-6 py-2 rounded-md hover:bg-[#BF6159] ${
-                    loading ? 'cursor-wait' : ''
-                  }`}
+                  className='px-6 py-2.5 bg-[#BF6159] text-white text-sm font-semibold rounded-xl hover:bg-red-700 transition shadow-md shadow-red-200 flex items-center gap-2 disabled:opacity-50'
                 >
-                  <div className='flex'>
-                    {loading ? 'Saving...' : 'Save'}{' '}
-                    <IoIosSave className='text-2xl' />
-                  </div>
+                  <IoIosSave className='text-lg' /> {loading ? 'Saving...' : 'Save Service'}
                 </button>
               </div>
             </form>

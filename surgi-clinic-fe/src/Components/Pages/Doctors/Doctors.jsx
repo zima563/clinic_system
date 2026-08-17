@@ -242,41 +242,41 @@ function Doctors () {
 
       {/* Add Doctor Modal */}
       {isModalOpen && (
-        <div className='fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50'>
-          <div className='bg-white rounded-lg shadow-lg w-full max-w-3xl p-6 relative'>
-            {/* Close Button */}
-            <button
-              onClick={closeModal}
-              className='absolute top-6 right-6 text-gray-400 hover:text-red-500'
-            >
-              <FaWindowClose className='text-3xl' />
-            </button>
+        <div className='fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 overflow-y-auto'>
+          <div className='bg-white w-full max-w-xl rounded-2xl shadow-2xl p-6 relative border border-red-100 my-8'>
+            {/* Header */}
+            <div className='flex justify-between items-center pb-3 mb-4 border-b border-gray-100'>
+              <h2 className='text-2xl font-bold text-[#BF6159] flex items-center gap-2'>
+                <FaUserPlus /> Add New Doctor
+              </h2>
+              <button
+                onClick={closeModal}
+                className='text-gray-400 hover:text-gray-600 text-xl font-bold w-8 h-8 rounded-full hover:bg-gray-100 flex items-center justify-center transition'
+              >
+                ✕
+              </button>
+            </div>
 
-            <h2 className='text-2xl font-bold mb-6 text-black'>Add Doctor</h2>
-
-            {/* Form Section */}
-
-            <div className='relative w-24 h-24 mb-9'>
-              {/* Circle background */}
-              <div className='relative w-full h-full rounded-full bg-red-100 flex items-center justify-center'>
-                {image ? (
-                  <img
-                    src={URL.createObjectURL(image)}
-                    alt='Selected'
-                    className='w-full h-full object-cover rounded-full'
-                  />
-                ) : (
-                  <div className='rounded-full overflow-hidden'>
-                    <img src={addDoctor} className=' mt-6' alt='' />
-                  </div>
-                )}
-                {/* Camera icon */}
+            {/* Avatar Upload */}
+            <div className='flex justify-center mb-6'>
+              <div className='relative w-24 h-24'>
+                <div className='w-full h-full rounded-full bg-red-50 border-2 border-red-200 flex items-center justify-center overflow-hidden shadow-inner'>
+                  {image ? (
+                    <img
+                      src={URL.createObjectURL(image)}
+                      alt='Selected'
+                      className='w-full h-full object-cover'
+                    />
+                  ) : (
+                    <img src={addDoctor} className='w-12 h-12 object-contain opacity-70' alt='Doctor Placeholder' />
+                  )}
+                </div>
                 <label
                   htmlFor='imageInput'
-                  className='absolute bottom-0 border-white  border-2 right-0 bg-[#5F66EA] text-white p-2 rounded-full cursor-pointer'
+                  className='absolute bottom-0 right-0 bg-[#BF6159] hover:bg-red-700 text-white p-2 rounded-full cursor-pointer shadow-md transition'
+                  title='Upload Doctor Avatar'
                 >
-                  <IoCameraOutline />
-
+                  <IoCameraOutline className='text-base' />
                   <input
                     type='file'
                     id='imageInput'
@@ -287,115 +287,96 @@ function Doctors () {
                 </label>
               </div>
             </div>
-            <form onSubmit={handleAddDoctor} className='flex flex-wrap gap-6'>
-              {/* Name */}
-              <div className='flex-1 min-w-[calc(50%-1.5rem)] group'>
-                <label className='block text-gray-700 mb-2 group-focus-within:text-[#BF6159]'>
-                  Name
-                </label>
+
+            <form onSubmit={handleAddDoctor} className='space-y-4'>
+              {/* Doctor Name */}
+              <div>
+                <label className='block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1'>Doctor Name</label>
                 <input
                   type='text'
                   name='name'
-                  placeholder='eg: John Doe'
+                  placeholder='e.g. Dr. Alexander Fleming'
                   value={formInputs.name}
                   onChange={handleInputChange}
-                  className='add-p-i pl-6 pr-4 py-2 w-full focus:outline-none focus:ring-2 focus:ring-[#BF6159]'
+                  className='w-full border border-gray-300 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-[#BF6159] focus:outline-none bg-gray-50/50'
                 />
               </div>
 
-              {/* Status */}
-              {/* <div className='flex-1 min-w-[calc(50%-1.5rem)] group'>
-                <label className='block text-gray-700 mb-2 group-focus-within:text-[#BF6159]'>
-                  Status
-                </label>
-                <select
-                  name='status'
-                  value={formInputs.status}
-                  onChange={handleInputChange}
-                  className='w-full add-p-i pl-6 py-2 focus:outline-none focus:ring-2 focus:ring-[#BF6159]'
-                >
-                  <option value={null}>Select</option>
-                  <option value={true}>Available</option>
-                  <option value={false}>Not Available</option>
-                </select>
-              </div> */}
-
-              <div className='flex justify-between gap-6'>
-                <div className='w-[349px]'>
-                  {/* Phone Number */}
-                  <div className='flex-1   group'>
-                    <label className='block text-gray-700 mb-2 group-focus-within:text-[#BF6159]'>
-                      Phone Number
-                    </label>
-                    <div className='flex mb-6 items-center border'>
-                      <select
-                        name='phoneCode'
-                        value={formInputs.phoneCode}
-                        onChange={handleInputChange}
-                        className='p-2 add-p-i focus:outline-none'
-                      >
-                        <option>+971</option>
-                        <option>+20</option>
-                      </select>
-                      <input
-                        type='text'
-                        name='phone'
-                        value={formInputs.phone}
-                        onChange={handleInputChange}
-                        placeholder='543210987'
-                        className='add-p-i pl-6 pr-4 py-2 w-full focus:outline-none focus:ring-2 focus:ring-[#BF6159]'
-                      />
-                    </div>
-                  </div>
-                  {/* Specialties */}
-                  <div className='flex-1 min-w-[calc(50%-1.5rem)] group'>
-                    <label className='block text-gray-700 mb-2 group-focus-within:text-[#BF6159]'>
-                      Specialties
-                    </label>
+              <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
+                {/* Phone Number */}
+                <div>
+                  <label className='block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1'>Phone Number</label>
+                  <div className='flex gap-2'>
                     <select
-                      name='specialty'
-                      value={formInputs.specialty}
+                      name='phoneCode'
+                      value={formInputs.phoneCode}
                       onChange={handleInputChange}
-                      className='w-full add-p-i pl-6 py-2 focus:outline-none focus:ring-2 focus:ring-[#BF6159]'
+                      className='px-3 py-2.5 bg-gray-100 border border-gray-300 rounded-xl text-sm font-semibold text-gray-600 focus:outline-none'
                     >
-                      <option value={null}>Select</option>
-                      {Speciality?.length > 0 ? (
-                        Speciality.map(spe => (
-                          <option key={spe.id} value={spe.id}>
-                            {spe.title}
-                          </option>
-                        ))
-                      ) : (
-                        <option>not found</option>
-                      )}
+                      <option>+20</option>
+                      <option>+971</option>
                     </select>
+                    <input
+                      type='text'
+                      name='phone'
+                      value={formInputs.phone}
+                      onChange={handleInputChange}
+                      placeholder='1012345678'
+                      className='w-full border border-gray-300 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-[#BF6159] focus:outline-none bg-gray-50/50'
+                    />
                   </div>
                 </div>
-                {/* Info */}
-                <div className='flex-1 w-[349px] group'>
-                  <label className='block text-gray-700 mb-2 group-focus-within:text-[#BF6159]'>
-                    Info
-                  </label>
-                  <textarea
-                    name='info'
-                    value={formInputs.info}
+
+                {/* Specialties */}
+                <div>
+                  <label className='block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1'>Specialties</label>
+                  <select
+                    name='specialty'
+                    value={formInputs.specialty}
                     onChange={handleInputChange}
-                    placeholder='Info'
-                    className='add-p-i pl-6 pr-4 h-[145px] py-2 resize-none w-full focus:outline-none focus:ring-2 focus:ring-[#BF6159]'
-                  ></textarea>
+                    className='w-full border border-gray-300 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-[#BF6159] focus:outline-none bg-gray-50/50'
+                  >
+                    <option value=''>-- Select Specialty --</option>
+                    {Speciality?.length > 0 ? (
+                      Speciality.map(spe => (
+                        <option key={spe.id} value={spe.id}>
+                          {spe.title}
+                        </option>
+                      ))
+                    ) : (
+                      <option disabled>No specialties available</option>
+                    )}
+                  </select>
                 </div>
               </div>
 
+              {/* Info / Biography */}
+              <div>
+                <label className='block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1'>Doctor Info / Bio</label>
+                <textarea
+                  name='info'
+                  value={formInputs.info}
+                  onChange={handleInputChange}
+                  placeholder='Specialization details, certifications, experience...'
+                  rows='3'
+                  className='w-full border border-gray-300 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-[#BF6159] focus:outline-none bg-gray-50/50 resize-none'
+                ></textarea>
+              </div>
+
               {/* Save Button */}
-              <div className='flex w-full  justify-start'>
+              <div className='flex justify-end gap-3 pt-4 border-t border-gray-100'>
+                <button
+                  type='button'
+                  onClick={closeModal}
+                  className='px-5 py-2.5 bg-gray-100 text-gray-700 text-sm font-semibold rounded-xl hover:bg-gray-200 transition'
+                >
+                  Cancel
+                </button>
                 <button
                   type='submit'
-                  className='bg-red-500 text-white px-6 py-2 rounded-md hover:bg-red-600'
+                  className='px-6 py-2.5 bg-[#BF6159] text-white text-sm font-semibold rounded-xl hover:bg-red-700 transition shadow-md shadow-red-200 flex items-center gap-2'
                 >
-                  <div className='flex align-baseline gap-3 justify-between items-center'>
-                    Save
-                    <IoIosSave className='text-2xl' />
-                  </div>
+                  <IoIosSave className='text-lg' /> Save Doctor
                 </button>
               </div>
             </form>
@@ -405,23 +386,26 @@ function Doctors () {
 
       {/* Confirm Delete Modal */}
       {isConfirmModalOpen && selectedDoctor && (
-        <div className='fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50'>
-          <div className='bg-white rounded-lg shadow-lg p-6 w-full max-w-md'>
-            <h3 className='text-xl font-semibold mb-4'>
-              Are you sure you want to delete {selectedDoctor.name}?
+        <div className='fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4'>
+          <div className='bg-white rounded-2xl shadow-2xl p-6 w-full max-w-md border border-red-100 relative'>
+            <h3 className='text-xl font-bold mb-3 text-gray-900'>
+              Confirm Deletion
             </h3>
-            <div className='flex justify-end gap-4'>
+            <p className='text-sm text-gray-600 mb-6'>
+              Are you sure you want to delete <strong className='text-red-600'>{selectedDoctor.name}</strong>? This action cannot be undone.
+            </p>
+            <div className='flex justify-end gap-3'>
               <button
                 onClick={closeConfirmModal}
-                className='px-4 py-2 bg-gray-300 text-gray-700 rounded hover:bg-gray-400'
+                className='px-5 py-2.5 bg-gray-100 text-gray-700 text-sm font-semibold rounded-xl hover:bg-gray-200 transition'
               >
                 Cancel
               </button>
               <button
                 onClick={handleDelete}
-                className='px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600'
+                className='px-6 py-2.5 bg-red-600 text-white text-sm font-semibold rounded-xl hover:bg-red-700 transition shadow-md shadow-red-200'
               >
-                Delete
+                Delete Doctor
               </button>
             </div>
           </div>

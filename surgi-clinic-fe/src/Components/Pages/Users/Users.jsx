@@ -213,27 +213,43 @@ export default function Users() {
 
       {/* Add User Modal */}
       {isModalOpen && (
-        <div className='fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4'>
-          <div className='bg-white rounded-xl shadow-xl w-full max-w-md p-6 relative border-t-4 border-[#BF6159]'>
-            <h3 className='text-xl font-bold text-gray-800 mb-4'>Add New User</h3>
-            {errorMsg && <p className='mb-4 p-2 bg-red-50 text-red-600 text-sm rounded border border-red-200'>{errorMsg}</p>}
+        <div className='fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 overflow-y-auto'>
+          <div className='bg-white w-full max-w-lg rounded-2xl shadow-2xl p-6 relative border border-red-100 my-8'>
+            {/* Header */}
+            <div className='flex justify-between items-center pb-3 mb-4 border-b border-gray-100'>
+              <h2 className='text-2xl font-bold text-[#BF6159] flex items-center gap-2'>
+                <FaUserPlus /> Add System User
+              </h2>
+              <button
+                onClick={() => setIsModalOpen(false)}
+                className='text-gray-400 hover:text-gray-600 text-xl font-bold w-8 h-8 rounded-full hover:bg-gray-100 flex items-center justify-center transition'
+              >
+                ✕
+              </button>
+            </div>
+
+            {errorMsg && (
+              <div className='mb-4 p-3 bg-red-50 border border-red-200 text-red-700 rounded-xl text-sm font-medium'>
+                ⚠️ {errorMsg}
+              </div>
+            )}
 
             <form onSubmit={handleAddUser} className='space-y-4'>
               <div>
-                <label className='block text-xs font-semibold text-gray-600 uppercase mb-1'>Username</label>
+                <label className='block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1'>Username</label>
                 <input
                   type='text'
                   name='userName'
                   required
                   value={formData.userName}
                   onChange={handleInputChange}
-                  placeholder='Full Name'
-                  className='w-full p-2.5 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#BF6159]'
+                  placeholder='e.g. John Operator'
+                  className='w-full border border-gray-300 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-[#BF6159] focus:outline-none bg-gray-50/50'
                 />
               </div>
 
               <div>
-                <label className='block text-xs font-semibold text-gray-600 uppercase mb-1'>Email</label>
+                <label className='block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1'>Email Address</label>
                 <input
                   type='email'
                   name='email'
@@ -241,47 +257,50 @@ export default function Users() {
                   value={formData.email}
                   onChange={handleInputChange}
                   placeholder='user@clinic.com'
-                  className='w-full p-2.5 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#BF6159]'
+                  className='w-full border border-gray-300 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-[#BF6159] focus:outline-none bg-gray-50/50'
                 />
               </div>
 
-              <div>
-                <label className='block text-xs font-semibold text-gray-600 uppercase mb-1'>Phone</label>
-                <input
-                  type='text'
-                  name='phone'
-                  required
-                  value={formData.phone}
-                  onChange={handleInputChange}
-                  placeholder='01000000000'
-                  className='w-full p-2.5 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#BF6159]'
-                />
+              <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
+                <div>
+                  <label className='block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1'>Phone Number</label>
+                  <input
+                    type='text'
+                    name='phone'
+                    required
+                    value={formData.phone}
+                    onChange={handleInputChange}
+                    placeholder='01012345678'
+                    className='w-full border border-gray-300 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-[#BF6159] focus:outline-none bg-gray-50/50'
+                  />
+                </div>
+
+                <div>
+                  <label className='block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1'>Password</label>
+                  <input
+                    type='password'
+                    name='password'
+                    required
+                    value={formData.password}
+                    onChange={handleInputChange}
+                    placeholder='••••••••'
+                    className='w-full border border-gray-300 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-[#BF6159] focus:outline-none bg-gray-50/50'
+                  />
+                </div>
               </div>
 
-              <div>
-                <label className='block text-xs font-semibold text-gray-600 uppercase mb-1'>Password</label>
-                <input
-                  type='password'
-                  name='password'
-                  required
-                  value={formData.password}
-                  onChange={handleInputChange}
-                  placeholder='••••••••'
-                  className='w-full p-2.5 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#BF6159]'
-                />
-              </div>
-
-              <div className='flex justify-end gap-3 pt-4 border-t'>
+              {/* Actions */}
+              <div className='flex justify-end gap-3 pt-4 border-t border-gray-100'>
                 <button
                   type='button'
                   onClick={() => setIsModalOpen(false)}
-                  className='px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200'
+                  className='px-5 py-2.5 bg-gray-100 text-gray-700 text-sm font-semibold rounded-xl hover:bg-gray-200 transition'
                 >
                   Cancel
                 </button>
                 <button
                   type='submit'
-                  className='px-4 py-2 bg-[#BF6159] text-white rounded-lg hover:bg-red-600 font-medium'
+                  className='px-6 py-2.5 bg-[#BF6159] text-white text-sm font-semibold rounded-xl hover:bg-red-700 transition shadow-md shadow-red-200'
                 >
                   Create User
                 </button>

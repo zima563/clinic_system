@@ -366,22 +366,27 @@ export default function Appointments () {
 
       {/* Modal */}
       {isModalOpen && (
-        <div className='fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50'>
-          <div className='bg-white rounded-[28px] border-[4px] border-[#BF6159] shadow-lg w-full max-w-xl p-6 relative'>
-            <button
-              onClick={closeModal}
-              className='absolute top-6 right-6 text-gray-400 hover:text-[#BF6159]'
-            >
-              <FaWindowClose className='text-3xl' />
-            </button>
-            <h2 className='text-2xl font-bold mb-6 text-black'>
-              Add Appointments
-            </h2>
-            <form onSubmit={handleSubmit}>
-              <div className='flex gap-4'>
-                <div className='w-1/2  mt-6'>
-                  <label className='block text-gray-700 mb-2 text-sm font-medium'>
-                    Patient Phone
+        <div className='fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 overflow-y-auto'>
+          <div className='bg-white w-full max-w-xl rounded-2xl shadow-2xl p-6 relative border border-red-100 my-8'>
+            {/* Header */}
+            <div className='flex justify-between items-center pb-3 mb-4 border-b border-gray-100'>
+              <h2 className='text-2xl font-bold text-[#BF6159] flex items-center gap-2'>
+                <FaCalendarPlus /> Add New Appointment
+              </h2>
+              <button
+                onClick={closeModal}
+                className='text-gray-400 hover:text-gray-600 text-xl font-bold w-8 h-8 rounded-full hover:bg-gray-100 flex items-center justify-center transition'
+              >
+                ✕
+              </button>
+            </div>
+
+            <form onSubmit={handleSubmit} className='space-y-4'>
+              <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
+                {/* Patient Selection */}
+                <div>
+                  <label className='block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1'>
+                    Patient Phone / Name
                   </label>
                   <Select
                     options={dropdownOptions}
@@ -394,7 +399,7 @@ export default function Appointments () {
                       if (typeof inputValue === 'string')
                         handleSearchChange(inputValue)
                     }}
-                    placeholder='Search and select...'
+                    placeholder='Search patient...'
                     styles={customStyles}
                     className='w-full'
                     isSearchable
@@ -402,16 +407,18 @@ export default function Appointments () {
                     noOptionsMessage={() =>
                       isLoading ? 'Loading...' : 'No results found'
                     }
-                    filterOption={null} // Optional: Disable filtering if needed
+                    filterOption={null}
                   />
                   {errorMessage.errorPatient && (
-                    <div style={{ color: 'red', marginBottom: '10px' }}>
+                    <div className='text-red-500 text-xs mt-1'>
                       {errorMessage.errorPatient}
                     </div>
                   )}
                 </div>
-                <div className='w-1/2    mt-6'>
-                  <label className='block text-gray-700 mb-2 text-sm font-medium'>
+
+                {/* Doctor Selection */}
+                <div>
+                  <label className='block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1'>
                     Doctor
                   </label>
                   <Select
@@ -428,7 +435,7 @@ export default function Appointments () {
                     }}
                     onMenuOpen={() => {
                       if (dropdownOptionsDoctor.length === 0) {
-                        handleSearchChangeDoctor() // Fetch all doctors when the dropdown is opened
+                        handleSearchChangeDoctor()
                       }
                     }}
                     placeholder='Select a doctor...'
@@ -443,10 +450,11 @@ export default function Appointments () {
                 </div>
               </div>
 
-              <div className='flex gap-4'>
-                <div className='w-1/2  mt-6'>
-                  <label className='block text-gray-700 mb-2 text-sm font-medium'>
-                    services
+              <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
+                {/* Service Selection */}
+                <div>
+                  <label className='block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1'>
+                    Service
                   </label>
                   <Select
                     options={dropdownOptionsservice}
@@ -462,7 +470,7 @@ export default function Appointments () {
                     }}
                     onMenuOpen={() => {
                       if (dropdownOptionsservice.length === 0) {
-                        handleSearchChangeService() // Fetch all services when the dropdown is opened
+                        handleSearchChangeService()
                       }
                     }}
                     placeholder='Select a service...'
@@ -475,9 +483,11 @@ export default function Appointments () {
                     }
                   />
                 </div>
-                <div className='w-1/2   mt-6'>
-                  <label className='block text-gray-700 mb-2 text-sm font-medium'>
-                    schdule
+
+                {/* Schedule Selection */}
+                <div>
+                  <label className='block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1'>
+                    Schedule
                   </label>
                   <Select
                     options={dropdownOptionsSchedule}
@@ -488,14 +498,13 @@ export default function Appointments () {
                       setDropdownOptionsDate([])
                       setSelectedOptionDate(null)
                       setPrice(selected.price)
-                      console.log(selected)
                     }}
                     onMenuOpen={() => {
                       if (dropdownOptionsSchedule.length === 0) {
-                        handleSearchChangeSchedule() // Fetch all Schedules when the dropdown is opened
+                        handleSearchChangeSchedule()
                       }
                     }}
-                    placeholder='Select a Schedule...'
+                    placeholder='Select schedule...'
                     styles={customStyles}
                     className='w-full'
                     isSearchable
@@ -505,17 +514,18 @@ export default function Appointments () {
                     }
                   />
                   {errorMessage.errorSchedule && (
-                    <div style={{ color: 'red', marginBottom: '10px' }}>
+                    <div className='text-red-500 text-xs mt-1'>
                       {errorMessage.errorSchedule}
                     </div>
                   )}
                 </div>
               </div>
 
-              <div className='flex   gap-12'>
-                <div className='w-1/2  mt-6'>
-                  <label className='block text-gray-700 mb-2 text-sm font-medium'>
-                    date
+              <div className='grid grid-cols-1 md:grid-cols-3 gap-4 items-end'>
+                {/* Date / Time Slot */}
+                <div className='md:col-span-2'>
+                  <label className='block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1'>
+                    Available Date / Time Slot
                   </label>
                   <Select
                     options={dropdownOptionsDate}
@@ -526,10 +536,10 @@ export default function Appointments () {
                     }}
                     onMenuOpen={() => {
                       if (dropdownOptionsDate.length === 0) {
-                        handleSearchChangeDate() // Fetch all Dates when the dropdown is opened
+                        handleSearchChangeDate()
                       }
                     }}
-                    placeholder='Select a Date...'
+                    placeholder='Select date slot...'
                     styles={customStyles}
                     className='w-full'
                     isSearchable
@@ -539,29 +549,37 @@ export default function Appointments () {
                     }
                   />
                   {errorMessage.errorDate && (
-                    <div style={{ color: 'red', marginBottom: '10px' }}>
+                    <div className='text-red-500 text-xs mt-1'>
                       {errorMessage.errorDate}
                     </div>
                   )}
                 </div>
-                <div className='w-1/4 mt-6'>
-                  <label htmlFor='price'>Price</label>
-                  <h4
-                    id='price'
-                    className=' mt-2 py-2 rounded-lg px-6 border border-[#BF6159]'
-                  >
-                    {price}
-                  </h4>
+
+                {/* Price Display */}
+                <div>
+                  <label className='block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1'>Total Price</label>
+                  <div className='py-2.5 px-4 bg-red-50 border border-red-200 rounded-xl text-center font-bold text-[#BF6159] text-base'>
+                    {price ? `${price} L.E` : '0 L.E'}
+                  </div>
                 </div>
               </div>
 
-              <button
-                type='submit'
-                className='mt-6 bg-red-500 text-white px-6 py-2 rounded-md hover:bg-red-600'
-              >
-                <IoIosSave className='inline-block mr-2' />
-                Save
-              </button>
+              {/* Actions */}
+              <div className='flex justify-end gap-3 pt-4 border-t border-gray-100'>
+                <button
+                  type='button'
+                  onClick={closeModal}
+                  className='px-5 py-2.5 bg-gray-100 text-gray-700 text-sm font-semibold rounded-xl hover:bg-gray-200 transition'
+                >
+                  Cancel
+                </button>
+                <button
+                  type='submit'
+                  className='px-6 py-2.5 bg-[#BF6159] text-white text-sm font-semibold rounded-xl hover:bg-red-700 transition shadow-md shadow-red-200 flex items-center gap-2'
+                >
+                  <IoIosSave className='text-lg' /> Save Appointment
+                </button>
+              </div>
             </form>
           </div>
         </div>

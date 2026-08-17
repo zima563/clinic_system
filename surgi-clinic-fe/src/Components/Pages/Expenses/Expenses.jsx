@@ -260,80 +260,103 @@ function Expenses () {
         </tbody>
       </table>
 
+      {/* Add / Edit Expense Modal */}
       {isModalOpen && (
-        <div className='fixed inset-0   flex items-center justify-center bg-black bg-opacity-50'>
-          <div className='bg-white border-[#BF6159] border-4  max-w-3xl p-6 rounded-lg shadow-lg w-[629px] h-[375px] '>
-            {' '}
-            <div className='relative flex justify-between items-center mb-8'>
+        <div className='fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 overflow-y-auto'>
+          <div className='bg-white w-full max-w-lg rounded-2xl shadow-2xl p-6 relative border border-red-100 my-8'>
+            {/* Header */}
+            <div className='flex justify-between items-center pb-3 mb-4 border-b border-gray-100'>
+              <h2 className='text-2xl font-bold text-[#BF6159] flex items-center gap-2'>
+                💳 {isEditing ? 'Edit Expense Record' : 'Add New Expense'}
+              </h2>
               <button
-                onClick={() => setIsModalOpen(false)}
-                className='absolute top-1 right-1 text-gray-400 hover:text-red-500'
+                onClick={() => {
+                  setIsModalOpen(false)
+                  resetModal()
+                }}
+                className='text-gray-400 hover:text-gray-600 text-xl font-bold w-8 h-8 rounded-full hover:bg-gray-100 flex items-center justify-center transition'
               >
-                <FaWindowClose className='text-3xl' />
+                ✕
               </button>
-              <h3 className='text-xl font-semibold'>
-                {isEditing ? 'Edit Expense' : 'Add Expense'}
-              </h3>
             </div>
-            <form onSubmit={handleSave} className='flex flex-col gap-4'>
-              <div className='flex justify-between '>
-                <div className='mb-4'>
-                  <label className='block text-sm font-medium text-gray-700'>
-                    {' '}
-                    Details{' '}
-                  </label>
-                  <textarea
-                    value={expenseDetails}
-                    onChange={e => setExpenseDetails(e.target.value)}
-                    className='add-p-i pl-6 pr-8 mr-6 w-[383px] h-[145px] py-2 resize-none focus:outline-none focus:ring-2 focus:ring-[#BF6159]'
-                  />
-                </div>
-                <div className='mb-4'>
-                  <label className='block  text-sm font-medium text-gray-700'>
-                    Amount
-                  </label>
-                  <input
-                    type='text'
-                    value={expenseAmount}
-                    onChange={e => {
-                      if (/^\d*\.?\d*$/.test(e.target.value)) {
-                        setExpenseAmount(e.target.value)
-                      }
-                    }}
-                    className='w-full border rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-[#BF6159]'
-                  />
-                </div>
+
+            <form onSubmit={handleSave} className='space-y-4'>
+              <div>
+                <label className='block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1'>
+                  Expense Amount (L.E)
+                </label>
+                <input
+                  type='text'
+                  value={expenseAmount}
+                  placeholder='e.g. 500'
+                  onChange={e => {
+                    if (/^\d*\.?\d*$/.test(e.target.value)) {
+                      setExpenseAmount(e.target.value)
+                    }
+                  }}
+                  className='w-full border border-gray-300 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-[#BF6159] focus:outline-none bg-gray-50/50'
+                />
               </div>
 
-              <button
-                type='submit'
-                className='w-[139px]  bg-[#BF6159] text-white py-2 rounded-md hover:bg-red-500'
-              >
-                {isEditing ? 'Update' : 'Save'}
-              </button>
+              <div>
+                <label className='block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1'>
+                  Expense Details / Description
+                </label>
+                <textarea
+                  value={expenseDetails}
+                  onChange={e => setExpenseDetails(e.target.value)}
+                  placeholder='e.g. Medical supplies, electricity bill, maintenance...'
+                  rows='3'
+                  className='w-full border border-gray-300 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-[#BF6159] focus:outline-none bg-gray-50/50 resize-none'
+                />
+              </div>
+
+              {/* Actions */}
+              <div className='flex justify-end gap-3 pt-4 border-t border-gray-100'>
+                <button
+                  type='button'
+                  onClick={() => {
+                    setIsModalOpen(false)
+                    resetModal()
+                  }}
+                  className='px-5 py-2.5 bg-gray-100 text-gray-700 text-sm font-semibold rounded-xl hover:bg-gray-200 transition'
+                >
+                  Cancel
+                </button>
+                <button
+                  type='submit'
+                  className='px-6 py-2.5 bg-[#BF6159] text-white text-sm font-semibold rounded-xl hover:bg-red-700 transition shadow-md shadow-red-200'
+                >
+                  {isEditing ? 'Update Expense' : 'Save Expense'}
+                </button>
+              </div>
             </form>
           </div>
         </div>
       )}
 
+      {/* Delete Expense Modal */}
       {isDeleteModalOpen && (
-        <div className='fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50'>
-          <div className='bg-white rounded-lg shadow-lg p-6 w-full max-w-md'>
-            <h3 className='text-xl font-semibold mb-4'>
-              Are you sure you want to delete this expense?
+        <div className='fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4'>
+          <div className='bg-white rounded-2xl shadow-2xl p-6 w-full max-w-md border border-red-100 relative'>
+            <h3 className='text-xl font-bold mb-3 text-gray-900'>
+              Confirm Expense Deletion
             </h3>
-            <div className='flex justify-end gap-4'>
+            <p className='text-sm text-gray-600 mb-6'>
+              Are you sure you want to delete this expense record? This action cannot be undone.
+            </p>
+            <div className='flex justify-end gap-3'>
               <button
                 onClick={() => setIsDeleteModalOpen(false)}
-                className='px-4 py-2 bg-gray-300 text-gray-700 rounded hover:bg-gray-400'
+                className='px-5 py-2.5 bg-gray-100 text-gray-700 text-sm font-semibold rounded-xl hover:bg-gray-200 transition'
               >
                 Cancel
               </button>
               <button
                 onClick={handleDelete}
-                className='px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600'
+                className='px-6 py-2.5 bg-red-600 text-white text-sm font-semibold rounded-xl hover:bg-red-700 transition shadow-md shadow-red-200'
               >
-                Delete
+                Delete Expense
               </button>
             </div>
           </div>

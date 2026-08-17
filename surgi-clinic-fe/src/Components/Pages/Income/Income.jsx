@@ -182,73 +182,70 @@ function Income () {
         </tbody>
       </table>
 
+      {/* Invoice Details Modal */}
       {isModalOpen && selectedRow && (
-        <div className='fixed inset-0  flex items-center justify-center bg-black bg-opacity-50 z-50 scroll-auto '>
-          <div className='relative w-1/3 bg-white border-4 border-[#BF6159] rounded-lg shadow-lg p-6 '>
-            {/* Close Icon */}
-            <button
-              onClick={() => closeModal()}
-              className='absolute top-4 right-4 text-gray-400 hover:text-red-500'
-            >
-              <FaWindowClose className='text-3xl' />
-            </button>
+        <div className='fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 overflow-y-auto'>
+          <div className='bg-white w-full max-w-md rounded-2xl shadow-2xl p-6 relative border border-red-100 my-8'>
+            {/* Header */}
+            <div className='flex justify-between items-center pb-3 mb-4 border-b border-gray-100'>
+              <h2 className='text-2xl font-bold text-[#BF6159] flex items-center gap-2'>
+                📄 Invoice #{selectedRow.ref || selectedRow.id}
+              </h2>
+              <button
+                onClick={() => closeModal()}
+                className='text-gray-400 hover:text-gray-600 text-xl font-bold w-8 h-8 rounded-full hover:bg-gray-100 flex items-center justify-center transition'
+              >
+                ✕
+              </button>
+            </div>
 
-            {/* Top Section: Patient and Doctor Info */}
-            <div className=' pb-4'>
-              <div>
-                <h2 className='font-[700] text-[32px] leading-[40px]'>
-                  {selectedRow.details[0]?.visitDetail?.patient?.name ||
-                    'Patient Name'}
-                </h2>
-              </div>
+            {/* Patient Header */}
+            <div className='bg-red-50/50 p-3 rounded-xl border border-red-100 mb-4'>
+              <span className='block text-xs font-bold text-gray-500 uppercase tracking-wider'>Patient Name</span>
+              <h3 className='text-lg font-bold text-gray-900 mt-0.5'>
+                {selectedRow.details[0]?.visitDetail?.patient?.name || 'Walk-in Patient'}
+              </h3>
             </div>
 
             {/* Details Section */}
-            <div className='mt-4 border-b'>
+            <div className='space-y-3 mb-4 max-h-60 overflow-y-auto pr-1 custom-scroll'>
               {selectedRow.details.map((detail, index) => (
-                <div key={index} className='flex justify-between pb-4 mb-4'>
+                <div key={index} className='bg-gray-50 p-3 rounded-xl border border-gray-200 flex justify-between items-center'>
                   <div>
-                    <h4 className='text-l font-semibold'>
-                      {detail.visitDetail?.schedule?.service?.title ||
-                        'Service Title'}
+                    <h4 className='text-sm font-bold text-gray-900'>
+                      {detail.visitDetail?.schedule?.service?.title || 'General Consultation'}
                     </h4>
-                    <p className='text-gray-600'>
-                      DR.{' '}
-                      {detail.visitDetail?.schedule?.doctor?.name ||
-                        'Doctor Name'}
+                    <p className='text-xs font-medium text-gray-500 mt-0.5'>
+                      Dr. {detail.visitDetail?.schedule?.doctor?.name || 'Attending Specialist'}
                     </p>
+                    {detail.visitDetail?.date && (
+                      <p className='text-[11px] text-gray-400 mt-0.5'>
+                        ⏰ {detail.visitDetail.date.fromTime} - {detail.visitDetail.date.toTime}
+                      </p>
+                    )}
                   </div>
-
-                  <div>
-                    <p className='text-gray-600 text-sm'>
-                      {detail.visitDetail?.date?.fromTime} -{' '}
-                      {detail.visitDetail?.date?.toTime}
-                    </p>
-                    <p className='text-gray-900 text-md text-center font-medium'>
+                  <div className='text-right'>
+                    <span className='text-sm font-bold text-[#BF6159] bg-white px-2.5 py-1 rounded-lg border border-red-100 shadow-sm block'>
                       {detail.amount} L.E
-                    </p>
+                    </span>
                   </div>
                 </div>
               ))}
             </div>
 
-            {/* Payment and Total Section */}
-            <div className='flex  justify-between items-center mt-4'>
+            {/* Total Footer */}
+            <div className='flex justify-between items-center pt-3 border-t border-gray-100 bg-gray-50 p-4 rounded-xl border'>
               <div>
-                <p className=' text-center text-black'>Payment Method</p>
-                <img
-                  src={
-                    paymentMethodImages[selectedRow.paymentMethod] ||
-                    '/path/to/default-payment.png'
-                  }
-                  alt={selectedRow.paymentMethod}
-                />
+                <span className='block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1'>Payment Method</span>
+                <span className='badge-active text-xs font-bold uppercase tracking-wider'>
+                  💳 {selectedRow.paymentMethod || 'Cash'}
+                </span>
               </div>
-              <div className='justify-between'>
-                <p className='text-black text-lg font-semibold'>Total</p>
-                <p className='text-red-500 text-lg font-bold'>
+              <div className='text-right'>
+                <span className='block text-xs font-bold text-gray-500 uppercase tracking-wider'>Grand Total</span>
+                <span className='text-2xl font-black text-[#BF6159]'>
                   {selectedRow.total} L.E
-                </p>
+                </span>
               </div>
             </div>
           </div>
