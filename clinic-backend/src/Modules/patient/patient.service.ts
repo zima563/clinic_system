@@ -13,6 +13,31 @@ const getPatientById = async (id: number) => {
           userName: true,
         },
       },
+      appointments: {
+        orderBy: { createdAt: 'desc' },
+        include: {
+          schedule: {
+            include: {
+              doctor: true,
+              service: true,
+            },
+          },
+          date: true,
+        },
+      },
+      VisitDetail: {
+        orderBy: { id: 'desc' },
+        include: {
+          visit: true,
+          schedule: {
+            include: {
+              doctor: true,
+              service: true,
+            },
+          },
+          date: true,
+        },
+      },
     },
   });
 };

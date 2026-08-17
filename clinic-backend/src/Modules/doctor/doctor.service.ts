@@ -44,9 +44,16 @@ const getDoctorById = async (id: number) => {
   return prisma.doctor.findUnique({
     where: { id },
     include: {
+      specialty: true,
       creator: {
         select: {
           userName: true,
+        },
+      },
+      schedules: {
+        include: {
+          service: true,
+          dates: true,
         },
       },
     },
