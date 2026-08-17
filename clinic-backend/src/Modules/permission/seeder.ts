@@ -18,11 +18,7 @@ import { secureRouteWithPermissions } from "../../middlewares/secureRoutesMiddle
 @JsonController("/api/permissions")
 export class PermissionController {
   private static permissionSchema = Joi.object({
-    id: Joi.string().required().messages({
-      "string.base": "id should be a string",
-      "string.empty": "id cannot be empty",
-      "any.required": "id is required",
-    }),
+    id: Joi.string().optional(),
     permissionNames: Joi.array()
       .items(
         Joi.string().required().messages({
@@ -31,11 +27,10 @@ export class PermissionController {
           "any.required": "permissionName is required",
         })
       )
-      .min(1)
+      .min(0)
       .required()
       .messages({
         "array.base": "permissionNames should be an array",
-        "array.min": "permissionNames should contain at least one element",
       }),
   });
 

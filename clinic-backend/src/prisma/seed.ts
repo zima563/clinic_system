@@ -111,64 +111,143 @@ async function main() {
   });
   console.log(`✅ Admin user ready (ID: ${adminUser.id}, Email: admin@clinic.com, Password: Admin@123).`);
 
-  // 3. Create Default Admin Role
-  console.log('🛡️ Seeding Admin role...');
-  let adminRole = await prisma.role.findFirst({
-    where: { name: 'Admin' },
-  });
+  // 3. Create Default Roles & Assign Permissions
+  console.log('🛡️ Seeding Default Clinic Roles & Permissions...');
 
-  if (!adminRole) {
-    adminRole = await prisma.role.create({
-      data: {
-        name: 'Admin',
-        createdBy: adminUser.id,
-      },
-    });
-  }
+  const roleDefinitions = [
+    {
+      name: 'Admin',
+      description: 'Full Access to all modules',
+      permissions: permissionsList // All permissions
+    },
+    {
+      name: 'Doctor',
+      description: 'Access to doctor schedules, appointments, patients, and visit details',
+      permissions: [
+        'listDoctors',
+        'showDoctorDetails',
+        'listPatient',
+        'getPatient',
+        'getAppointment',
+        'showAppointmnetDetail',
+        'listSchedules',
+        'showScheduleDetails',
+        'getAllVisits',
+        'showVisitDetails',
+        'profile',
+        'updateUserProfile',
+        'ChangePassword'
+      ]
+    },
+    {
+      name: 'Receptionist',
+      description: 'Access to patient intake, appointments, schedules, and visits creation',
+      permissions: [
+        'addPatient',
+        'updatePatient',
+        'listPatient',
+        'getPatient',
+        'addAppointment',
+        'updateStatus',
+        'updateAppointment',
+        'getAppointment',
+        'showAppointmnetDetail',
+        'createVisit',
+        'getAllVisits',
+        'showVisitDetails',
+        'listSchedules',
+        'allServices',
+        'allSpecialtys',
+        'listDoctors',
+        'showDoctorDetails',
+        'profile',
+        'updateUserProfile',
+        'ChangePassword'
+      ]
+    },
+    {
+      name: 'Accountant',
+      description: 'Access to invoices, income, expenses, visits, and financial reports',
+      permissions: [
+        'createInvoice',
+        'listInvoice',
+        'updateInvoiceDetail',
+        'Show_Invoice_Details',
+        'List_Invoice_Details',
+        'Append_Invoice_Details',
+        'Remove_Invoice_Details',
+        'deleteInvoice',
+        'getAllVisits',
+        'showVisitDetails',
+        'summarized_report',
+        'downloadPdf',
+        'profile',
+        'updateUserProfile',
+        'ChangePassword'
+      ]
+    }
+  ];
 
-  // Assign all permissions to Admin Role
-  for (const perm of allPermissions) {
-    const existing = await prisma.rolePermission.findFirst({
-      where: { roleId: adminRole.id, permissionId: perm.id },
-    });
-    if (!existing) {
-      await prisma.rolePermission.create({
+  let adminRole: any = null;
+
+  for (const roleDef of roleDefinitions) {
+    let role = await prisma.role.findFirst({ where: { name: roleDef.name } });
+    if (!role) {
+      role = await prisma.role.create({
         data: {
-          roleId: adminRole.id,
-          permissionId: perm.id,
-        },
+          name: roleDef.name,
+          createdBy: adminUser.id
+        }
       });
+    }
+    if (roleDef.name === 'Admin') adminRole = role;
+
+    // Map permissions for this role
+    for (const permName of roleDef.permissions) {
+      const permObj = allPermissions.find(p => p.name === permName);
+      if (permObj) {
+        const existingRP = await prisma.rolePermission.findFirst({
+          where: { roleId: role.id, permissionId: permObj.id }
+        });
+        if (!existingRP) {
+          await prisma.rolePermission.create({
+            data: { roleId: role.id, permissionId: permObj.id }
+          });
+        }
+      }
     }
   }
 
   // Assign Admin Role to Admin User
-  const userRoleExisting = await prisma.userRole.findFirst({
-    where: { userId: adminUser.id, roleId: adminRole.id },
-  });
-  if (!userRoleExisting) {
-    await prisma.userRole.create({
-      data: {
-        userId: adminUser.id,
-        roleId: adminRole.id,
-      },
+  if (adminRole) {
+    const userRoleExisting = await prisma.userRole.findFirst({
+      where: { userId: adminUser.id, roleId: adminRole.id }
     });
+    if (!userRoleExisting) {
+      await prisma.userRole.create({
+        data: {
+          userId: adminUser.id,
+          roleId: adminRole.id
+        }
+      });
+    }
   }
 
   // Assign all direct permissions to Admin User
   for (const perm of allPermissions) {
     const existing = await prisma.userPermission.findFirst({
-      where: { userId: adminUser.id, permissionId: perm.id },
+      where: { userId: adminUser.id, permissionId: perm.id }
     });
     if (!existing) {
       await prisma.userPermission.create({
         data: {
           userId: adminUser.id,
-          permissionId: perm.id,
-        },
+          permissionId: perm.id
+        }
       });
     }
   }
-  console.log('✅ Admin role & permissions assigned successfully.');
+  console.log('✅ Default Roles (Admin, Doctor, Receptionist, Accountant) & permissions assigned successfully.');
 
   // 4. Seed Specialties
   console.log('🩺 Seeding specialties...');
