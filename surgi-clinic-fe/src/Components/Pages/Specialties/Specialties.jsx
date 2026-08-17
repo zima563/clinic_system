@@ -1,51 +1,56 @@
 import React, { useState, useEffect } from 'react'
 import axios from 'axios'
-import special1 from '../../../assets/special.png'
-import { FaSearch, FaWindowClose } from 'react-icons/fa'
-import { IoIosSave } from 'react-icons/io'
+import {
+  FaSearch,
+  FaPrescriptionBottleAlt,
+  FaPlus,
+  FaTrash,
+  FaEdit,
+  FaCheckCircle
+} from 'react-icons/fa'
 import { IoCameraOutline } from 'react-icons/io5'
+import specialPlaceholder from '../../../assets/special.png'
 import { API_URL, getToken } from '../../../config'
 
 const APIURL = `${API_URL}/api/specialist`
-const TOKEN = getToken()
 
-function Specialties () {
+function Specialties() {
   const [specialtiesData, setSpecialtiesData] = useState([])
   const [searchTerm, setSearchTerm] = useState('')
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [image, setImage] = useState(null)
   const [specialtyName, setSpecialtyName] = useState('')
-  const [Error, setError] = useState('')
+  const [error, setError] = useState('')
 
-  // Fetch specialties data
+  const token = getToken()
+
   const fetchSpecialties = async () => {
     try {
       const response = await axios.get(`${APIURL}/all`, {
-        headers: {
-          Authorization: `Bearer ${TOKEN}`
-        }
+        headers: { Authorization: `Bearer ${token}` }
       })
       setSpecialtiesData(response.data.data || [])
-      console.log(response.data.data)
-    } catch (error) {}
+    } catch (err) {
+      console.error('Error fetching specialties:', err)
+    }
   }
 
   useEffect(() => {
     fetchSpecialties()
   }, [])
 
-  // Modal toggle functions
   const openModal = () => setIsModalOpen(true)
   const closeModal = () => {
     setImage(null)
     setSpecialtyName('')
+    setError('')
     setIsModalOpen(false)
   }
 
   const handleImageChange = e => {
     const file = e.target.files[0]
     if (file && file.type.startsWith('image/')) {
-      setImage(file) // Store the file in state
+      setImage(file)
     } else {
       alert('Please upload a valid image file.')
     }
@@ -57,166 +62,179 @@ function Specialties () {
       alert('Please enter a specialty name')
       return
     }
-
     if (!image) {
-      alert('Please upload an image')
+      alert('Please upload an image icon')
       return
     }
 
     const formData = new FormData()
-    formData.append('title', specialtyName)
-    formData.append('icon', image) // Append the file directly
+    formData.append('title', specialtyName.trim())
+    formData.append('icon', image)
 
     try {
-      const response = await axios.post(APIURL, formData, {
+      await axios.post(APIURL, formData, {
         headers: {
-          Authorization: `Bearer ${TOKEN}`,
-          'Content-Type': 'multipart/form-data' // Important for file uploads
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'multipart/form-data'
         }
       })
-      console.log('Specialty added successfully:', response.data)
-      fetchSpecialties() // Reload specialties after successful submission
-      setImage(null)
-      setSpecialtyName('')
-      closeModal() // Close the modal
-    } catch (error) {
-      setError(error)
+      fetchSpecialties()
+      closeModal()
+    } catch (err) {
+      setError(err.response?.data?.message || 'Failed to add specialty')
     }
   }
 
+  const handleDelete = async id => {
+    if (!window.confirm('Are you sure you want to delete this medical specialty?')) return
+    try {
+      await axios.delete(`${APIURL}/${id}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      })
+      fetchSpecialties()
+    } catch (err) {
+      alert(err.response?.data?.message || 'Failed to delete specialty')
+    }
+  }
+
+  const filteredSpecialties = specialtiesData.filter(item =>
+    (item.title || '').toLowerCase().includes(searchTerm.toLowerCase())
+  )
+
   return (
-    <div className='container mx-auto mt-10'>
-      {/* Header */}
-      <div className='flex items-center ps-10 pe-10 justify-between mb-4'>
-        <h3 className='text-2xl font-semibold text-red-600'>
-          Specialties List
-        </h3>
-        <div className='flex gap-4'>
-          <div className='relative'>
-            <FaSearch className='absolute left-4 top-3 text-gray-400' />
+    <div style={{ maxHeight: 'calc(100vh - 50px)' }} className='p-6 overflow-y-auto custom-scroll space-y-6'>
+      {/* Top Header */}
+      <div className='flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 pb-3 border-b border-gray-200'>
+        <div>
+          <h2 className='page-title text-2xl'>
+            <FaPrescriptionBottleAlt className='text-[#BF6159]' /> Medical Specialties ({specialtiesData.length})
+          </h2>
+          <p className='text-xs text-gray-500 mt-0.5'>Configure clinical specialties, departments, and medical categories</p>
+        </div>
+
+        <div className='flex items-center gap-3 w-full sm:w-auto justify-between sm:justify-end'>
+          <div className='search-wrap'>
+            <span className='search-icon'>🔍</span>
             <input
               type='text'
               value={searchTerm}
-              placeholder='Search by Name'
               onChange={e => setSearchTerm(e.target.value)}
-              className='p-s-i pl-12 pr-4 py-2 w-full focus:outline-none focus:ring-2 focus:ring-[#D5D5D5]'
+              placeholder='Search Specialty Title...'
             />
           </div>
-          <button
-            onClick={openModal}
-            className='btn-primary'
-          >
-            + Add Specialties
+
+          <button onClick={openModal} className='btn-primary'>
+            <FaPlus /> Add Specialty
           </button>
         </div>
       </div>
-      {/* Grid of Specialties */}
-      <div className='grid grid-cols-2 md:grid-cols-4 mt-14'>
-        {specialtiesData
-          .filter(s => s.title?.toLowerCase().includes(searchTerm.toLowerCase()))
-          .map(specialty => (
-            <div
-              key={specialty.id}
-              className='flex flex-col py-6 items-center glass-card m-3 transform transition-all duration-300 hover:-translate-y-1 hover:shadow-lg rounded-2xl cursor-pointer'
-            >
-              <div className='w-24 h-24 rounded-full bg-red-50 border-2 border-red-200 flex items-center justify-center text-red-600 text-4xl mb-3 shadow-inner overflow-hidden'>
-                {specialty.icon && specialty.icon.startsWith('http') ? (
-                  <img
-                    src={specialty.icon}
-                    alt={specialty.title}
-                    className='w-full h-full object-cover'
-                    onError={(e) => { e.target.style.display = 'none' }}
-                  />
-                ) : (
-                  <span className='text-3xl font-bold'>🩺</span>
-                )}
+
+      {/* Specialty Cards Grid */}
+      <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5'>
+        {filteredSpecialties.length > 0 ? (
+          filteredSpecialties.map(item => {
+            const iconUrl = item.icon && item.icon.startsWith('http')
+              ? item.icon
+              : specialPlaceholder
+
+            return (
+              <div
+                key={item.id}
+                className='card p-5 bg-white border border-gray-200 shadow-sm flex items-center justify-between space-x-4 hover:border-red-200 transition'
+              >
+                <div className='flex items-center gap-4'>
+                  <div className='w-14 h-14 rounded-2xl bg-red-50 border border-red-100 flex items-center justify-center p-2 shadow-2xs'>
+                    <img
+                      src={iconUrl}
+                      alt={item.title}
+                      className='w-full h-full object-contain'
+                      onError={e => {
+                        e.target.src = specialPlaceholder
+                      }}
+                    />
+                  </div>
+
+                  <div className='space-y-1'>
+                    <h3 className='text-base font-bold text-gray-900'>{item.title}</h3>
+                    <span className='badge badge-confirmed text-[10px] inline-flex items-center gap-1'>
+                      <FaCheckCircle className='text-[9px]' /> Active Specialty
+                    </span>
+                  </div>
+                </div>
+
+                <button onClick={() => handleDelete(item.id)} className='btn-icon danger' title='Delete Specialty'>
+                  <FaTrash />
+                </button>
               </div>
-              <div className='text-base font-bold text-slate-800 text-center px-2'>{specialty.title}</div>
-            </div>
-          ))}
+            )
+          })
+        ) : (
+          <div className='col-span-full p-12 text-center bg-white rounded-xl border border-dashed border-gray-200'>
+            <FaPrescriptionBottleAlt className='text-4xl text-gray-300 mx-auto mb-3' />
+            <p className='text-sm font-semibold text-gray-600'>No medical specialties found matching your query.</p>
+          </div>
+        )}
       </div>
 
-      {/* Modal */}
+      {/* MODAL: ADD SPECIALTY */}
       {isModalOpen && (
-        <div className='fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 overflow-y-auto'>
-          <div className='bg-white w-full max-w-xl rounded-2xl shadow-2xl p-6 relative border border-red-100 my-8'>
-            {/* Header */}
-            <div className='flex justify-between items-center pb-3 mb-4 border-b border-gray-100'>
-              <h2 className='text-2xl font-bold text-[#BF6159] flex items-center gap-2'>
-                🩺 Add New Specialty
-              </h2>
-              <button
-                onClick={closeModal}
-                className='modal-close'
-              >
+        <div className='modal-overlay'>
+          <div className='modal-panel max-w-md'>
+            <div className='modal-header'>
+              <h3 className='modal-title'>
+                <FaPrescriptionBottleAlt /> Add Medical Specialty
+              </h3>
+              <button onClick={closeModal} className='modal-close'>
                 ✕
               </button>
             </div>
 
-            <form onSubmit={handleSubmit} className='space-y-4'>
-              {/* Icon / Image Upload */}
-              <div className='flex justify-center mb-6'>
-                <div className='relative w-24 h-24'>
-                  <div className='w-full h-full rounded-2xl bg-red-50 border-2 border-red-200 flex items-center justify-center overflow-hidden shadow-inner'>
-                    {image ? (
-                      <img
-                        src={URL.createObjectURL(image)}
-                        alt='Selected'
-                        className='w-full h-full object-cover'
-                      />
-                    ) : (
-                      <img src={special1} className='w-12 h-12 object-contain opacity-70' alt='Specialty Placeholder' />
-                    )}
-                  </div>
-                  <label
-                    htmlFor='imageInput'
-                    className='absolute bottom-0 right-0 bg-[#BF6159] hover:bg-red-700 text-white p-2 rounded-full cursor-pointer shadow-md transition'
-                    title='Upload Specialty Icon'
-                  >
-                    <IoCameraOutline className='text-base' />
-                    <input
-                      type='file'
-                      id='imageInput'
-                      accept='image/*'
-                      onChange={handleImageChange}
-                      className='hidden'
-                    />
-                  </label>
-                </div>
+            {error && (
+              <div className='mb-4 p-3 bg-red-50 border border-red-200 text-red-700 rounded-xl text-xs font-semibold'>
+                ⚠️ {error}
               </div>
+            )}
 
-              {/* Specialty Title */}
+            {/* Icon Preview Upload */}
+            <div className='flex justify-center mb-4'>
+              <div className='relative w-20 h-20'>
+                <div className='w-full h-full rounded-2xl bg-red-50 border-2 border-red-200 flex items-center justify-center overflow-hidden p-2 shadow-2xs'>
+                  {image ? (
+                    <img src={URL.createObjectURL(image)} alt='Specialty Icon' className='w-full h-full object-contain' />
+                  ) : (
+                    <img src={specialPlaceholder} className='w-10 h-10 object-contain opacity-70' alt='Specialty Placeholder' />
+                  )}
+                </div>
+                <label
+                  htmlFor='iconUpload'
+                  className='absolute -bottom-1 -right-1 bg-[#BF6159] hover:bg-red-700 text-white p-1.5 rounded-full cursor-pointer shadow-md transition'
+                  title='Upload Icon'
+                >
+                  <IoCameraOutline className='text-sm' />
+                  <input type='file' id='iconUpload' accept='image/*' onChange={handleImageChange} className='hidden' />
+                </label>
+              </div>
+            </div>
+
+            <form onSubmit={handleSubmit} className='space-y-4'>
               <div>
-                <label className='block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1'>Specialty Name</label>
+                <label className='form-label'>Specialty Title</label>
                 <input
                   type='text'
+                  required
+                  placeholder='e.g. Cardiology & Vascular'
                   value={specialtyName}
                   onChange={e => setSpecialtyName(e.target.value)}
-                  placeholder='e.g. Cardiology, Orthopedics, Pediatrics'
-                  className='w-full border border-gray-300 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-[#BF6159] focus:outline-none bg-gray-50/50'
+                  className='form-input'
                 />
               </div>
 
-              {Error && (
-                <div className='p-3 bg-red-50 border border-red-200 text-red-700 rounded-xl text-xs font-medium'>
-                  ⚠️ {Error}
-                </div>
-              )}
-
-              {/* Actions */}
-              <div className='flex justify-end gap-3 pt-4 border-t border-gray-100'>
-                <button
-                  type='button'
-                  onClick={closeModal}
-                  className='btn-secondary'
-                >
+              <div className='modal-footer'>
+                <button type='button' onClick={closeModal} className='btn-secondary'>
                   Cancel
                 </button>
-                <button
-                  type='submit'
-                  className='btn-primary'
-                >
-                  <IoIosSave className='text-lg' /> Save Specialty
+                <button type='submit' className='btn-primary'>
+                  Save Specialty
                 </button>
               </div>
             </form>

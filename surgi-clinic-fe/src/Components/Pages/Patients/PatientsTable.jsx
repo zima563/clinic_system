@@ -1,17 +1,25 @@
 import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { FaEdit, FaSearch, FaTrashAlt, FaWindowClose, FaUserPlus } from 'react-icons/fa'
-import { IoIosSave } from 'react-icons/io'
+import {
+  FaEdit,
+  FaSearch,
+  FaTrashAlt,
+  FaUserPlus,
+  FaUserInjured,
+  FaThLarge,
+  FaList,
+  FaPhone,
+  FaCalendarAlt,
+  FaVenusMars,
+  FaUser
+} from 'react-icons/fa'
 import axios from 'axios'
 import * as yup from 'yup'
-import { API_URL, getToken } from '../../../config'
-
-import './PatientsTable.css'
 import { useForm } from 'react-hook-form'
 import { yupResolver } from '@hookform/resolvers/yup'
+import { API_URL, getToken } from '../../../config'
 import { hasPermission } from '../../PrivateRoute'
 
-// Define Yup validation schema
 const validationSchema = yup.object().shape({
   name: yup
     .string()
@@ -42,20 +50,20 @@ const validationSchema = yup.object().shape({
 
 const PatientsTable = () => {
   const navigate = useNavigate()
-
-  // State for patients data
   const [patients, setPatients] = useState([])
+  const [viewMode, setViewMode] = useState('table') // 'table' | 'grid'
   const [isModalOpen, setIsModalOpen] = useState(false)
-  const [errorMessage, seterrorMessage] = useState('')
+  const [errorMessage, setErrorMessage] = useState('')
   const [searchQuery, setSearchQuery] = useState('')
+  const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false)
+  const [selectedPatient, setSelectedPatient] = useState(null)
 
   const token = getToken()
 
-  // Fetch patients data from the API, can handle search query
-  const fetchPatients = async (searchQuery = '') => {
+  const fetchPatients = async (query = '') => {
     try {
       const response = await axios.get(
-        `${API_URL}/api/patients?keyword_phone=${searchQuery}`,
+        `${API_URL}/api/patients?keyword_phone=${query}`,
         {
           headers: {
             'Content-Type': 'application/json',
@@ -64,7 +72,7 @@ const PatientsTable = () => {
           }
         }
       )
-      setPatients(response.data.data) // Assuming API returns a 'data' field with patients
+      setPatients(response.data.data || [])
     } catch (error) {
       console.error('Error fetching patients:', error)
     }
@@ -74,23 +82,17 @@ const PatientsTable = () => {
     fetchPatients()
   }, [])
 
-  // Handle search input change
   const handleSearchChange = e => {
     const query = e.target.value
     setSearchQuery(query)
-    fetchPatients(query) // Call API with the search query
+    fetchPatients(query)
   }
 
-  const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false)
-  const [selectedPatient, setSelectedPatient] = useState(null)
-
-  // Open the confirmation modal
   const openConfirmModal = patient => {
     setSelectedPatient(patient)
     setIsConfirmModalOpen(true)
   }
 
-  // Close the modal
   const closeConfirmModal = () => {
     setIsConfirmModalOpen(false)
     setSelectedPatient(null)
@@ -98,26 +100,16 @@ const PatientsTable = () => {
 
   const handleDelete = async () => {
     if (!selectedPatient) return
-
     try {
-      // Send DELETE request to the API
       await axios.delete(`${API_URL}/api/patients/${selectedPatient.id}`, {
         headers: {
-          'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`
         }
       })
-
-      // Update the state to remove the deleted patient
-      const updatedPatients = patients.filter(
-        patient => patient.id !== selectedPatient.id
-      )
-      setPatients(updatedPatients)
-
-      console.log(`Patient with ID ${selectedPatient.id} deleted successfully.`)
+      setPatients(patients.filter(p => p.id !== selectedPatient.id))
     } catch (error) {
       console.error('Error deleting patient:', error)
-      alert('Failed to delete the patient. Please try again.')
+      alert('Failed to delete the patient.')
     } finally {
       closeConfirmModal()
     }
@@ -126,9 +118,11 @@ const PatientsTable = () => {
   const handleRowClick = id => navigate(`/patient/${id}`)
   const handleEdit = id => navigate(`/edit-patient/${id}`)
   const openModal = () => setIsModalOpen(true)
-  const closeModal = () => setIsModalOpen(false)
+  const closeModal = () => {
+    setIsModalOpen(false)
+    setErrorMessage('')
+  }
 
-  // React Hook Form setup with validation
   const {
     register,
     handleSubmit,
@@ -140,281 +134,287 @@ const PatientsTable = () => {
 
   const onSubmit = async data => {
     try {
-      // Adjust API request if needed based on API requirements
-      const response = await axios.post(`${API_URL}/api/patients`, data, {
+      await axios.post(`${API_URL}/api/patients`, data, {
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`
         }
       })
-
-      // // Handle success (e.g., add the new patient to the list)
-      // setPatients(prevPatients => [...prevPatients, response.data.data])
       fetchPatients()
-
-      // Close modal and reset form
       closeModal()
       reset()
-
-      // Optional: Display success message
-      console.log('Patient added successfully:', response.data)
     } catch (error) {
-      // Handle errors
-      seterrorMessage(error.response.data.message)
+      setErrorMessage(error.response?.data?.message || 'Failed to create patient')
     }
   }
 
   return (
-    <div className='container mx-auto p-4'>
-      <div className='flex items-center justify-between'>
-        <h3 className='text-2xl font-semibold mb-4 text-red-600'>
-          Patients List
-        </h3>
-        <div className='flex justify-between gap-5 items-center mb-4'>
-          <div className='relative'>
-            <FaSearch className='absolute left-4 top-3 text-gray-400' />
+    <div style={{ maxHeight: 'calc(100vh - 50px)' }} className='p-6 overflow-y-auto custom-scroll space-y-6'>
+      {/* Top Header */}
+      <div className='flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 pb-3 border-b border-gray-200'>
+        <div>
+          <h2 className='page-title text-2xl'>
+            <FaUserInjured className='text-[#BF6159]' /> Patients Directory ({patients.length})
+          </h2>
+          <p className='text-xs text-gray-500 mt-0.5'>Manage registered clinic patients, medical records, and profiles</p>
+        </div>
+
+        <div className='flex items-center gap-3 w-full sm:w-auto justify-between sm:justify-end'>
+          <div className='search-wrap'>
+            <span className='search-icon'>🔍</span>
             <input
               type='text'
               value={searchQuery}
               onChange={handleSearchChange}
-              placeholder='Search by Phone'
-              className='p-s-i pl-12 pr-4 py-2 w-full  focus:outline-none focus:ring-2 focus:ring-[#D5D5D5]'
+              placeholder='Search by Phone or Name...'
             />
           </div>
-          {hasPermission(['addPatient']) ? (
+
+          {/* View Mode Switcher */}
+          <div className='flex bg-gray-100 p-1 rounded-xl border border-gray-200'>
             <button
-              onClick={openModal}
-              className='btn-primary'
+              onClick={() => setViewMode('table')}
+              className={`p-2 rounded-lg text-sm transition ${viewMode === 'table' ? 'bg-white text-[#BF6159] shadow-xs' : 'text-gray-500'}`}
+              title='Table View'
             >
+              <FaList />
+            </button>
+            <button
+              onClick={() => setViewMode('grid')}
+              className={`p-2 rounded-lg text-sm transition ${viewMode === 'grid' ? 'bg-white text-[#BF6159] shadow-xs' : 'text-gray-500'}`}
+              title='Grid Cards View'
+            >
+              <FaThLarge />
+            </button>
+          </div>
+
+          {hasPermission(['addPatient']) && (
+            <button onClick={openModal} className='btn-primary'>
               + Add Patient
             </button>
-          ) : (
-            ''
           )}
         </div>
       </div>
 
-      <div className='overflow-x-auto'>
-        <table className='min-w-full patient-table bg-white mb-5 mt-10 shadow-md'>
-          <thead className='p-t-h'>
-            <tr>
-              <th className='py-2 px-4 text-left'>No</th>
-              <th className='py-2 px-4 text-left'>Name</th>
-              <th className='py-2 px-4 text-left'>Phone</th>
-              <th className='py-2 px-4 text-left'>Birthdate</th>
-              <th className='py-2 px-4 text-left'>Gender</th>
-              <th className='py-2 px-4 text-center'>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {patients?.length > 0 ? (
-              patients?.map((patient, index) => (
-                <tr
-                  key={patient.id}
-                  className='hover:bg-[#F5E7E6] p-t-r cursor-pointer'
-                  onClick={() => handleRowClick(patient.id)}
-                >
-                  <td className='py-4 px-4'>{index + 1}</td>
-                  <td>{patient.name || 'N/A'}</td>
-                  <td>{patient.phone || 'N/A'}</td>
-                  <td>
-                    {patient.birthdate
-                      ? new Date(patient.birthdate).toLocaleDateString()
-                      : 'N/A'}
-                  </td>
-                  <td>{patient.gender || 'N/A'}</td>
-                  <td
-                    className='py-4 px-4 text-center flex justify-center items-center space-x-4'
-                    onClick={e => e.stopPropagation()}
-                  >
-                    <button
-                      onClick={() => handleEdit(patient.id)}
-                      className='btn-icon'
+      {/* TABLE VIEW */}
+      {viewMode === 'table' && (
+        <div className='bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden'>
+          <table className='data-table'>
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Patient Name</th>
+                <th>Phone Number</th>
+                <th>Birthdate</th>
+                <th>Gender</th>
+                <th className='text-center'>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {patients.length > 0 ? (
+                patients.map((patient, index) => {
+                  const avatarUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(patient.name || 'Patient')}&background=BF6159&color=fff`
+                  return (
+                    <tr
+                      key={patient.id}
+                      onClick={() => handleRowClick(patient.id)}
+                      className='cursor-pointer hover:bg-red-50/40 transition'
                     >
-                      <FaEdit size={18} />
-                    </button>
-                    <button
-                      onClick={() => openConfirmModal(patient)}
-                      className='btn-icon danger'
-                    >
-                      <FaTrashAlt size={18} />
-                    </button>
+                      <td className='font-medium text-gray-600'>{index + 1}</td>
+                      <td>
+                        <div className='flex items-center gap-3 py-1'>
+                          <img
+                            src={avatarUrl}
+                            alt={patient.name}
+                            className='w-9 h-9 rounded-full object-cover border border-red-200 shadow-2xs'
+                          />
+                          <span className='font-bold text-gray-900 hover:text-[#BF6159] transition'>
+                            {patient.name}
+                          </span>
+                        </div>
+                      </td>
+                      <td className='text-gray-700 font-medium'>{patient.phone || 'N/A'}</td>
+                      <td className='text-gray-600 text-xs'>
+                        {patient.birthdate ? new Date(patient.birthdate).toLocaleDateString() : 'N/A'}
+                      </td>
+                      <td>
+                        <span className={`badge ${patient.gender === 'female' ? 'badge-info' : 'badge-primary'}`}>
+                          {patient.gender || 'N/A'}
+                        </span>
+                      </td>
+                      <td className='text-center' onClick={e => e.stopPropagation()}>
+                        <div className='flex items-center justify-center gap-2'>
+                          <button onClick={() => handleEdit(patient.id)} className='btn-icon' title='Edit Patient'>
+                            <FaEdit />
+                          </button>
+                          <button onClick={() => openConfirmModal(patient)} className='btn-icon danger' title='Delete Patient'>
+                            <FaTrashAlt />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  )
+                })
+              ) : (
+                <tr>
+                  <td colSpan='6' className='py-8 text-center text-gray-400'>
+                    No patient records found matching your query.
                   </td>
                 </tr>
-              ))
-            ) : (
-              <tr>
-                <td colSpan='6' className='text-center text-gray-500 py-4'>
-                  No patients found.
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
-      </div>
+              )}
+            </tbody>
+          </table>
+        </div>
+      )}
 
-      {/* Add Patient Modal */}
+      {/* GRID VIEW */}
+      {viewMode === 'grid' && (
+        <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5'>
+          {patients.length > 0 ? (
+            patients.map(patient => {
+              const avatarUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(patient.name || 'Patient')}&background=BF6159&color=fff`
+              return (
+                <div
+                  key={patient.id}
+                  className='card p-5 bg-white border border-gray-200 shadow-sm flex flex-col justify-between space-y-4 hover:border-red-200 transition'
+                >
+                  <div className='flex items-start gap-4'>
+                    <img
+                      src={avatarUrl}
+                      alt={patient.name}
+                      className='w-14 h-14 rounded-full object-cover border-2 border-red-100 shadow-2xs'
+                    />
+                    <div className='space-y-1 overflow-hidden'>
+                      <h3
+                        onClick={() => handleRowClick(patient.id)}
+                        className='text-base font-bold text-gray-900 hover:text-[#BF6159] cursor-pointer truncate'
+                      >
+                        {patient.name}
+                      </h3>
+                      <p className='text-xs font-semibold text-gray-500 flex items-center gap-1.5'>
+                        <FaPhone className='text-[#BF6159]' /> {patient.phone || 'N/A'}
+                      </p>
+                      <div className='flex gap-2 pt-1'>
+                        <span className={`badge ${patient.gender === 'female' ? 'badge-info' : 'badge-primary'}`}>
+                          <FaVenusMars className='text-[10px]' /> {patient.gender || 'N/A'}
+                        </span>
+                        {patient.birthdate && (
+                          <span className='badge badge-canceled text-[10px]'>
+                            <FaCalendarAlt className='text-[10px]' /> {new Date(patient.birthdate).toLocaleDateString()}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className='flex items-center justify-between pt-3 border-t border-gray-100'>
+                    <button onClick={() => handleRowClick(patient.id)} className='btn-secondary text-xs py-1.5'>
+                      <FaUser /> View Profile
+                    </button>
+
+                    <div className='flex gap-2'>
+                      <button onClick={() => handleEdit(patient.id)} className='btn-icon' title='Edit Patient'>
+                        <FaEdit />
+                      </button>
+                      <button onClick={() => openConfirmModal(patient)} className='btn-icon danger' title='Delete Patient'>
+                        <FaTrashAlt />
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )
+            })
+          ) : (
+            <div className='col-span-full p-12 text-center bg-white rounded-xl border border-dashed border-gray-200'>
+              <FaUserInjured className='text-4xl text-gray-300 mx-auto mb-3' />
+              <p className='text-sm font-semibold text-gray-600'>No patient records found.</p>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* MODAL 1: ADD PATIENT */}
       {isModalOpen && (
-        <div className='fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 overflow-y-auto'>
-          <div className='bg-white w-full max-w-2xl rounded-2xl shadow-2xl p-6 relative border border-red-100 my-8'>
-            {/* Header */}
-            <div className='flex justify-between items-center pb-3 mb-4 border-b border-gray-100'>
-              <h2 className='text-2xl font-bold text-[#BF6159] flex items-center gap-2'>
+        <div className='modal-overlay'>
+          <div className='modal-panel max-w-xl'>
+            <div className='modal-header'>
+              <h3 className='modal-title'>
                 <FaUserPlus /> Add New Patient
-              </h2>
-              <button
-                onClick={closeModal}
-                className='modal-close'
-              >
+              </h3>
+              <button onClick={closeModal} className='modal-close'>
                 ✕
               </button>
             </div>
 
-            {/* Form Section */}
+            {errorMessage && (
+              <div className='mb-4 p-3 bg-red-50 border border-red-200 text-red-700 rounded-xl text-xs font-semibold'>
+                ⚠️ {errorMessage}
+              </div>
+            )}
+
             <form onSubmit={handleSubmit(onSubmit)} className='space-y-4'>
-              <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
-                {/* Full Name */}
+              <div className='grid grid-cols-1 sm:grid-cols-2 gap-4'>
                 <div>
-                  <label className='block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1'>Full Name</label>
+                  <label className='form-label'>Full Name</label>
                   <input
                     {...register('name')}
                     type='text'
                     placeholder='e.g. John Doe'
-                    className={`w-full border border-gray-300 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-[#BF6159] focus:outline-none bg-gray-50/50 ${
-                      errors.name ? 'border-red-500' : ''
-                    }`}
+                    className={`form-input ${errors.name ? 'border-red-500' : ''}`}
                   />
-                  {errors.name && (
-                    <span className='text-red-500 text-xs mt-1 block'>
-                      {errors.name.message}
-                    </span>
-                  )}
+                  {errors.name && <span className='text-red-500 text-xs mt-1 block'>{errors.name.message}</span>}
                 </div>
 
-                {/* Gender */}
                 <div>
-                  <label className='block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1'>Gender</label>
-                  <select
-                    {...register('gender')}
-                    className={`w-full border border-gray-300 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-[#BF6159] focus:outline-none bg-gray-50/50 ${
-                      errors.gender ? 'border-red-500' : ''
-                    }`}
-                  >
-                    <option value=''>Select Gender</option>
+                  <label className='form-label'>Gender</label>
+                  <select {...register('gender')} className={`form-input ${errors.gender ? 'border-red-500' : ''}`}>
+                    <option value=''>-- Select Gender --</option>
                     <option value='male'>Male</option>
                     <option value='female'>Female</option>
                   </select>
-                  {errors.gender && (
-                    <span className='text-red-500 text-xs mt-1 block'>
-                      {errors.gender.message}
-                    </span>
-                  )}
+                  {errors.gender && <span className='text-red-500 text-xs mt-1 block'>{errors.gender.message}</span>}
                 </div>
               </div>
 
-              <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
-                {/* Phone Number */}
+              <div className='grid grid-cols-1 sm:grid-cols-2 gap-4'>
                 <div>
-                  <label className='block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1'>
-                    Phone Number
-                  </label>
-                  <div className='flex gap-2'>
-                    <span className='px-3 py-2.5 bg-gray-100 border border-gray-300 rounded-xl text-sm font-semibold text-gray-600 flex items-center'>
-                      +20
-                    </span>
-                    <input
-                      {...register('phone')}
-                      type='text'
-                      placeholder='1012345678'
-                      className={`w-full border border-gray-300 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-[#BF6159] focus:outline-none bg-gray-50/50 ${
-                        errors.phone ? 'border-red-500' : ''
-                      }`}
-                    />
-                  </div>
-                  {errors.phone && (
-                    <span className='text-red-500 text-xs mt-1 block'>
-                      {errors.phone.message}
-                    </span>
-                  )}
-                  {errorMessage && (
-                    <span className='text-red-500 text-xs mt-1 block'>
-                      {errorMessage}
-                    </span>
-                  )}
+                  <label className='form-label'>Phone Number</label>
+                  <input
+                    {...register('phone')}
+                    type='text'
+                    placeholder='01012345678'
+                    className={`form-input ${errors.phone ? 'border-red-500' : ''}`}
+                  />
+                  {errors.phone && <span className='text-red-500 text-xs mt-1 block'>{errors.phone.message}</span>}
                 </div>
 
-                {/* Date of Birth */}
                 <div>
-                  <label className='block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1'>
-                    Date of Birth
-                  </label>
+                  <label className='form-label'>Birthdate</label>
                   <input
                     {...register('birthdate')}
                     type='date'
-                    className={`w-full border border-gray-300 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-[#BF6159] focus:outline-none bg-gray-50/50 ${
-                      errors.birthdate ? 'border-red-500' : ''
-                    }`}
+                    className={`form-input ${errors.birthdate ? 'border-red-500' : ''}`}
                   />
-                  {errors.birthdate && (
-                    <span className='text-red-500 text-xs mt-1 block'>
-                      {errors.birthdate.message}
-                    </span>
-                  )}
+                  {errors.birthdate && <span className='text-red-500 text-xs mt-1 block'>{errors.birthdate.message}</span>}
                 </div>
               </div>
 
-              {/* Info */}
               <div>
-                <label className='block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1'>Additional Notes / Info</label>
-                <textarea
-                  {...register('info')}
-                  placeholder='e.g. Allergies, blood type, emergency contact...'
-                  rows='2'
-                  className={`w-full border border-gray-300 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-[#BF6159] focus:outline-none bg-gray-50/50 resize-none ${
-                    errors.info ? 'border-red-500' : ''
-                  }`}
-                ></textarea>
-                {errors.info && (
-                  <span className='text-red-500 text-xs mt-1 block'>
-                    {errors.info.message}
-                  </span>
-                )}
-              </div>
-
-              {/* Medical History */}
-              <div>
-                <label className='block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1'>
-                  Medical History
-                </label>
+                <label className='form-label'>Medical History (Optional)</label>
                 <textarea
                   {...register('medicalHistory')}
-                  placeholder='Previous chronic conditions, surgeries...'
-                  rows='2'
-                  className={`w-full border border-gray-300 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-[#BF6159] focus:outline-none bg-gray-50/50 resize-none ${
-                    errors.medicalHistory ? 'border-red-500' : ''
-                  }`}
-                ></textarea>
-                {errors.medicalHistory && (
-                  <span className='text-red-500 text-xs mt-1 block'>
-                    {errors.medicalHistory.message}
-                  </span>
-                )}
+                  rows={2}
+                  placeholder='Chronic illnesses, allergies, past operations...'
+                  className='form-input'
+                />
               </div>
 
-              {/* Save Button */}
-              <div className='flex justify-end gap-3 pt-3 border-t border-gray-100'>
-                <button
-                  type='button'
-                  onClick={closeModal}
-                  className='btn-secondary'
-                >
+              <div className='modal-footer'>
+                <button type='button' onClick={closeModal} className='btn-secondary'>
                   Cancel
                 </button>
-                <button
-                  type='submit'
-                  className='btn-primary'
-                >
-                  <IoIosSave className='text-lg' /> Save Patient
+                <button type='submit' className='btn-primary'>
+                  Save Patient Record
                 </button>
               </div>
             </form>
@@ -422,28 +422,23 @@ const PatientsTable = () => {
         </div>
       )}
 
-      {/* Delete Confirmation Modal */}
-      {isConfirmModalOpen && selectedPatient && (
-        <div className='fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4'>
-          <div className='bg-white rounded-2xl shadow-2xl p-6 w-full max-w-md border border-red-100 relative'>
-            <h3 className='text-xl font-bold mb-3 text-gray-900'>
-              Confirm Deletion
-            </h3>
-            <p className='text-sm text-gray-600 mb-6'>
-              Are you sure you want to delete patient <strong className='text-red-600'>{selectedPatient.name}</strong>? This action cannot be undone.
+      {/* MODAL 2: CONFIRM DELETE */}
+      {isConfirmModalOpen && (
+        <div className='modal-overlay'>
+          <div className='modal-panel max-w-sm text-center space-y-4'>
+            <div className='w-12 h-12 rounded-full bg-red-100 text-red-600 flex items-center justify-center mx-auto text-xl'>
+              ⚠️
+            </div>
+            <h3 className='text-lg font-bold text-gray-900'>Delete Patient Record?</h3>
+            <p className='text-xs text-gray-500'>
+              Are you sure you want to remove <strong>{selectedPatient?.name}</strong>? This action cannot be undone.
             </p>
-            <div className='flex justify-end gap-3'>
-              <button
-                onClick={closeConfirmModal}
-                className='btn-secondary'
-              >
+            <div className='flex justify-center gap-3 pt-2'>
+              <button onClick={closeConfirmModal} className='btn-secondary'>
                 Cancel
               </button>
-              <button
-                onClick={handleDelete}
-                className='btn-danger'
-              >
-                Delete
+              <button onClick={handleDelete} className='btn-danger'>
+                Yes, Delete Patient
               </button>
             </div>
           </div>

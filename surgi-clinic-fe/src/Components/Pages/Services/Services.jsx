@@ -1,14 +1,21 @@
 import React, { useEffect, useState } from 'react'
-import { FaSearch, FaWindowClose, FaStethoscope } from 'react-icons/fa'
-import { IoIosSave } from 'react-icons/io'
+import {
+  FaSearch,
+  FaStethoscope,
+  FaPlus,
+  FaTrash,
+  FaCheckCircle,
+  FaTimesCircle,
+  FaMicroscope
+} from 'react-icons/fa'
 import { IoCameraOutline } from 'react-icons/io5'
 import axios from 'axios'
 import Joi from 'joi'
 import { useFormik } from 'formik'
-import addDoctor from '../../../assets/heart.png'
+import defaultServiceIcon from '../../../assets/heart.png'
 import { API_URL, getToken } from '../../../config'
 
-export default function Services () {
+export default function Services() {
   const token = getToken()
 
   const addServiceValidation = Joi.object({
@@ -24,12 +31,9 @@ export default function Services () {
       'string.max': 'Description cannot exceed 1000 characters.',
       'any.required': 'Description is required.'
     }),
-    status: Joi.string()
-      .valid('Available', 'Not Available')
-      .required()
-      .messages({
-        'any.only': 'Status must be "Available" or "Not Available".'
-      }),
+    status: Joi.string().valid('Available', 'Not Available').required().messages({
+      'any.only': 'Status must be "Available" or "Not Available".'
+    }),
     icon: Joi.any().optional()
   })
 
@@ -44,7 +48,7 @@ export default function Services () {
       const response = await axios.get(`${API_URL}/api/services/all`, {
         headers: { Authorization: `Bearer ${token}` }
       })
-      setServices(response.data.data)
+      setServices(response.data.data || [])
     } catch (error) {
       console.error('Error fetching services:', error)
     }
@@ -54,6 +58,34 @@ export default function Services () {
     fetchServices()
   }, [])
 
+  const openModal = () => setIsModalOpen(true)
+  const closeModal = () => {
+    setIsModalOpen(false)
+    setImage(null)
+    formik.resetForm()
+  }
+
+  const handleImageChange = e => {
+    const file = e.target.files[0]
+    if (file && file.type.startsWith('image/')) {
+      setImage(file)
+    } else {
+      alert('Please upload a valid image file.')
+    }
+  }
+
+  const handleDeleteService = async id => {
+    if (!window.confirm('Are you sure you want to delete this clinical service?')) return
+    try {
+      await axios.delete(`${API_URL}/api/services/${id}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      })
+      fetchServices()
+    } catch (err) {
+      alert(err.response?.data?.message || 'Failed to delete service')
+    }
+  }
+
   const formik = useFormik({
     initialValues: {
       title: '',
@@ -61,9 +93,7 @@ export default function Services () {
       desc: ''
     },
     validate: values => {
-      const { error } = addServiceValidation.validate(values, {
-        abortEarly: false
-      })
+      const { error } = addServiceValidation.validate(values, { abortEarly: false })
       if (error) {
         return error.details.reduce((acc, detail) => {
           acc[detail.path[0]] = detail.message
@@ -74,7 +104,6 @@ export default function Services () {
     },
     onSubmit: async values => {
       if (loading) return
-
       setLoading(true)
       const formData = new FormData()
       formData.append('title', values.title)
@@ -88,8 +117,6 @@ export default function Services () {
         })
         fetchServices()
         closeModal()
-        setImage(null)
-        formik.resetForm()
       } catch (error) {
         console.error('Error adding service:', error)
       } finally {
@@ -98,177 +125,160 @@ export default function Services () {
     }
   })
 
-  const handleImageChange = e => {
-    const file = e.target.files[0]
-    if (file) setImage(file)
-  }
-
-  const openModal = () => setIsModalOpen(true)
-  const closeModal = () => setIsModalOpen(false)
-
-  const handleStatusClick = async id => {
-    try {
-      const response = await axios.patch(
-        `${API_URL}/api/services/${id}`,
-        {},
-        {
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${token}`
-          }
-        }
-      )
-      fetchServices()
-    } catch (error) {
-      console.error('Error updating status:', error.response || error.message)
-    }
-  }
+  const filteredServices = services.filter(
+    s =>
+      (s.title || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (s.desc || '').toLowerCase().includes(searchTerm.toLowerCase())
+  )
 
   return (
-    <div
-      style={{ maxHeight: 'calc(100vh - 50px)' }}
-      className='container mx-auto px-4 overflow-y-auto custom-scroll'
-    >
-      <div className='flex items-center justify-between mb-4'>
-        <h3 className='text-2xl font-semibold text-red-600'>Services List</h3>
-        <div className='flex justify-between gap-5 items-center mb-4'>
-          <div className='relative'>
-            <FaSearch className='absolute left-4 top-3 text-gray-400' />
+    <div style={{ maxHeight: 'calc(100vh - 50px)' }} className='p-6 overflow-y-auto custom-scroll space-y-6'>
+      {/* Top Header */}
+      <div className='flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 pb-3 border-b border-gray-200'>
+        <div>
+          <h2 className='page-title text-2xl'>
+            <FaMicroscope className='text-[#BF6159]' /> Clinical Services ({services.length})
+          </h2>
+          <p className='text-xs text-gray-500 mt-0.5'>Manage available medical treatments, consultations, and procedure catalog</p>
+        </div>
+
+        <div className='flex items-center gap-3 w-full sm:w-auto justify-between sm:justify-end'>
+          <div className='search-wrap'>
+            <span className='search-icon'>🔍</span>
             <input
               type='text'
               value={searchTerm}
-              placeholder='Search by Name'
               onChange={e => setSearchTerm(e.target.value)}
-              className='p-s-i pl-12 pr-4 py-2 w-full  focus:outline-none focus:ring-2 focus:ring-[#D5D5D5]'
+              placeholder='Search Service Title or Desc...'
             />
           </div>
-          <button
-            onClick={openModal}
-            className='btn-primary'
-          >
-            + Add Service
+
+          <button onClick={openModal} className='btn-primary'>
+            <FaPlus /> Add Service
           </button>
         </div>
       </div>
 
-      <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6'>
-        {services
-          .filter(service =>
-            service.title.toLowerCase().includes(searchTerm.toLowerCase())
-          )
-          .map(service => (
-            <div
-              key={service.id}
-              className='bg-white rounded-lg shadow-md hover:shadow-lg transition cursor-pointer'
-            >
-              <img
-                className='rounded-t-lg w-full h-48 object-cover border-b border-gray-100'
-                src={service.img || ''}
-                onError={(e) => { e.target.src = 'https://images.unsplash.com/photo-1579684385127-1ef15d508118?w=500&auto=format&fit=crop&q=60' }}
-                alt={service.title || 'Service'}
-              />
-              <div className='p-4'>
-                <h3 className='text-xl font-semibold text-gray-800'>
-                  {service.title}
-                </h3>
-                <p className='mt-2 text-gray-600'>{service.desc}</p>
-                <span
-                  onClick={e => {
-                    e.preventDefault()
-                    handleStatusClick(service.id)
-                  }}
-                  className={`inline-block px-3 py-1 text-sm font-medium rounded-full ${
-                    service.status
-                      ? 'bg-green-100 text-green-800'
-                      : 'bg-red-100 text-red-800'
-                  }`}
-                >
-                  {service.status ? 'Available' : 'Not Available'}
-                </span>
+      {/* Services Grid */}
+      <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5'>
+        {filteredServices.length > 0 ? (
+          filteredServices.map(item => {
+            const iconUrl = item.icon && item.icon.startsWith('http')
+              ? item.icon
+              : defaultServiceIcon
+
+            return (
+              <div
+                key={item.id}
+                className='card p-5 bg-white border border-gray-200 shadow-sm flex flex-col justify-between space-y-4 hover:border-red-200 transition'
+              >
+                <div className='space-y-3'>
+                  <div className='flex items-start justify-between gap-3'>
+                    <div className='flex items-center gap-3'>
+                      <div className='w-12 h-12 rounded-2xl bg-red-50 border border-red-100 flex items-center justify-center p-2 shadow-2xs'>
+                        <img
+                          src={iconUrl}
+                          alt={item.title}
+                          className='w-full h-full object-contain'
+                          onError={e => {
+                            e.target.src = defaultServiceIcon
+                          }}
+                        />
+                      </div>
+                      <div>
+                        <h3 className='text-base font-bold text-gray-900'>{item.title}</h3>
+                        <span
+                          className={`badge ${item.status ? 'badge-confirmed' : 'badge-canceled'} text-[10px] inline-flex items-center gap-1`}
+                        >
+                          {item.status ? (
+                            <>
+                              <FaCheckCircle className='text-[9px]' /> Available
+                            </>
+                          ) : (
+                            <>
+                              <FaTimesCircle className='text-[9px]' /> Not Available
+                            </>
+                          )}
+                        </span>
+                      </div>
+                    </div>
+
+                    <button onClick={() => handleDeleteService(item.id)} className='btn-icon danger' title='Delete Service'>
+                      <FaTrash />
+                    </button>
+                  </div>
+
+                  <p className='text-xs text-gray-600 line-clamp-3 leading-relaxed bg-gray-50 p-3 rounded-xl border border-gray-100/60'>
+                    {item.desc || 'No procedure description provided.'}
+                  </p>
+                </div>
               </div>
-            </div>
-          ))}
+            )
+          })
+        ) : (
+          <div className='col-span-full p-12 text-center bg-white rounded-xl border border-dashed border-gray-200'>
+            <FaMicroscope className='text-4xl text-gray-300 mx-auto mb-3' />
+            <p className='text-sm font-semibold text-gray-600'>No clinical services found matching your query.</p>
+          </div>
+        )}
       </div>
 
+      {/* MODAL: ADD SERVICE */}
       {isModalOpen && (
-        <div className='fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 overflow-y-auto'>
-          <div className='bg-white w-full max-w-xl rounded-2xl shadow-2xl p-6 relative border border-red-100 my-8'>
-            {/* Header */}
-            <div className='flex justify-between items-center pb-3 mb-4 border-b border-gray-100'>
-              <h2 className='text-2xl font-bold text-[#BF6159] flex items-center gap-2'>
-                <FaStethoscope /> Add New Service
-              </h2>
-              <button
-                onClick={closeModal}
-                className='modal-close'
-              >
+        <div className='modal-overlay'>
+          <div className='modal-panel max-w-lg'>
+            <div className='modal-header'>
+              <h3 className='modal-title'>
+                <FaStethoscope /> Add Clinical Service
+              </h3>
+              <button onClick={closeModal} className='modal-close'>
                 ✕
               </button>
             </div>
 
-            <form onSubmit={formik.handleSubmit} className='space-y-4'>
-              {/* Image Upload */}
-              <div className='flex justify-center mb-6'>
-                <div className='relative w-24 h-24'>
-                  <div className='w-full h-full rounded-2xl bg-red-50 border-2 border-red-200 flex items-center justify-center overflow-hidden shadow-inner'>
-                    {image ? (
-                      <img
-                        src={URL.createObjectURL(image)}
-                        alt='Selected'
-                        className='w-full h-full object-cover'
-                      />
-                    ) : (
-                      <img src={addDoctor} className='w-12 h-12 object-contain opacity-70' alt='Placeholder' />
-                    )}
-                  </div>
-                  <label
-                    htmlFor='imageInput'
-                    className='absolute bottom-0 right-0 bg-[#BF6159] hover:bg-red-700 text-white p-2 rounded-full cursor-pointer shadow-md transition'
-                    title='Upload Service Image'
-                  >
-                    <IoCameraOutline className='text-base' />
-                    <input
-                      type='file'
-                      id='imageInput'
-                      accept='image/*'
-                      onChange={handleImageChange}
-                      className='hidden'
-                    />
-                  </label>
+            {/* Icon Preview Upload */}
+            <div className='flex justify-center mb-4'>
+              <div className='relative w-20 h-20'>
+                <div className='w-full h-full rounded-2xl bg-red-50 border-2 border-red-200 flex items-center justify-center overflow-hidden p-2 shadow-2xs'>
+                  {image ? (
+                    <img src={URL.createObjectURL(image)} alt='Service Icon' className='w-full h-full object-contain' />
+                  ) : (
+                    <img src={defaultServiceIcon} className='w-10 h-10 object-contain opacity-70' alt='Service Placeholder' />
+                  )}
                 </div>
+                <label
+                  htmlFor='serviceIconUpload'
+                  className='absolute -bottom-1 -right-1 bg-[#BF6159] hover:bg-red-700 text-white p-1.5 rounded-full cursor-pointer shadow-md transition'
+                  title='Upload Icon'
+                >
+                  <IoCameraOutline className='text-sm' />
+                  <input type='file' id='serviceIconUpload' accept='image/*' onChange={handleImageChange} className='hidden' />
+                </label>
               </div>
+            </div>
 
-              <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
-                {/* Title */}
+            <form onSubmit={formik.handleSubmit} className='space-y-4'>
+              <div className='grid grid-cols-1 sm:grid-cols-2 gap-4'>
                 <div>
-                  <label className='block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1'>
-                    Service Title
-                  </label>
+                  <label className='form-label'>Service Title</label>
                   <input
                     type='text'
                     name='title'
+                    placeholder='e.g. General Dental Checkup'
                     value={formik.values.title}
                     onChange={formik.handleChange}
-                    onBlur={formik.handleBlur}
-                    placeholder='e.g. General Dental Checkup'
-                    className='w-full border border-gray-300 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-[#BF6159] focus:outline-none bg-gray-50/50'
+                    className={`form-input ${formik.errors.title ? 'border-red-500' : ''}`}
                   />
-                  {formik.errors.title && formik.touched.title && (
-                    <div className='text-red-500 text-xs mt-1'>{formik.errors.title}</div>
-                  )}
+                  {formik.errors.title && <p className='text-red-500 text-xs mt-1'>{formik.errors.title}</p>}
                 </div>
 
-                {/* Status */}
                 <div>
-                  <label className='block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1'>
-                    Availability Status
-                  </label>
+                  <label className='form-label'>Service Status</label>
                   <select
                     name='status'
                     value={formik.values.status}
                     onChange={formik.handleChange}
-                    onBlur={formik.handleBlur}
-                    className='w-full border border-gray-300 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-[#BF6159] focus:outline-none bg-gray-50/50'
+                    className='form-input'
                   >
                     <option value='Available'>Available</option>
                     <option value='Not Available'>Not Available</option>
@@ -276,40 +286,25 @@ export default function Services () {
                 </div>
               </div>
 
-              {/* Description */}
               <div>
-                <label className='block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1'>
-                  Description & Medical Details
-                </label>
+                <label className='form-label'>Service Description</label>
                 <textarea
                   name='desc'
+                  rows={3}
+                  placeholder='Detailed medical service description, duration, requirements...'
                   value={formik.values.desc}
                   onChange={formik.handleChange}
-                  onBlur={formik.handleBlur}
-                  placeholder='Write a brief description of the medical service...'
-                  rows='3'
-                  className='w-full border border-gray-300 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-[#BF6159] focus:outline-none bg-gray-50/50 resize-none'
-                ></textarea>
-                {formik.errors.desc && formik.touched.desc && (
-                  <div className='text-red-500 text-xs mt-1'>{formik.errors.desc}</div>
-                )}
+                  className={`form-input ${formik.errors.desc ? 'border-red-500' : ''}`}
+                />
+                {formik.errors.desc && <p className='text-red-500 text-xs mt-1'>{formik.errors.desc}</p>}
               </div>
 
-              {/* Action Buttons */}
-              <div className='flex justify-end gap-3 pt-4 border-t border-gray-100'>
-                <button
-                  type='button'
-                  onClick={closeModal}
-                  className='btn-secondary'
-                >
+              <div className='modal-footer'>
+                <button type='button' onClick={closeModal} className='btn-secondary'>
                   Cancel
                 </button>
-                <button
-                  type='submit'
-                  disabled={loading}
-                  className='btn-primary'
-                >
-                  <IoIosSave className='text-lg' /> {loading ? 'Saving...' : 'Save Service'}
+                <button type='submit' disabled={loading} className='btn-primary'>
+                  {loading ? 'Saving...' : 'Save Clinical Service'}
                 </button>
               </div>
             </form>
