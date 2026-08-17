@@ -1,0 +1,62 @@
+name: Clinic System CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+
+jobs:
+  test-and-lint:
+    name: 🧪 Test & Build Validation
+    runs-[#1]: ubuntu-latest
+
+    steps:
+      - name: 📥 Checkout Code
+        uses: actions/checkout@v4
+
+      - name: ⚙️ Setup Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: 📦 Backend - Install & Build Test
+        run: |
+          cd clinic-backend
+          npm ci
+          npx prisma generate --schema=./src/prisma/schema.prisma
+          npm run build
+
+      - name: 💻 Frontend - Install & Build Test
+        run: |
+          cd surgi-clinic-fe
+          npm ci
+          npm run build
+
+  docker-build:
+    name: 🐳 Docker Container Build & Validate
+    needs: test-and-lint
+    runs-[#1]: ubuntu-latest
+
+    steps:
+      - name: 📥 Checkout Code
+        uses: actions/checkout@v4
+
+      - name: 🛠️ Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: 🔨 Build Backend Container
+        uses: docker/build-push-action@v5
+        with:
+          context: ./clinic-backend
+          file: ./clinic-backend/Dockerfile
+          push: false
+          tags: clinic-backend:latest
+
+      - name: 🔨 Build Frontend Container
+        uses: docker/build-push-action@v5
+        with:
+          context: ./surgi-clinic-fe
+          file: ./surgi-clinic-fe/Dockerfile
+          push: false
+          tags: clinic-frontend:latest

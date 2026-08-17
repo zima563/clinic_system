@@ -24,20 +24,24 @@ FROM node:20-alpine AS runner
 
 WORKDIR /app
 
-# Install runtime dependencies for Prisma and OpenSSL
-RUN apk add --no-cache openssl libc6-compat
+# Install runtime dependencies for Prisma, OpenSSL, and netcat for db health wait
+RUN apk add --no-cache openssl libc6-compat netcat-openbsd curl
 
 # Set node environment
 ENV NODE_ENV=production
 
-# Copy built dist, node_modules, package manifests, and src
+# Copy built dist, node_modules, package manifests, src, and entrypoint
 COPY --from=builder /app/package*.json ./
 COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/src ./src
+COPY docker-entrypoint.sh ./
+
+RUN chmod +x docker-entrypoint.sh
 
 # Expose backend port
 EXPOSE 4000
 
-# Start server
+# Entrypoint & default command
+ENTRYPOINT ["/app/docker-entrypoint.sh"]
 CMD ["node", "dist/server.js"]

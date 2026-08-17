@@ -13,6 +13,11 @@ services:
       - mysql_data:/var/lib/mysql
     networks:
       - clinic_network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-prootpassword"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   # Clinic Backend Service
   backend:
@@ -29,10 +34,19 @@ services:
       base_url: "http://localhost:4000/uploads/"
     ports:
       - '4000:4000'
+    volumes:
+      - uploads_data:/app/uploads
     depends_on:
-      - mysql
+      mysql:
+        condition: service_healthy
     networks:
       - clinic_network
+    healthcheck:
+      test: ["CMD-SHELL", "node -e \"require('http').get('http://localhost:4000/', res => process.exit(res.statusCode ? 0 : 1))\""]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
 
   # Clinic Frontend Service (Nginx)
   frontend:
@@ -44,12 +58,20 @@ services:
     ports:
       - '80:80'
     depends_on:
-      - backend
+      backend:
+        condition: service_healthy
     networks:
       - clinic_network
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:80/ || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
 
 volumes:
   mysql_data:
+  uploads_data:
 
 networks:
   clinic_network:
