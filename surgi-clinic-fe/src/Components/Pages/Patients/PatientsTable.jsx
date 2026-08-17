@@ -184,7 +184,7 @@ const PatientsTable = () => {
           {hasPermission(['addPatient']) ? (
             <button
               onClick={openModal}
-              className='bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-md'
+              className='btn-primary'
             >
               + Add Patient
             </button>
@@ -229,13 +229,13 @@ const PatientsTable = () => {
                   >
                     <button
                       onClick={() => handleEdit(patient.id)}
-                      className='text-blue-600 hover:text-blue-800'
+                      className='btn-icon'
                     >
                       <FaEdit size={18} />
                     </button>
                     <button
                       onClick={() => openConfirmModal(patient)}
-                      className='text-red-600 hover:text-red-800'
+                      className='btn-icon danger'
                     >
                       <FaTrashAlt size={18} />
                     </button>
@@ -264,7 +264,7 @@ const PatientsTable = () => {
               </h2>
               <button
                 onClick={closeModal}
-                className='text-gray-400 hover:text-gray-600 text-xl font-bold w-8 h-8 rounded-full hover:bg-gray-100 flex items-center justify-center transition'
+                className='modal-close'
               >
                 ✕
               </button>
@@ -406,13 +406,13 @@ const PatientsTable = () => {
                 <button
                   type='button'
                   onClick={closeModal}
-                  className='px-5 py-2.5 bg-gray-100 text-gray-700 text-sm font-semibold rounded-xl hover:bg-gray-200 transition'
+                  className='btn-secondary'
                 >
                   Cancel
                 </button>
                 <button
                   type='submit'
-                  className='px-6 py-2.5 bg-[#BF6159] text-white text-sm font-semibold rounded-xl hover:bg-red-700 transition shadow-md shadow-red-200 flex items-center gap-2'
+                  className='btn-primary'
                 >
                   <IoIosSave className='text-lg' /> Save Patient
                 </button>
@@ -435,13 +435,13 @@ const PatientsTable = () => {
             <div className='flex justify-end gap-3'>
               <button
                 onClick={closeConfirmModal}
-                className='px-5 py-2.5 bg-gray-100 text-gray-700 text-sm font-semibold rounded-xl hover:bg-gray-200 transition'
+                className='btn-secondary'
               >
                 Cancel
               </button>
               <button
                 onClick={handleDelete}
-                className='px-6 py-2.5 bg-red-600 text-white text-sm font-semibold rounded-xl hover:bg-red-700 transition shadow-md shadow-red-200'
+                className='btn-danger'
               >
                 Delete
               </button>

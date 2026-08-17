@@ -122,7 +122,7 @@ export default function Settings() {
 
                 <button
                   type='submit'
-                  className='flex items-center gap-2 bg-[#BF6159] text-white px-5 py-2.5 rounded-lg hover:bg-red-600 font-medium transition'
+                  className='btn-primary'
                 >
                   <FaSave /> Update Password
                 </button>

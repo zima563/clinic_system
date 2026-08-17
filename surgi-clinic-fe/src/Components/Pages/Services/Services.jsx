@@ -144,7 +144,7 @@ export default function Services () {
           </div>
           <button
             onClick={openModal}
-            className='bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-md'
+            className='btn-primary'
           >
             + Add Service
           </button>
@@ -200,7 +200,7 @@ export default function Services () {
               </h2>
               <button
                 onClick={closeModal}
-                className='text-gray-400 hover:text-gray-600 text-xl font-bold w-8 h-8 rounded-full hover:bg-gray-100 flex items-center justify-center transition'
+                className='modal-close'
               >
                 ✕
               </button>
@@ -300,14 +300,14 @@ export default function Services () {
                 <button
                   type='button'
                   onClick={closeModal}
-                  className='px-5 py-2.5 bg-gray-100 text-gray-700 text-sm font-semibold rounded-xl hover:bg-gray-200 transition'
+                  className='btn-secondary'
                 >
                   Cancel
                 </button>
                 <button
                   type='submit'
                   disabled={loading}
-                  className='px-6 py-2.5 bg-[#BF6159] text-white text-sm font-semibold rounded-xl hover:bg-red-700 transition shadow-md shadow-red-200 flex items-center gap-2 disabled:opacity-50'
+                  className='btn-primary'
                 >
                   <IoIosSave className='text-lg' /> {loading ? 'Saving...' : 'Save Service'}
                 </button>

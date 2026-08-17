@@ -37,19 +37,21 @@ const Schedule = () => {
   return (
     <div className='p-6'>
       {/* Header */}
-      <div className='flex justify-between mb-4'>
-        <h1 className='text-[#BF6159] text-3xl'>Schedule List</h1>
+      <div className='flex justify-between items-center mb-6'>
+        <h1 className='page-title'>📅 Schedule List</h1>
         <div className='flex gap-3'>
-          <input
-            type='text'
-            placeholder='Search by Name'
-            value={searchQuery}
-            onChange={e => setSearchQuery(e.target.value)}
-            className='px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-red-600'
-          />
+          <div className='search-wrap'>
+            <span className='search-icon'>🔍</span>
+            <input
+              type='text'
+              placeholder='Search by name...'
+              value={searchQuery}
+              onChange={e => setSearchQuery(e.target.value)}
+            />
+          </div>
           <button
-            onClick={() => setIsModalOpen(true)} // Open modal on button click
-            className='bg-[#BF6159] text-white px-4 py-2 rounded-md hover:bg-red-600'
+            onClick={() => setIsModalOpen(true)}
+            className='btn-primary'
           >
             + Add Schedule
           </button>
@@ -60,10 +62,10 @@ const Schedule = () => {
       <table className='w-full border-collapse'>
         <thead>
           <tr>
-            <th className='border-b py-2 text-left'>Dr. Name</th>
-            <th className='border-b py-2 text-left'>Services</th>
-            <th className='border-b py-2 text-left'>Available Date</th>
-            <th className='border-b py-2 text-left'>Price</th>
+            <th className='border-b-2 border-gray-100 py-3 text-left text-xs font-bold uppercase tracking-wider text-gray-500 px-2'>Dr. Name</th>
+            <th className='border-b-2 border-gray-100 py-3 text-left text-xs font-bold uppercase tracking-wider text-gray-500 px-2'>Service</th>
+            <th className='border-b-2 border-gray-100 py-3 text-left text-xs font-bold uppercase tracking-wider text-gray-500 px-2'>Available Days</th>
+            <th className='border-b-2 border-gray-100 py-3 text-left text-xs font-bold uppercase tracking-wider text-gray-500 px-2'>Price</th>
           </tr>
         </thead>
         <tbody>

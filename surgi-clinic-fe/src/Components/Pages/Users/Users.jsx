@@ -124,7 +124,7 @@ export default function Users() {
           </div>
           <button
             onClick={() => setIsModalOpen(true)}
-            className='flex items-center gap-2 bg-[#BF6159] text-white px-4 py-2 rounded-lg hover:bg-red-600 transition font-medium'
+            className='btn-primary'
           >
             <FaUserPlus /> Add User
           </button>
@@ -184,14 +184,14 @@ export default function Users() {
                     <div className='flex items-center justify-center gap-3'>
                       <button
                         onClick={() => toggleUserActive(user.id)}
-                        className='text-xl text-gray-600 hover:text-[#BF6159]'
+                        className='btn-ghost'
                         title='Toggle Active'
                       >
                         {user.isActive ? <FaToggleOn className='text-green-600' /> : <FaToggleOff className='text-gray-400' />}
                       </button>
                       <button
                         onClick={() => deleteUser(user.id)}
-                        className='text-red-500 hover:text-red-700'
+                        className='btn-icon danger'
                         title='Delete User'
                       >
                         <FaTrash />
@@ -222,7 +222,7 @@ export default function Users() {
               </h2>
               <button
                 onClick={() => setIsModalOpen(false)}
-                className='text-gray-400 hover:text-gray-600 text-xl font-bold w-8 h-8 rounded-full hover:bg-gray-100 flex items-center justify-center transition'
+                className='modal-close'
               >
                 ✕
               </button>
@@ -294,13 +294,13 @@ export default function Users() {
                 <button
                   type='button'
                   onClick={() => setIsModalOpen(false)}
-                  className='px-5 py-2.5 bg-gray-100 text-gray-700 text-sm font-semibold rounded-xl hover:bg-gray-200 transition'
+                  className='btn-secondary'
                 >
                   Cancel
                 </button>
                 <button
                   type='submit'
-                  className='px-6 py-2.5 bg-[#BF6159] text-white text-sm font-semibold rounded-xl hover:bg-red-700 transition shadow-md shadow-red-200'
+                  className='btn-primary'
                 >
                   Create User
                 </button>

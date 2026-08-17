@@ -203,7 +203,7 @@ function Expenses () {
             <FaCalendarAlt className='absolute left-3 top-3 text-gray-400' />
           </div>
           <button
-            className='text-white bg-[#BF6159] px-4 py-2 rounded-md hover:bg-[red]'
+            className='btn-primary'
             onClick={() => {
               resetModal()
               setIsModalOpen(true)
@@ -243,13 +243,13 @@ function Expenses () {
               <td className='px-4 py-2 text-center'>{item.details}</td>
               <td className='px-4 py-2 text-center'>
                 <button
-                  className='text-black px-3 py-1  ml-2 justify-center items-center'
+                  className='btn-ghost'
                   onClick={() => handleEdit(item.invoiceDetailsId)}
                 >
                   <FiEdit2 size={24} />
                 </button>
                 <button
-                  className='text-[#E31B25] px-3 py-1 justify-center items-center'
+                  className='btn-icon danger'
                   onClick={() => openDeleteModal(item.id)}
                 >
                   <FaTrash size={24} />
@@ -274,7 +274,7 @@ function Expenses () {
                   setIsModalOpen(false)
                   resetModal()
                 }}
-                className='text-gray-400 hover:text-gray-600 text-xl font-bold w-8 h-8 rounded-full hover:bg-gray-100 flex items-center justify-center transition'
+                className='modal-close'
               >
                 ✕
               </button>
@@ -319,13 +319,13 @@ function Expenses () {
                     setIsModalOpen(false)
                     resetModal()
                   }}
-                  className='px-5 py-2.5 bg-gray-100 text-gray-700 text-sm font-semibold rounded-xl hover:bg-gray-200 transition'
+                  className='btn-secondary'
                 >
                   Cancel
                 </button>
                 <button
                   type='submit'
-                  className='px-6 py-2.5 bg-[#BF6159] text-white text-sm font-semibold rounded-xl hover:bg-red-700 transition shadow-md shadow-red-200'
+                  className='btn-primary'
                 >
                   {isEditing ? 'Update Expense' : 'Save Expense'}
                 </button>
@@ -348,13 +348,13 @@ function Expenses () {
             <div className='flex justify-end gap-3'>
               <button
                 onClick={() => setIsDeleteModalOpen(false)}
-                className='px-5 py-2.5 bg-gray-100 text-gray-700 text-sm font-semibold rounded-xl hover:bg-gray-200 transition'
+                className='btn-secondary'
               >
                 Cancel
               </button>
               <button
                 onClick={handleDelete}
-                className='px-6 py-2.5 bg-red-600 text-white text-sm font-semibold rounded-xl hover:bg-red-700 transition shadow-md shadow-red-200'
+                className='btn-danger'
               >
                 Delete Expense
               </button>

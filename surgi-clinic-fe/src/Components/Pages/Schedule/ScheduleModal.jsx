@@ -130,7 +130,7 @@ const ScheduleModal = ({ onClose, onSave }) => {
           </h2>
           <button
             onClick={onClose}
-            className='text-gray-400 hover:text-gray-600 text-xl font-bold w-8 h-8 rounded-full hover:bg-gray-100 flex items-center justify-center'
+            className='modal-close'
           >
             ✕
           </button>
@@ -250,7 +250,7 @@ const ScheduleModal = ({ onClose, onSave }) => {
                     <button
                       type='button'
                       onClick={() => handleRemoveSlot(idx)}
-                      className='text-red-500 hover:text-red-700 p-1.5 rounded-lg hover:bg-red-100 transition'
+                      className='btn-icon danger'
                       title='Remove Slot'
                     >
                       <FaTrash className='text-xs' />
@@ -266,14 +266,14 @@ const ScheduleModal = ({ onClose, onSave }) => {
             <button
               type='button'
               onClick={onClose}
-              className='px-5 py-2.5 bg-gray-100 text-gray-700 text-sm font-semibold rounded-xl hover:bg-gray-200 transition'
+              className='btn-secondary'
             >
               Cancel
             </button>
             <button
               type='submit'
               disabled={isSubmitting}
-              className='px-6 py-2.5 bg-[#BF6159] text-white text-sm font-semibold rounded-xl hover:bg-red-700 transition shadow-md shadow-red-200 disabled:opacity-50'
+              className='btn-primary'
             >
               {isSubmitting ? 'Saving...' : 'Save Schedule'}
             </button>

@@ -193,7 +193,7 @@ function Income () {
               </h2>
               <button
                 onClick={() => closeModal()}
-                className='text-gray-400 hover:text-gray-600 text-xl font-bold w-8 h-8 rounded-full hover:bg-gray-100 flex items-center justify-center transition'
+                className='modal-close'
               >
                 ✕
               </button>
