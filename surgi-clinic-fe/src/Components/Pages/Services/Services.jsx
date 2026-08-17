@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import { FaSearch, FaWindowClose } from 'react-icons/fa'
+import { FaSearch, FaWindowClose, FaStethoscope } from 'react-icons/fa'
 import { IoIosSave } from 'react-icons/io'
 import { IoCameraOutline } from 'react-icons/io5'
 import axios from 'axios'
@@ -57,7 +57,7 @@ export default function Services () {
   const formik = useFormik({
     initialValues: {
       title: '',
-      status: '',
+      status: 'Available',
       desc: ''
     },
     validate: values => {

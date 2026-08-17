@@ -45,7 +45,7 @@ export const createVisit = async (
     const invoice = await prisma.invoice.create({
       data: {
         total,
-        ex: true,
+        ex: false,
         paymentMethod,
         createdBy: req.user?.id || 0,
       },

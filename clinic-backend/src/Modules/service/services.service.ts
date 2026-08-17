@@ -71,7 +71,10 @@ export const listServices = async (res: Response, query: any) => {
   const { result, pagination } = await apiFeatures.exec("service");
 
   result.map((doc: any) => {
-    doc.img = process.env.base_url + doc.img;
+    const base = process.env.base_url || 'http://localhost:4000/uploads/';
+    if (doc.img && !doc.img.startsWith('http')) {
+      doc.img = base + doc.img;
+    }
   });
 
   return res.status(200).json({
@@ -98,7 +101,10 @@ export const getService = async (res: Response, id: number) => {
   if (!service) {
     throw new ApiError("service not found", 404);
   }
-  service.img = process.env.base_url + service.img;
+  const base = process.env.base_url || 'http://localhost:4000/uploads/';
+  if (service.img && !service.img.startsWith('http')) {
+    service.img = base + service.img;
+  }
   return res.status(200).json(service);
 };
 

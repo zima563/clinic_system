@@ -11,9 +11,9 @@ import ApiError from "../../utils/ApiError";
 export const createAppointment = async (data: any, res: Response) => {
   await validatePatient(data.patientId);
   await validateSchedule(data.scheduleId);
-  const appointment = prisma.appointment.create({ data });
+  const appointment = await prisma.appointment.create({ data });
 
-  return res.status(200).json(appointment);
+  return res.status(201).json({ message: "Appointment created successfully", data: appointment });
 };
 
 export const getAllAppoientmentPatient = async (
@@ -74,8 +74,10 @@ export const getAppointments = async (query: any, res: Response) => {
   const { result, pagination } = await apiFeatures.exec("appointment");
 
   result.map((app: any) => {
-    app.schedule.doctor.image =
-      process.env.base_url + app.schedule.doctor.image;
+    const base = process.env.base_url || 'http://localhost:4000/uploads/';
+    if (app.schedule?.doctor?.image && !app.schedule.doctor.image.startsWith('http')) {
+      app.schedule.doctor.image = base + app.schedule.doctor.image;
+    }
   });
   return res.status(200).json({
     data: result,

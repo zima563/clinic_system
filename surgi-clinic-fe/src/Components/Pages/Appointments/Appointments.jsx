@@ -1,6 +1,6 @@
 import { object } from 'joi'
 import { useEffect, useState } from 'react'
-import { FaSearch, FaWindowClose } from 'react-icons/fa'
+import { FaSearch, FaWindowClose, FaCalendarPlus } from 'react-icons/fa'
 import { FiMoreHorizontal } from 'react-icons/fi'
 import { IoIosSave } from 'react-icons/io'
 import Select from 'react-select'
@@ -19,6 +19,7 @@ export default function Appointments () {
   const [selectedOptionSchedule, setSelectedOptionSchedule] = useState(null)
   const [dropdownOptionsDate, setDropdownOptionsDate] = useState([])
   const [selectedOptionDate, setSelectedOptionDate] = useState(null)
+  const [selectedDateTime, setSelectedDateTime] = useState('')
   const [price, setPrice] = useState(0)
   const [errorMessage, setErrorMessage] = useState({})
 
@@ -72,11 +73,15 @@ export default function Appointments () {
       setErrorMessage({ errorDate: 'Please select a date.' })
       return
     }
+    if (!selectedDateTime) {
+      setErrorMessage({ errorDate: 'Please select an appointment date.' })
+      return
+    }
 
     setErrorMessage('')
 
     const payload = {
-      dateTime: '2024-12-25',
+      dateTime: selectedDateTime,
       patientId: Number(selectedOption?.value), // Use selected patient ID
       scheduleId: Number(selectedOptionSchedule?.value),
       dateId: Number(selectedOptionDate?.value)
@@ -519,6 +524,23 @@ export default function Appointments () {
                     </div>
                   )}
                 </div>
+              </div>
+
+              {/* Appointment Date */}
+              <div>
+                <label className='block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1'>
+                  Appointment Date
+                </label>
+                <input
+                  type='date'
+                  value={selectedDateTime}
+                  onChange={e => setSelectedDateTime(e.target.value)}
+                  min={new Date().toISOString().split('T')[0]}
+                  className='w-full border border-gray-300 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-[#BF6159] focus:outline-none bg-gray-50/50'
+                />
+                {errorMessage.errorDate && !selectedOptionDate && (
+                  <div className='text-red-500 text-xs mt-1'>{errorMessage.errorDate}</div>
+                )}
               </div>
 
               <div className='grid grid-cols-1 md:grid-cols-3 gap-4 items-end'>

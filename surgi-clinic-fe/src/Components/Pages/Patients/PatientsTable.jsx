@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { FaEdit, FaSearch, FaTrashAlt, FaWindowClose } from 'react-icons/fa'
+import { FaEdit, FaSearch, FaTrashAlt, FaWindowClose, FaUserPlus } from 'react-icons/fa'
 import { IoIosSave } from 'react-icons/io'
 import axios from 'axios'
 import * as yup from 'yup'

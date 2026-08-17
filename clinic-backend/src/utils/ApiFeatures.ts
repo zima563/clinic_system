@@ -53,7 +53,8 @@ class ApiFeatures {
     }
 
     if (this.searchQuery.ex !== undefined) {
-      this.prismaQuery.where.ex = this.searchQuery.ex === "1";
+      const exVal = this.searchQuery.ex;
+      this.prismaQuery.where.ex = exVal === true || exVal === "true" || exVal === "1" || exVal === 1;
       delete filterObj.ex;
     }
 
@@ -356,6 +357,7 @@ class ApiFeatures {
               select: {
                 id: true,
                 name: true,
+                image: true,
               },
             },
           },

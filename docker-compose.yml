@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   # MySQL Database Service
   mysql:
@@ -28,6 +26,7 @@ services:
       DATABASE_URL: mysql://root:rootpassword@mysql:3306/clinic_system_db
       JWT_KEY: CLINIC_SYSTEM_SECRET_KEY_510
       NODE_ENV: production
+      base_url: "http://localhost:4000/uploads/"
     ports:
       - '4000:4000'
     depends_on:

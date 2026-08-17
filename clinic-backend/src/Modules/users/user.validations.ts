@@ -27,9 +27,13 @@ export const addUser = Joi.object({
     .pattern(/^\+?[0-9]{10,15}$/)
     .required()
     .messages({
-      "string.pattern.base": "Invalid email format.",
+      "string.pattern.base": "Invalid phone format.",
       "any.required": "Phone is required. ",
     }),
+  roleId: Joi.number().integer().positive().optional().messages({
+    "number.base": "Role ID must be a number.",
+    "number.positive": "Role ID must be a positive number.",
+  }),
 });
 
 export const UpdateUser = Joi.object({

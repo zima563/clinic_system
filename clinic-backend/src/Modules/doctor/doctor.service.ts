@@ -107,7 +107,10 @@ export const getDoctors = async (res: Response, query: any) => {
   // Execute the query and get the result and pagination
   const { result, pagination } = await apiFeatures.exec("doctor");
   result.map((doc: any) => {
-    doc.image = process.env.base_url + doc.image;
+    const base = process.env.base_url || 'http://localhost:4000/uploads/';
+    if (doc.image && !doc.image.startsWith('http')) {
+      doc.image = base + doc.image;
+    }
   });
 
   return res.status(200).json({
@@ -122,7 +125,10 @@ export const getDoctor = async (res: Response, id: number) => {
   if (!doctor) {
     throw new ApiError("doctor not found", 404);
   }
-  doctor.image = process.env.base_url + doctor.image;
+  const base = process.env.base_url || 'http://localhost:4000/uploads/';
+  if (doctor.image && !doctor.image.startsWith('http')) {
+    doctor.image = base + doctor.image;
+  }
   return res.status(200).json(doctor);
 };
 

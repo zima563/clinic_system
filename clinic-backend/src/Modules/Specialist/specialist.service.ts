@@ -71,7 +71,10 @@ export const getSpecialty = async (res: Response, id: number) => {
   if (!specialty) {
     throw new ApiError("specialty not found");
   }
-  specialty.icon = process.env.base_url + specialty.icon;
+  const base = process.env.base_url || 'http://localhost:4000/uploads/';
+  if (specialty.icon && !specialty.icon.startsWith('http')) {
+    specialty.icon = base + specialty.icon;
+  }
   return res.status(200).json(specialty);
 };
 
@@ -143,7 +146,10 @@ export const getListSpecial = async (res: Response, query: any) => {
   const { result, pagination } = await apiFeatures.exec("specialty");
 
   result.map((doc: any) => {
-    doc.icon = process.env.base_url + doc.icon;
+    const base = process.env.base_url || 'http://localhost:4000/uploads/';
+    if (doc.icon && !doc.icon.startsWith('http')) {
+      doc.icon = base + doc.icon;
+    }
   });
 
   return res.status(200).json({

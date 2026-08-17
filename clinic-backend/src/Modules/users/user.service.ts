@@ -6,9 +6,18 @@ import ApiFeatures from "../../utils/ApiFeatures";
 import bcrypt from "bcryptjs";
 
 export const addUser = async (res: Response, body: any) => {
-  body.password = bcrypt.hashSync(body.password, 10);
-  let user = await prisma.user.create({ data: body });
-  return res.status(201).json(user);
+  const { roleId, ...userData } = body;
+  userData.password = bcrypt.hashSync(userData.password, 10);
+  const user = await prisma.user.create({ data: userData });
+
+  // Assign role if provided
+  if (roleId) {
+    await prisma.userRole.create({
+      data: { userId: user.id, roleId: Number(roleId) },
+    });
+  }
+
+  return res.status(201).json({ message: "User created successfully", user });
 };
 
 export const getAllUser = async (res: Response, query: any) => {

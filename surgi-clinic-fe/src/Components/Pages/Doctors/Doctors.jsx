@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react'
-import { FaTrash, FaEdit, FaSearch } from 'react-icons/fa'
+import { FaTrash, FaEdit, FaSearch, FaUserPlus, FaWindowClose } from 'react-icons/fa'
 import { IoIosSave } from 'react-icons/io'
-import { FaWindowClose } from 'react-icons/fa'
 import { useNavigate } from 'react-router-dom'
 import addDoctor from '../../../assets/addDoctor.png'
 import { IoCameraOutline } from 'react-icons/io5'
@@ -55,7 +54,7 @@ function Doctors () {
 
   const fetchSpecialties = async () => {
     try {
-      const response = await axios.get(`${API_URL}/api/specialist/all`, {
+      const response = await axios.get(`${API_URL}/api/Specialist`, {
         headers: {
           Authorization: `Bearer ${token}`
         }
