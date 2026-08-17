@@ -2,7 +2,7 @@ import React, { useState } from 'react'
 import { NavLink } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { IoIosArrowDropleft, IoIosArrowDropright } from 'react-icons/io'
-import logo from '../../assets/marinalogo.png'
+import logo from '../../assets/clinic_logo.jpg'
 import './Sidebar.css'
 import {
   FaHome,

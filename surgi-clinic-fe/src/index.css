@@ -2,8 +2,18 @@
 @tailwind components;
 @tailwind utilities;
 
+:root {
+  --primary-burgundy: #8B1E2B;
+  --primary-accent: #BF6159;
+  --bg-slate: #F8FAFC;
+  --card-glass: rgba(255, 255, 255, 0.95);
+  --border-subtle: #E2E8F0;
+}
+
 body {
-  font-family: 'IBM Plex Sans Arabic', sans-serif;
+  font-family: 'IBM Plex Sans Arabic', 'Cairo', 'Inter', sans-serif;
+  background-color: var(--bg-slate);
+  color: #1E293B;
 }
 
 html,
@@ -14,41 +24,92 @@ body {
   padding: 0;
 }
 
+/* Glassmorphism Card Utility */
+.glass-card {
+  background: var(--card-glass);
+  backdrop-filter: blur(12px);
+  border: 1px solid var(--border-subtle);
+  border-radius: 0.75rem;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+  transition: all 0.2s ease-in-out;
+}
+
+.glass-card:hover {
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.08), 0 4px 6px -2px rgba(0, 0, 0, 0.04);
+}
+
+/* Status Badges */
+.badge-confirmed {
+  background-color: #ECFDF5;
+  color: #047857;
+  border: 1px solid #A7F3D0;
+  padding: 0.25rem 0.625rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.badge-pending {
+  background-color: #FEF3C7;
+  color: #B45309;
+  border: 1px solid #FDE68A;
+  padding: 0.25rem 0.625rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.badge-canceled {
+  background-color: #FEE2E2;
+  color: #B91C1C;
+  border: 1px solid #FECACA;
+  padding: 0.25rem 0.625rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.badge-active {
+  background-color: #EFF6FF;
+  color: #1D4ED8;
+  border: 1px solid #BFDBFE;
+  padding: 0.25rem 0.625rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
 /* Custom Scrollbar Styles */
 .custom-scroll::-webkit-scrollbar {
-  width: 8px; /* Width of the scrollbar */
-  height: 8px; /* Height of the horizontal scrollbar */
+  width: 6px;
+  height: 6px;
 }
 
 .custom-scroll::-webkit-scrollbar-thumb {
-  background-color: #ee302a00; /* Gray color for the scrollbar thumb */
-  border-radius: 4px; /* Rounded edges */
+  background-color: #CBD5E1;
+  border-radius: 9999px;
 }
 
 .custom-scroll::-webkit-scrollbar-thumb:hover {
-  background-color: #ee302a2b; /* Darker gray when hovered */
+  background-color: #94A3B8;
 }
 
 .custom-scroll::-webkit-scrollbar-track {
-  background-color: #f7fafc00; /* Light background for the scrollbar track */
-  border-radius: 4px; /* Rounded edges */
-}
-
-.custom-spinner {
-  stroke: #ee312a !important; /* Apply your desired color */
+  background-color: transparent;
 }
 
 .react-datepicker-wrapper {
   display: inline !important;
 }
 
-
-.react-calendar{
+.react-calendar {
   border: none !important;
+  font-family: inherit !important;
+  width: 100% !important;
 }
 
 .react-calendar__tile--active {
-  background-color: #EBCECC !important; /* Tailwind's sky-400 color */
-  color: #fff; /* Ensure text is visible */
-  border-radius: 0.5rem; /* Optional rounded corners */
+  background-color: #BF6159 !important;
+  color: #fff !important;
+  border-radius: 0.5rem;
 }

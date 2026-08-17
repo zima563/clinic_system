@@ -17,7 +17,8 @@ export default function SurgicalOperations() {
       const res = await axios.get(`${API_URL}/api/visit/all`, {
         headers: { Authorization: `Bearer ${token}` }
       })
-      setVisits(res.data.data || [])
+      const visitList = res.data.visits || res.data.data || (Array.isArray(res.data) ? res.data : [])
+      setVisits(visitList)
     } catch (err) {
       console.error('Failed to fetch surgical operations:', err)
     } finally {

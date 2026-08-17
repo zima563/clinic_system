@@ -55,6 +55,7 @@ export class appointmentController {
   }
 
   @Get("/")
+  @Get("/all")
   @UseBefore(...secureRouteWithPermissions("getAppointment"))
   async getAppointment(@Req() req: Request, @Res() res: Response) {
     return await appointmentService.getAppointments(req.query, res);

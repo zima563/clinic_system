@@ -49,6 +49,7 @@ export class patientController {
   }
 
   @Get("/")
+  @Get("/all")
   @UseBefore(...secureRouteWithPermissions("listPatient"))
   async listPatient(
     @QueryParams() query: any,

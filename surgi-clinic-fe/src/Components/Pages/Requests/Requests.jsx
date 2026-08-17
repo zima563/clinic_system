@@ -17,7 +17,8 @@ export default function Requests() {
       const res = await axios.get(`${API_URL}/api/appointment/all`, {
         headers: { Authorization: `Bearer ${token}` }
       })
-      setAppointments(res.data.data || [])
+      const appsList = res.data.data || (Array.isArray(res.data) ? res.data : [])
+      setAppointments(appsList)
     } catch (err) {
       console.error('Failed to fetch appointment requests:', err)
     } finally {

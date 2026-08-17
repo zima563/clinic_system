@@ -55,6 +55,7 @@ export class specialtyControllers {
     return await specialtyServices.updateSpecialty(req, res, id, body);
   }
 
+  @Get("/")
   @Get("/all")
   @UseBefore(...secureRouteWithPermissions("allSpecialtys"))
   async allSpecialtys(@QueryParams() query: any, @Res() res: Response) {

@@ -112,19 +112,28 @@ function Specialties () {
       </div>
       {/* Grid of Specialties */}
       <div className='grid grid-cols-2 md:grid-cols-4 mt-14'>
-        {specialtiesData.map(specialty => (
-          <div
-            key={specialty.id}
-            className='flex flex-col py-7 items-center transform transition-transform duration-300 hover:scale-105'
-          >
-            <img
-              src={specialty.icon || special1} // Fallback image if API data lacks an image
-              alt={specialty.title}
-              className='w-36 h-36 object-contain'
-            />
-            <div className='mt-2 text-lg font-semibold'>{specialty.title}</div>
-          </div>
-        ))}
+        {specialtiesData
+          .filter(s => s.title?.toLowerCase().includes(searchTerm.toLowerCase()))
+          .map(specialty => (
+            <div
+              key={specialty.id}
+              className='flex flex-col py-6 items-center glass-card m-3 transform transition-all duration-300 hover:-translate-y-1 hover:shadow-lg rounded-2xl cursor-pointer'
+            >
+              <div className='w-24 h-24 rounded-full bg-red-50 border-2 border-red-200 flex items-center justify-center text-red-600 text-4xl mb-3 shadow-inner overflow-hidden'>
+                {specialty.icon && specialty.icon.startsWith('http') ? (
+                  <img
+                    src={specialty.icon}
+                    alt={specialty.title}
+                    className='w-full h-full object-cover'
+                    onError={(e) => { e.target.style.display = 'none' }}
+                  />
+                ) : (
+                  <span className='text-3xl font-bold'>🩺</span>
+                )}
+              </div>
+              <div className='text-base font-bold text-slate-800 text-center px-2'>{specialty.title}</div>
+            </div>
+          ))}
       </div>
 
       {/* Modal */}

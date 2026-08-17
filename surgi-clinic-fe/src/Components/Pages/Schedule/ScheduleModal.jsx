@@ -25,10 +25,12 @@ const ScheduleModal = ({ onClose, onSave }) => {
       const token = getToken()
       const [docRes, servRes] = await Promise.all([
         axios.get(`${API_URL}/api/doctors/all`, { headers: { Authorization: `Bearer ${token}` } }),
-        axios.get(`${API_URL}/api/service/all`, { headers: { Authorization: `Bearer ${token}` } })
+        axios.get(`${API_URL}/api/services/all`, { headers: { Authorization: `Bearer ${token}` } })
       ])
-      setDoctors(docRes.data.data || [])
-      setServices(servRes.data.data || [])
+      const docsList = Array.isArray(docRes.data) ? docRes.data : (docRes.data?.data || [])
+      const servsList = Array.isArray(servRes.data) ? servRes.data : (servRes.data?.data || [])
+      setDoctors(docsList)
+      setServices(servsList)
     } catch (err) {
       console.error('Error fetching doctors or services:', err)
     }

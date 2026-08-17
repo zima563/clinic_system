@@ -101,7 +101,7 @@ const PatientsTable = () => {
 
     try {
       // Send DELETE request to the API
-      await axios.delete(`${API_URL}/${selectedPatient.id}`, {
+      await axios.delete(`${API_URL}/api/patients/${selectedPatient.id}`, {
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`

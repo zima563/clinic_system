@@ -67,68 +67,69 @@ const Schedule = () => {
           </tr>
         </thead>
         <tbody>
-          {schedules.map(schedule => (
+          {schedules?.map(schedule => (
             <tr key={schedule.id}>
               <td className='py-5 border-b flex items-center gap-3'>
                 <img
-                  src={schedule.doctor.image}
-                  alt={schedule.doctor.name}
-                  className='w-10 h-10 rounded-full'
+                  src={schedule.doctor?.image || ''}
+                  alt={schedule.doctor?.name || 'Doctor'}
+                  className='w-10 h-10 rounded-full object-cover border border-red-200 shadow-sm'
+                  onError={(e) => { e.target.src = 'https://ui-avatars.com/api/?name=' + encodeURIComponent(schedule.doctor?.name || 'Doctor') + '&background=BF6159&color=fff' }}
                 />
-                <span>{schedule.doctor.name}</span>
+                <span className='font-semibold text-gray-800'>{schedule.doctor?.name || 'Doctor'}</span>
               </td>
-              <td className='py-6 border-b font-bold'>
-                {schedule.service.title}
+              <td className='py-6 border-b font-bold text-gray-700'>
+                {schedule.service?.title || 'General Service'}
               </td>
               <td className='border-b'>
                 <div>
                   <div className='flex gap-2 p-2'>
-                    <div className='border flex p-2'>
+                    <div className='border rounded-lg flex p-1 bg-gray-50'>
                       {daysOfWeek.map((day, index) => {
-                        const isAvailable = schedule.dates.some(
-                          date => date.day === day
+                        const matchedDate = schedule.dates?.find(
+                          date => date.day?.toLowerCase().startsWith(day.toLowerCase())
                         )
+                        const isAvailable = !!matchedDate
                         return (
                           <div
                             key={index}
                             onClick={() =>
                               setSelectedDay(
-                                isAvailable ? { day, schedule } : null
+                                isAvailable ? { day, schedule, matchedDate } : null
                               )
                             }
-                            className={`cursor-pointer px-3 py-1 ${
+                            className={`cursor-pointer px-3 py-1 text-xs font-semibold rounded ${
                               isAvailable
-                                ? 'bg-[#F5E7E6] text-black'
-                                : 'bg-transparent'
+                                ? 'bg-[#BF6159] text-white shadow-sm'
+                                : 'bg-transparent text-gray-400'
                             }`}
                           >
-                            {day}
+                            {day.toUpperCase()}
                           </div>
                         )
                       })}
                     </div>
                   </div>
                   {selectedDay && selectedDay.schedule.id === schedule.id && (
-                    <div className='text-xs text-gray-600'>
-                      {selectedDay.schedule.dates
-                        .filter(date => date.day === selectedDay.day)
-                        .map((date, idx) => (
-                          <div key={idx}>
-                            {formatTimeRange(date.fromTime, date.toTime)}
-                          </div>
-                        ))}
+                    <div className='text-xs text-[#BF6159] font-medium px-2 py-1 bg-red-50 rounded mt-1'>
+                      {selectedDay.matchedDate?.fromTime} - {selectedDay.matchedDate?.toTime}
                     </div>
                   )}
                 </div>
               </td>
-              <td className='py-2 border-b'>{schedule.price} EGP</td>
+              <td className='py-2 border-b font-bold text-slate-800'>{schedule.price} EGP</td>
             </tr>
           ))}
         </tbody>
       </table>
 
       {/* Modal */}
-      {isModalOpen && <ScheduleModal onClose={() => setIsModalOpen(false)} />}
+      {isModalOpen && (
+        <ScheduleModal
+          onClose={() => setIsModalOpen(false)}
+          onSave={fetchSchedules}
+        />
+      )}
     </div>
   )
 }

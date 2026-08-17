@@ -195,9 +195,19 @@ function Doctors () {
                 onClick={() => handleRowClick(doctor.id)}
               >
                 <td className='p-2 text-center'>{index + 1}</td>
-                <td className='p-2 text-center'>{doctor.name}</td>
+                <td className='p-2 text-center flex items-center justify-center gap-3'>
+                  <img
+                    src={doctor.image || ''}
+                    alt={doctor.name}
+                    className='w-9 h-9 rounded-full object-cover border border-red-200 shadow-sm'
+                    onError={(e) => { e.target.src = 'https://ui-avatars.com/api/?name=' + encodeURIComponent(doctor.name) + '&background=BF6159&color=fff' }}
+                  />
+                  <span className='font-semibold text-slate-800'>{doctor.name}</span>
+                </td>
                 <td className='p-2 text-center'>{doctor.phone}</td>
-                <td className='p-2 text-center'>{doctor.specialty.title}</td>
+                <td className='p-2 text-center'>
+                  <span className='badge-active'>{doctor.specialty?.title || 'General'}</span>
+                </td>
                 <td className='p-2 flex justify-center space-x-2'>
                   <button
                     onClick={e => {

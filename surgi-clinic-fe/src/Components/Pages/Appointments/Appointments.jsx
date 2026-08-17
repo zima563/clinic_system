@@ -30,17 +30,18 @@ export default function Appointments () {
 
   const fetchAppointments = async () => {
     try {
-      await fetch(`${API_URL}/api/appointment`, {
+      await fetch(`${API_URL}/api/appointment/all`, {
         headers: {
           Authorization: `Bearer ${token}`
         }
       })
         .then(response => response.json())
-        .then(data => {
-          const sortedAppointments = data.data.sort(
+        .then(resData => {
+          const list = Array.isArray(resData) ? resData : (resData.data || [])
+          const sortedAppointments = list.sort(
             (a, b) => new Date(b.dateTime) - new Date(a.dateTime)
           )
-          setData(sortedAppointments || [])
+          setData(sortedAppointments)
         })
         .catch(error => console.error('Error fetching data:', error))
     } catch (error) {
@@ -336,10 +337,11 @@ export default function Appointments () {
                 <div>
                   <h3 className='text-2xl mb-3'>{appointment.patient.name}</h3>
                   <div className='flex gap-3 items-center mb-4'>
-                    <div className='rounded-full bg-black w-10 h-10 '>
+                    <div className='rounded-full bg-red-50 border border-red-200 w-10 h-10 overflow-hidden flex items-center justify-center'>
                       <img
-                        className='w-full rounded-full'
-                        src={appointment.schedule.doctor.image}
+                        className='w-full h-full object-cover rounded-full'
+                        src={appointment.schedule?.doctor?.image || ''}
+                        onError={(e) => { e.target.src = 'https://ui-avatars.com/api/?name=' + encodeURIComponent(appointment.schedule?.doctor?.name || 'Doctor') + '&background=BF6159&color=fff' }}
                         alt=''
                       />
                     </div>

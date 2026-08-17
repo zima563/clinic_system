@@ -62,6 +62,7 @@ export class visitController {
   }
 
   @Get("/")
+  @Get("/all")
   @UseBefore(...secureRouteWithPermissions("getAllVisits"))
   async getAllVisits(
     @Req() req: Request,

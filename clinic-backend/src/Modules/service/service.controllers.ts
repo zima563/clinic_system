@@ -35,6 +35,7 @@ export class ServiceController {
     });
   }
 
+  @Get("/")
   @Get("/all")
   @UseBefore(...secureRouteWithPermissions("allServices"))
   async allServices(@QueryParams() query: any, @Res() res: Response) {

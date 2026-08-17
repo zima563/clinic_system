@@ -162,8 +162,9 @@ export default function Services () {
               className='bg-white rounded-lg shadow-md hover:shadow-lg transition cursor-pointer'
             >
               <img
-                className='rounded-t-lg w-full h-48 object-cover'
-                src={service.img}
+                className='rounded-t-lg w-full h-48 object-cover border-b border-gray-100'
+                src={service.img || ''}
+                onError={(e) => { e.target.src = 'https://images.unsplash.com/photo-1579684385127-1ef15d508118?w=500&auto=format&fit=crop&q=60' }}
                 alt={service.title || 'Service'}
               />
               <div className='p-4'>
