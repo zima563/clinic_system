@@ -20,25 +20,30 @@ export const addscheduleSchema = Joi.object({
     .items(
       Joi.object({
         day: Joi.string()
-          .valid("Mon", "Tue", "Ted", "Thu", "Fri", "Sat", "Sun")
+          .insensitive()
+          .valid(
+            "Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun",
+            "mon", "tue", "wed", "thu", "fri", "sat", "sun",
+            "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"
+          )
           .required()
           .messages({
             "any.only":
-              "Day must be one of 'mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'.",
+              "Day must be one of 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'.",
             "any.required": "Day is required.",
           }),
         fromTime: Joi.string()
           .pattern(/^([01]\d|2[0-3]):([0-5]\d)$/)
           .required()
           .messages({
-            "string.pattern.base": "From time must be in HH:mm format.",
+            "string.pattern.base": "From time must be in HH:mm format (e.g. 09:00).",
             "any.required": "From time is required.",
           }),
         toTime: Joi.string()
           .pattern(/^([01]\d|2[0-3]):([0-5]\d)$/)
           .required()
           .messages({
-            "string.pattern.base": "To time must be in HH:mm format.",
+            "string.pattern.base": "To time must be in HH:mm format (e.g. 17:00).",
             "any.required": "To time is required.",
           }),
       })
@@ -73,25 +78,30 @@ export const updateScheduleSchema = Joi.object({
     .items(
       Joi.object({
         day: Joi.string()
-          .valid("Mon", "Tue", "Ted", "Thu", "Fri", "Sat", "Sun")
+          .insensitive()
+          .valid(
+            "Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun",
+            "mon", "tue", "wed", "thu", "fri", "sat", "sun",
+            "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"
+          )
           .required()
           .messages({
             "any.only":
-              "Day must be one of 'mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'.",
+              "Day must be one of 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'.",
             "any.required": "Day is required.",
           }),
         fromTime: Joi.string()
           .pattern(/^([01]\d|2[0-3]):([0-5]\d)$/)
           .required()
           .messages({
-            "string.pattern.base": "From time must be in HH:mm format.",
+            "string.pattern.base": "From time must be in HH:mm format (e.g. 09:00).",
             "any.required": "From time is required.",
           }),
         toTime: Joi.string()
           .pattern(/^([01]\d|2[0-3]):([0-5]\d)$/)
           .required()
           .messages({
-            "string.pattern.base": "To time must be in HH:mm format.",
+            "string.pattern.base": "To time must be in HH:mm format (e.g. 17:00).",
             "any.required": "To time is required.",
           }),
       })
