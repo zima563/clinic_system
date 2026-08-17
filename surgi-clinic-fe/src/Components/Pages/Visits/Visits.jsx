@@ -1,73 +1,93 @@
+import React, { useEffect, useState } from 'react'
+import {
+  FaSearch,
+  FaStethoscope,
+  FaClock,
+  FaThLarge,
+  FaList,
+  FaUser,
+  FaCalendarAlt,
+  FaMoneyCheckAlt,
+  FaReceipt
+} from 'react-icons/fa'
+import { MdMedicalServices } from 'react-icons/md'
 import Select from 'react-select'
-import { useEffect, useState } from 'react'
-import { FaSearch, FaWindowClose } from 'react-icons/fa'
-import { FiMoreHorizontal } from 'react-icons/fi'
-import { IoIosSave } from 'react-icons/io'
-import icon from '../../../assets/cash.png'
+import { useNavigate } from 'react-router-dom'
 import { API_URL, getToken } from '../../../config'
 
-export default function Visits () {
-  const [expandedVisit, setExpandedVisit] = useState(null)
-
-  const toggleExpand = visitId => {
-    setExpandedVisit(prev => (prev === visitId ? null : visitId))
-  }
+export default function Visits() {
+  const navigate = useNavigate()
   const [data, setData] = useState([])
+  const [searchTerm, setSearchTerm] = useState('')
+  const [viewMode, setViewMode] = useState('grid') // 'grid' | 'table'
   const [isModalOpen, setIsModalOpen] = useState(false)
+
+  // Form & Dropdown States
   const [selectedOption, setSelectedOption] = useState(null)
   const [dropdownOptions, setDropdownOptions] = useState([])
   const [dropdownOptionsDoctor, setDropdownOptionsDoctor] = useState([])
   const [selectedOptionDoctor, setSelectedOptionDoctor] = useState(null)
-  const [dropdownOptionsservice, setDropdownOptionsservice] = useState([])
-  const [selectedOptionservice, setSelectedOptionservice] = useState(null)
   const [dropdownOptionsSchedule, setDropdownOptionsSchedule] = useState([])
   const [selectedOptionSchedule, setSelectedOptionSchedule] = useState(null)
   const [dropdownOptionsDate, setDropdownOptionsDate] = useState([])
   const [selectedOptionDate, setSelectedOptionDate] = useState(null)
-  const [dropdownOptionsPayment, setDropdownOptionsPayment] = useState([
-    { value: 'Cash', label: 'cash' }
+  const [dropdownOptionsPayment] = useState([
+    { value: 'Cash', label: 'Cash' },
+    { value: 'Visa', label: 'Visa' },
+    { value: 'PayPal', label: 'PayPal' }
   ])
-  const [selectedOptionPayment, setSelectedOptionPayment] = useState(null)
+  const [selectedOptionPayment, setSelectedOptionPayment] = useState({ value: 'Cash', label: 'Cash' })
   const [price, setPrice] = useState(0)
   const [errorMessage, setErrorMessage] = useState({})
   const [isLoading, setIsLoading] = useState(false)
-  // Modal toggle functions
-  const openModal = () => setIsModalOpen(true)
-  const closeModal = () => {
-    setIsModalOpen(false)
-  }
 
-  const TOKEN = getToken()
+  const token = getToken()
+
+  useEffect(() => {
+    fetchVisits()
+  }, [])
+
   const fetchVisits = async () => {
     try {
-      await fetch(`${API_URL}/api/visit`, {
-        headers: {
-          Authorization: `Bearer ${TOKEN}`
-        }
+      const res = await fetch(`${API_URL}/api/visit`, {
+        headers: { Authorization: `Bearer ${token}` }
       })
-        .then(response => response.json())
-        .then(data => {
-          console.log(data)
-          const sortedAppointments = data.visits.sort(
-            (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
-          )
-          setData(sortedAppointments || [])
-        })
-        .catch(error => console.error('Error fetching data:', error))
+      const result = await res.json()
+      const sorted = (result.visits || []).sort(
+        (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
+      )
+      setData(sorted)
     } catch (error) {
       console.error('Error fetching visits:', error)
-      setErrorMessage('Failed to fetch visits. Please try again later.')
     }
   }
 
-  // Group data by date
-  const groupedData = data.reduce((groups, item) => {
-    const date = new Date(item.createdAt).toLocaleDateString() // Format date
-    if (!groups[date]) groups[date] = []
-    groups[date].push(item)
+  const openModal = () => setIsModalOpen(true)
+  const closeModal = () => {
+    setIsModalOpen(false)
+    setErrorMessage({})
+  }
+
+  // Filter Visits
+  const filteredVisits = data.filter(v => {
+    const pName = v.details?.[0]?.patient?.name || ''
+    const dName = v.details?.[0]?.schedule?.doctor?.name || ''
+    const sTitle = v.details?.[0]?.schedule?.service?.title || ''
+    const term = searchTerm.toLowerCase()
+    return pName.toLowerCase().includes(term) || dName.toLowerCase().includes(term) || sTitle.toLowerCase().includes(term)
+  })
+
+  // Group by Date for Grid View
+  const groupedData = filteredVisits.reduce((groups, item) => {
+    const dateStr = item.createdAt
+      ? new Date(item.createdAt).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })
+      : 'Unscheduled Date'
+    if (!groups[dateStr]) groups[dateStr] = []
+    groups[dateStr].push(item)
     return groups
   }, {})
 
+  // Submit Visit Form
   const handleSubmit = async e => {
     e.preventDefault()
 
@@ -80,21 +100,21 @@ export default function Visits () {
       return
     }
     if (!selectedOptionDate) {
-      setErrorMessage({ errorDate: 'Please select a date.' })
+      setErrorMessage({ errorDate: 'Please select a date slot.' })
       return
     }
 
-    setErrorMessage('')
+    setErrorMessage({})
 
     const payload = {
-      patientId: Number(selectedOption?.value), // Ensure patientId is a number
+      patientId: Number(selectedOption.value),
       visitDetails: [
         {
-          scheduleId: Number(selectedOptionSchedule?.value), // Ensure scheduleId is a number
-          dateId: Number(selectedOptionDate?.value)
+          scheduleId: Number(selectedOptionSchedule.value),
+          dateId: Number(selectedOptionDate.value)
         }
       ],
-      paymentMethod: selectedOptionPayment?.value
+      paymentMethod: selectedOptionPayment?.value || 'Cash'
     }
 
     try {
@@ -102,333 +122,321 @@ export default function Visits () {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${TOKEN}`
+          Authorization: `Bearer ${token}`
         },
         body: JSON.stringify(payload)
       })
 
-      const data = await response.json()
-      console.log('Response:', data)
-      fetchVisits()
-      closeModal()
+      if (response.ok) {
+        fetchVisits()
+        closeModal()
+      } else {
+        alert('Failed to create visit record.')
+      }
     } catch (error) {
-      console.error('Error:', error)
-      alert('Failed to create the visit.')
+      console.error('Error submitting visit:', error)
     }
   }
 
-  useEffect(() => {
-    fetchVisits()
-  }, [])
-
+  // Search Patients
   const handleSearchChange = async inputValue => {
     if (!inputValue) return
-
     setIsLoading(true)
     try {
-      const response = await fetch(
-        `${API_URL}/api/patients?keyword_phone=${inputValue}`,
-        {
-          method: 'GET',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${TOKEN}`
-          }
-        }
-      )
-
-      const result = await response.json()
-      console.log('API Response:', result) // Log the full response
-
+      const res = await fetch(`${API_URL}/api/patients?keyword_phone=${inputValue}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      })
+      const result = await res.json()
       if (result && result.data) {
-        const options = result.data.map(item => ({
-          value: String(item.id),
-          label: `${item.name} (${item.phone})`
-        }))
-        setDropdownOptions(options)
-      } else {
-        console.error('No data found or API response format is incorrect')
-        setDropdownOptions([]) // Clear options if no data is found
+        setDropdownOptions(result.data.map(i => ({ value: String(i.id), label: `${i.name} (${i.phone})` })))
       }
-    } catch (error) {
-      console.error('Error fetching dropdown options:', error)
+    } catch (err) {
+      console.error(err)
     } finally {
       setIsLoading(false)
     }
   }
 
+  // Search Doctors & Schedules
   const handleSearchChangeDoctor = async () => {
     setIsLoading(true)
     try {
-      const response = await fetch(`${API_URL}/api/doctors`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${TOKEN}`
-        }
+      const res = await fetch(`${API_URL}/api/doctors`, {
+        headers: { Authorization: `Bearer ${token}` }
       })
-
-      const result = await response.json()
-      console.log('API Response:', result) // Log the full response
-
+      const result = await res.json()
       if (result && result.data) {
-        const options = result.data.map(item => ({
-          value: String(item.id),
-          label: item.name
-        }))
-        setDropdownOptionsDoctor(options)
-      } else {
-        console.error('No data found or API response format is incorrect')
-        setDropdownOptionsDoctor([]) // Clear options if no data is found
+        setDropdownOptionsDoctor(result.data.map(i => ({ value: String(i.id), label: i.name })))
       }
-    } catch (error) {
-      console.error('Error fetching dropdown options:', error)
+    } catch (err) {
+      console.error(err)
     } finally {
       setIsLoading(false)
     }
   }
 
-  const handleSearchChangeService = async () => {
-    setIsLoading(true)
+  const handleSelectDoctor = async selectedDoctor => {
+    setSelectedOptionDoctor(selectedDoctor)
+    if (!selectedDoctor) return
     try {
-      const response = await fetch(`${API_URL}/api/services/all`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${TOKEN}`
-        }
+      const res = await fetch(`${API_URL}/api/schedule`, {
+        headers: { Authorization: `Bearer ${token}` }
       })
-
-      const result = await response.json()
-      console.log('API Response:', result) // Log the full response
-
-      if (result && result.data) {
-        const options = result.data.map(item => ({
-          value: String(item.id),
-          label: item.title
-        }))
-        setDropdownOptionsservice(options)
-      } else {
-        console.error('No data found or API response format is incorrect')
-        setDropdownOptionsservice([]) // Clear options if no data is found
-      }
-    } catch (error) {
-      console.error('Error fetching dropdown options:', error)
-    } finally {
-      setIsLoading(false)
-    }
-  }
-
-  const handleSearchChangeSchedule = async () => {
-    setIsLoading(true)
-    try {
-      const response = await fetch(
-        `${API_URL}/api/schedule?doctorId=${selectedOptionDoctor.value}&servicesId=${selectedOptionservice.value}`,
-        {
-          method: 'GET',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${TOKEN}`
-          }
-        }
+      const result = await res.json()
+      const doctorSchedules = (result.data || []).filter(
+        s => String(s.doctorId) === String(selectedDoctor.value)
       )
-
-      const result = await response.json()
-      console.log('API Response:', result) // Log the full response
-
-      if (result && result.data) {
-        const options = result.data.map(item => ({
-          value: String(item.id),
-          label: `price ${item.price} dates ${item.dates.map(val => val.day)}`,
-          price: item.price
+      setDropdownOptionsSchedule(
+        doctorSchedules.map(s => ({
+          value: String(s.id),
+          label: `${s.service?.title || 'Service'} — ${s.price} L.E`,
+          price: s.price,
+          dates: s.dates
         }))
-        setDropdownOptionsSchedule(options)
-        console.log(dropdownOptionsSchedule)
-      } else {
-        console.error('No data found or API response format is incorrect')
-        setDropdownOptionsSchedule([]) // Clear options if no data is found
-      }
-    } catch (error) {
-      console.error('Error fetching dropdown options:', error)
-    } finally {
-      setIsLoading(false)
-    }
-  }
-
-  const handleSearchChangeDate = async () => {
-    setIsLoading(true)
-    try {
-      const response = await fetch(
-        `${API_URL}/api/schedule/dates/${selectedOptionSchedule.value}`,
-        {
-          method: 'GET',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${TOKEN}`
-          }
-        }
       )
-
-      const result = await response.json()
-      console.log('API Response:', result) // Log the full response
-
-      if (result) {
-        const options = result.map(item => ({
-          value: String(item.id),
-          label: `${item.day} - ${item.fromTime} to ${item.toTime}`
-        }))
-        setDropdownOptionsDate(options)
-        console.log(dropdownOptionsDate)
-      } else {
-        console.error('No data found or API response format is incorrect')
-        setDropdownOptionsDate([]) // Clear options if no data is found
-      }
-    } catch (error) {
-      console.error('Error fetching dropdown options:', error)
-    } finally {
-      setIsLoading(false)
+    } catch (err) {
+      console.error(err)
     }
   }
 
-  const customStyles = {
-    control: base => ({
-      ...base,
-      border: '1px solid #E5E7EB',
+  const handleSelectSchedule = selectedSchedule => {
+    setSelectedOptionSchedule(selectedSchedule)
+    if (!selectedSchedule) return
+    setPrice(selectedSchedule.price || 0)
+    if (selectedSchedule.dates) {
+      setDropdownOptionsDate(
+        selectedSchedule.dates.map(d => ({
+          value: String(d.id),
+          label: `${d.day}: ${d.fromTime} - ${d.toTime}`
+        }))
+      )
+    }
+  }
+
+  const customSelectStyles = {
+    control: provided => ({
+      ...provided,
+      borderRadius: '0.75rem',
+      borderColor: '#E2E8F0',
+      padding: '0.1rem',
       boxShadow: 'none',
-      '&:hover': {
-        borderColor: '#EF4444'
-      }
+      '&:hover': { borderColor: '#BF6159' }
     }),
-    option: (base, state) => ({
-      ...base,
-      backgroundColor: state.isFocused ? '#FEE2E2' : '#FFFFFF',
-      color: state.isFocused ? '#B91C1C' : '#374151',
-      '&:active': {
-        backgroundColor: '#EF4444',
-        color: '#FFFFFF'
-      }
+    option: (provided, state) => ({
+      ...provided,
+      backgroundColor: state.isSelected ? '#BF6159' : state.isFocused ? '#F5E7E6' : '#fff',
+      color: state.isSelected ? '#fff' : '#1E293B',
+      cursor: 'pointer'
     })
   }
 
   return (
-    <div
-      style={{ maxHeight: 'calc(100vh - 50px)' }}
-      className='p-4 overflow-y-auto custom-scroll'
-    >
-      {/* Header */}
-      <div className='flex items-center ps-10 pe-10 justify-between mb-4'>
-        <h3 className='text-2xl font-semibold text-red-600'>Visit List</h3>
-        <div className='flex gap-4'>
-          <div className='relative'>
-            <FaSearch className='absolute left-4 top-3 text-gray-400' />
+    <div style={{ maxHeight: 'calc(100vh - 50px)' }} className='p-6 overflow-y-auto custom-scroll space-y-6'>
+      {/* Top Header */}
+      <div className='flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 pb-3 border-b border-gray-200'>
+        <div>
+          <h2 className='page-title text-2xl'>
+            <StethoscopeIcon /> Clinic Visits Log
+          </h2>
+          <p className='text-xs text-gray-500 mt-0.5'>Record patient consultations, medical procedures, and income transactions</p>
+        </div>
+
+        <div className='flex items-center gap-3 w-full sm:w-auto justify-between sm:justify-end'>
+          <div className='search-wrap'>
+            <span className='search-icon'>🔍</span>
             <input
               type='text'
-              placeholder='Search by Name'
-              className='p-s-i pl-12 pr-4 py-2 w-full focus:outline-none focus:ring-2 focus:ring-[#D5D5D5]'
+              placeholder='Search patient or doctor...'
+              value={searchTerm}
+              onChange={e => setSearchTerm(e.target.value)}
             />
           </div>
-          <button
-            onClick={openModal}
-            className='btn-primary'
-          >
+
+          {/* View Mode Switcher */}
+          <div className='flex bg-gray-100 p-1 rounded-xl border border-gray-200'>
+            <button
+              onClick={() => setViewMode('grid')}
+              className={`p-2 rounded-lg text-sm transition ${viewMode === 'grid' ? 'bg-white text-[#BF6159] shadow-xs' : 'text-gray-500'}`}
+              title='Grid View'
+            >
+              <FaThLarge />
+            </button>
+            <button
+              onClick={() => setViewMode('table')}
+              className={`p-2 rounded-lg text-sm transition ${viewMode === 'table' ? 'bg-white text-[#BF6159] shadow-xs' : 'text-gray-500'}`}
+              title='Table View'
+            >
+              <FaList />
+            </button>
+          </div>
+
+          <button onClick={openModal} className='btn-primary'>
             + Add Visit
           </button>
         </div>
       </div>
-      {Object.keys(groupedData).map(date => (
-        <div key={date} className='mb-8'>
-          <h2 className='text-lg font-semibold mb-4'>{date}</h2>
-          <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4'>
-            {groupedData[date].map(visit => (
-              <div
-                key={visit.id}
-                className={`border rounded-lg p-4 border-[#BF6159] transition w-88 overflow-hidden ${
-                  expandedVisit === visit.id ? 'max-h-auto' : 'max-h-[300px]'
-                }`}
-                style={{
-                  maxHeight: expandedVisit === visit.id ? 'none' : '200px',
-                  cursor: 'pointer'
-                }}
-                onClick={() => toggleExpand(visit.id)}
-              >
-                <div>
-                  <div className='flex justify-between'>
-                    <h3 className='font-semibold text-2xl mb-2'>
-                      {visit.details[0].patient.name}
-                    </h3>
-                    <FiMoreHorizontal className='text-gray-500' />
-                  </div>
-                  <div>
-                    <p className='text-sm text-gray-600'>
-                      DR: {visit.details[0].schedule.doctor.name}
-                    </p>
-                  </div>
+
+      {/* GRID VIEW */}
+      {viewMode === 'grid' && (
+        <div className='space-y-6'>
+          {Object.keys(groupedData).length > 0 ? (
+            Object.keys(groupedData).map(dateGroup => (
+              <div key={dateGroup} className='space-y-3'>
+                <div className='flex items-center gap-2 text-xs font-bold text-gray-500 uppercase tracking-wider bg-gray-100/80 px-3 py-1.5 rounded-lg w-max border border-gray-200'>
+                  <FaCalendarAlt className='text-[#BF6159]' /> {dateGroup} ({groupedData[dateGroup].length} visits)
                 </div>
-                <div className='mt-4 flex justify-between'>
-                  <div>
-                    {visit.details.map(detail => (
-                      <div key={detail.id} className='mb-3'>
-                        <h3 className='font-semibold text-[#BF6159] text-[15px]'>
-                          {detail.schedule.service.title}
-                        </h3>
-                        <div className='flex text-sm gap-3'>
-                          <div>
-                            {detail.date.fromTime} - {detail.date.toTime}
+
+                <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5'>
+                  {groupedData[dateGroup].map(visit => {
+                    const firstDetail = visit.details?.[0]
+                    const docImg = firstDetail?.schedule?.doctor?.image && firstDetail.schedule.doctor.image.startsWith('http')
+                      ? firstDetail.schedule.doctor.image
+                      : `https://ui-avatars.com/api/?name=${encodeURIComponent(firstDetail?.schedule?.doctor?.name || 'Doctor')}&background=BF6159&color=fff`
+
+                    return (
+                      <div
+                        key={visit.id}
+                        className='card p-5 bg-white border border-gray-200 shadow-sm space-y-4 hover:border-red-200 transition flex flex-col justify-between'
+                      >
+                        {/* Patient & RF */}
+                        <div className='space-y-1'>
+                          <div className='flex justify-between items-start'>
+                            <h3
+                              onClick={() => firstDetail?.patient?.id && navigate(`/patient/${firstDetail.patient.id}`)}
+                              className='text-lg font-bold text-gray-900 hover:text-[#BF6159] cursor-pointer flex items-center gap-1.5'
+                            >
+                              <FaUser className='text-xs text-gray-400' /> {firstDetail?.patient?.name || 'Walk-in Patient'}
+                            </h3>
+                            <span className='badge badge-primary text-[10px] uppercase font-bold'>
+                              💳 {visit.paymentMethod || 'Cash'}
+                            </span>
                           </div>
-                          <div>{detail.schedule.price}.LE</div>
+                          <p className='text-[11px] font-mono text-gray-400'>RF: #{visit.rf || visit.id}</p>
+                        </div>
+
+                        {/* Doctor & Services */}
+                        <div className='space-y-2 p-3 bg-gray-50 rounded-xl border border-gray-100'>
+                          <div className='flex items-center gap-2.5 pb-2 border-b border-gray-200/60'>
+                            <img
+                              src={docImg}
+                              alt={firstDetail?.schedule?.doctor?.name}
+                              className='w-8 h-8 rounded-full object-cover border border-red-100 shadow-2xs'
+                            />
+                            <div>
+                              <span className='block text-xs font-bold text-gray-900'>
+                                Dr. {firstDetail?.schedule?.doctor?.name || 'Attending Doctor'}
+                              </span>
+                            </div>
+                          </div>
+
+                          <div className='space-y-1.5 pt-1'>
+                            {visit.details?.map(d => (
+                              <div key={d.id} className='flex justify-between items-center text-xs'>
+                                <span className='font-semibold text-gray-700 flex items-center gap-1'>
+                                  <MdMedicalServices className='text-[#BF6159]' /> {d.schedule?.service?.title || 'General Service'}
+                                </span>
+                                <span className='text-[11px] font-medium text-gray-500'>
+                                  ⏰ {d.date?.fromTime} - {d.date?.toTime}
+                                </span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+
+                        {/* Footer Total */}
+                        <div className='flex justify-between items-center pt-2 border-t border-gray-100'>
+                          <span className='text-xs font-bold text-gray-500 uppercase tracking-wider flex items-center gap-1'>
+                            <FaReceipt className='text-[#BF6159]' /> Visit Total:
+                          </span>
+                          <span className='text-base font-extrabold text-[#BF6159] bg-white px-3 py-1 rounded-lg border border-red-100 shadow-2xs'>
+                            {visit.total} L.E
+                          </span>
                         </div>
                       </div>
-                    ))}
-                  </div>
-                  <div>
-                    <div className='text-center mb-3'>
-                      <h3 className='text-[#BF6159] text-center text-[15px] font-semibold'>
-                        Payment Method
-                      </h3>
-                      {visit.paymentMethod === 'Cash' ? (
-                        <img src={icon} alt='' className='w-12 h-4 mx-auto' />
-                      ) : (
-                        'not found'
-                      )}
-                    </div>
-                    <div className='text-center'>
-                      <h4 className='text-[#BF6159] text-center text-[15px] font-semibold'>
-                        Total
-                      </h4>
-                      {visit.total}
-                    </div>
-                  </div>
+                    )
+                  })}
                 </div>
               </div>
-            ))}
-          </div>
+            ))
+          ) : (
+            <div className='p-12 text-center bg-white rounded-xl border border-dashed border-gray-200'>
+              <FaStethoscope className='text-4xl text-gray-300 mx-auto mb-3' />
+              <p className='text-sm font-semibold text-gray-600'>No visit records found matching your query.</p>
+            </div>
+          )}
         </div>
-      ))}
+      )}
 
-      {/* Modal */}
+      {/* TABLE VIEW */}
+      {viewMode === 'table' && (
+        <div className='bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden'>
+          <table className='data-table'>
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Patient Name</th>
+                <th>Attending Doctor</th>
+                <th>Services Rendered</th>
+                <th>Payment Method</th>
+                <th>Total (L.E)</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filteredVisits.length > 0 ? (
+                filteredVisits.map((item, idx) => (
+                  <tr key={item.id}>
+                    <td className='font-medium text-gray-600'>{idx + 1}</td>
+                    <td>
+                      <span
+                        onClick={() => item.details?.[0]?.patient?.id && navigate(`/patient/${item.details[0].patient.id}`)}
+                        className='font-bold text-gray-900 hover:text-[#BF6159] cursor-pointer'
+                      >
+                        {item.details?.[0]?.patient?.name || 'Walk-in Patient'}
+                      </span>
+                    </td>
+                    <td className='font-medium text-gray-700'>
+                      Dr. {item.details?.[0]?.schedule?.doctor?.name || 'N/A'}
+                    </td>
+                    <td>
+                      <span className='badge badge-primary'>
+                        {item.details?.[0]?.schedule?.service?.title || 'Consultation'}
+                      </span>
+                    </td>
+                    <td>
+                      <span className='badge badge-info'>💳 {item.paymentMethod || 'Cash'}</span>
+                    </td>
+                    <td className='font-extrabold text-[#BF6159]'>{item.total} L.E</td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td colSpan={6} className='py-8 text-center text-gray-400'>
+                    No visit records found.
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      )}
+
+      {/* MODAL: ADD VISIT */}
       {isModalOpen && (
-        <div className='fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 overflow-y-auto'>
-          <div className='bg-white w-full max-w-xl rounded-2xl shadow-2xl p-6 relative border border-red-100 my-8'>
-            {/* Header */}
-            <div className='flex justify-between items-center pb-3 mb-4 border-b border-gray-100'>
-              <h2 className='text-2xl font-bold text-[#BF6159] flex items-center gap-2'>
-                🩺 Add New Clinic Visit
-              </h2>
-              <button
-                onClick={closeModal}
-                className='modal-close'
-              >
+        <div className='modal-overlay'>
+          <div className='modal-panel'>
+            <div className='modal-header'>
+              <h3 className='modal-title'>
+                <FaStethoscope /> Create New Clinic Visit
+              </h3>
+              <button onClick={closeModal} className='modal-close'>
                 ✕
               </button>
             </div>
 
             <form onSubmit={handleSubmit} className='space-y-4'>
               <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
-                {/* Patient Selection */}
                 <div>
-                  <label className='block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1'>
-                    Patient Phone / Name
-                  </label>
+                  <label className='form-label'>Select Patient (Phone / Name)</label>
                   <Select
                     options={dropdownOptions}
                     value={selectedOption}
@@ -437,137 +445,53 @@ export default function Visits () {
                       setSelectedOption(selected)
                     }}
                     onInputChange={inputValue => {
-                      if (typeof inputValue === 'string')
-                        handleSearchChange(inputValue)
+                      if (typeof inputValue === 'string') handleSearchChange(inputValue)
                     }}
                     placeholder='Search patient...'
-                    styles={customStyles}
-                    className='w-full'
+                    styles={customSelectStyles}
                     isSearchable
                     isLoading={isLoading}
-                    noOptionsMessage={() =>
-                      isLoading ? 'Loading...' : 'No results found'
-                    }
-                    filterOption={null}
                   />
                   {errorMessage.errorPatient && (
-                    <div className='text-red-500 text-xs mt-1'>
-                      {errorMessage.errorPatient}
-                    </div>
+                    <p className='text-red-500 text-xs mt-1'>{errorMessage.errorPatient}</p>
                   )}
                 </div>
 
-                {/* Doctor Selection */}
                 <div>
-                  <label className='block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1'>
-                    Doctor
-                  </label>
+                  <label className='form-label'>Select Attending Doctor</label>
                   <Select
                     options={dropdownOptionsDoctor}
                     value={selectedOptionDoctor}
-                    onChange={selected => {
-                      setErrorMessage({})
-                      setSelectedOptionDoctor(selected)
-                      setDropdownOptionsSchedule([])
-                      setSelectedOptionSchedule(null)
-                      setDropdownOptionsDate([])
-                      setSelectedOptionDate(null)
-                      setPrice(0)
-                    }}
+                    onChange={handleSelectDoctor}
                     onMenuOpen={() => {
-                      if (dropdownOptionsDoctor.length === 0) {
-                        handleSearchChangeDoctor()
-                      }
+                      if (dropdownOptionsDoctor.length === 0) handleSearchChangeDoctor()
                     }}
-                    placeholder='Select a doctor...'
-                    styles={customStyles}
-                    className='w-full'
+                    placeholder='Select doctor...'
+                    styles={customSelectStyles}
                     isSearchable
                     isLoading={isLoading}
-                    noOptionsMessage={() =>
-                      isLoading ? 'Loading...' : 'No results found'
-                    }
                   />
                 </div>
               </div>
 
               <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
-                {/* Service Selection */}
                 <div>
-                  <label className='block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1'>
-                    Service
-                  </label>
-                  <Select
-                    options={dropdownOptionsservice}
-                    value={selectedOptionservice}
-                    onChange={selected => {
-                      setErrorMessage({})
-                      setSelectedOptionservice(selected)
-                      setDropdownOptionsSchedule([])
-                      setSelectedOptionSchedule(null)
-                      setDropdownOptionsDate([])
-                      setSelectedOptionDate(null)
-                      setPrice(0)
-                    }}
-                    onMenuOpen={() => {
-                      if (dropdownOptionsservice.length === 0) {
-                        handleSearchChangeService()
-                      }
-                    }}
-                    placeholder='Select a service...'
-                    styles={customStyles}
-                    className='w-full'
-                    isSearchable
-                    isLoading={isLoading}
-                    noOptionsMessage={() =>
-                      isLoading ? 'Loading...' : 'No results found'
-                    }
-                  />
-                </div>
-
-                {/* Schedule Selection */}
-                <div>
-                  <label className='block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1'>
-                    Schedule
-                  </label>
+                  <label className='form-label'>Service / Schedule</label>
                   <Select
                     options={dropdownOptionsSchedule}
                     value={selectedOptionSchedule}
-                    onChange={selected => {
-                      setErrorMessage({})
-                      setSelectedOptionSchedule(selected)
-                      setDropdownOptionsDate([])
-                      setSelectedOptionDate(null)
-                      setPrice(selected.price)
-                    }}
-                    onMenuOpen={() => {
-                      if (dropdownOptionsSchedule.length === 0) {
-                        handleSearchChangeSchedule()
-                      }
-                    }}
-                    placeholder='Select schedule...'
-                    styles={customStyles}
-                    className='w-full'
-                    isSearchable
-                    isLoading={isLoading}
-                    noOptionsMessage={() =>
-                      isLoading ? 'Loading...' : 'No results found'
-                    }
+                    onChange={handleSelectSchedule}
+                    placeholder='Select service schedule...'
+                    styles={customSelectStyles}
+                    isDisabled={!selectedOptionDoctor}
                   />
                   {errorMessage.errorSchedule && (
-                    <div className='text-red-500 text-xs mt-1'>
-                      {errorMessage.errorSchedule}
-                    </div>
+                    <p className='text-red-500 text-xs mt-1'>{errorMessage.errorSchedule}</p>
                   )}
                 </div>
-              </div>
 
-              <div className='grid grid-cols-1 md:grid-cols-3 gap-4 items-end'>
-                {/* Available Date */}
-                <div className='md:col-span-2'>
-                  <label className='block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1'>
-                    Available Date / Time Slot
-                  </label>
+                <div>
+                  <label className='form-label'>Available Time Slot</label>
                   <Select
                     options={dropdownOptionsDate}
                     value={selectedOptionDate}
@@ -575,73 +499,41 @@ export default function Visits () {
                       setErrorMessage({})
                       setSelectedOptionDate(selected)
                     }}
-                    onMenuOpen={() => {
-                      if (dropdownOptionsDate.length === 0) {
-                        handleSearchChangeDate()
-                      }
-                    }}
-                    placeholder='Select date slot...'
-                    styles={customStyles}
-                    className='w-full'
-                    isSearchable
-                    isLoading={isLoading}
-                    noOptionsMessage={() =>
-                      isLoading ? 'Loading...' : 'No results found'
-                    }
+                    placeholder='Select slot date...'
+                    styles={customSelectStyles}
+                    isDisabled={!selectedOptionSchedule}
                   />
                   {errorMessage.errorDate && (
-                    <div className='text-red-500 text-xs mt-1'>
-                      {errorMessage.errorDate}
-                    </div>
+                    <p className='text-red-500 text-xs mt-1'>{errorMessage.errorDate}</p>
                   )}
                 </div>
+              </div>
 
-                {/* Price Display */}
+              <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
                 <div>
-                  <label className='block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1'>Total Price</label>
-                  <div className='py-2.5 px-4 bg-red-50 border border-red-200 rounded-xl text-center font-bold text-[#BF6159] text-base'>
-                    {price ? `${price} L.E` : '0 L.E'}
+                  <label className='form-label'>Payment Method</label>
+                  <Select
+                    options={dropdownOptionsPayment}
+                    value={selectedOptionPayment}
+                    onChange={setSelectedOptionPayment}
+                    styles={customSelectStyles}
+                  />
+                </div>
+
+                <div>
+                  <label className='form-label'>Visit Fee Total</label>
+                  <div className='form-input bg-gray-100 font-extrabold text-[#BF6159] flex items-center'>
+                    {price} L.E
                   </div>
                 </div>
               </div>
 
-              {/* Payment Method */}
-              <div>
-                <label className='block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1'>
-                  Payment Method
-                </label>
-                <Select
-                  options={dropdownOptionsPayment}
-                  value={selectedOptionPayment}
-                  onChange={selected => {
-                    setErrorMessage({})
-                    setSelectedOptionPayment(selected)
-                  }}
-                  placeholder='Select payment method (Cash/Card)...'
-                  styles={customStyles}
-                  className='w-full'
-                  isSearchable
-                  isLoading={isLoading}
-                  noOptionsMessage={() =>
-                    isLoading ? 'Loading...' : 'No results found'
-                  }
-                />
-              </div>
-
-              {/* Actions */}
-              <div className='flex justify-end gap-3 pt-4 border-t border-gray-100'>
-                <button
-                  type='button'
-                  onClick={closeModal}
-                  className='btn-secondary'
-                >
+              <div className='modal-footer'>
+                <button type='button' onClick={closeModal} className='btn-secondary'>
                   Cancel
                 </button>
-                <button
-                  type='submit'
-                  className='btn-primary'
-                >
-                  <IoIosSave className='text-lg' /> Save Visit
+                <button type='submit' className='btn-primary'>
+                  Save Clinic Visit
                 </button>
               </div>
             </form>
@@ -650,4 +542,8 @@ export default function Visits () {
       )}
     </div>
   )
+}
+
+function StethoscopeIcon() {
+  return <FaStethoscope className='text-[#BF6159]' />
 }
