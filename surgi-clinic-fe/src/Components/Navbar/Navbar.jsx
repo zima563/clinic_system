@@ -5,7 +5,10 @@ import './Navbar.css'
 import avatar from '../../assets/doctor_male.jpg'
 import { IoMdArrowDropdown } from 'react-icons/io'
 
+import { useNavigate } from 'react-router-dom'
+
 const Navbar = () => {
+  const navigate = useNavigate()
   const { t, i18n } = useTranslation()
   const [isLangOpen, setIsLangOpen] = useState(false)
   const dropdownRef = useRef(null)
@@ -84,7 +87,11 @@ const Navbar = () => {
         </div>
 
         {/* Profile Section */}
-        <div className='flex items-center space-x-2 rtl:space-x-reverse cursor-pointer'>
+        <div
+          onClick={() => navigate('/Settings')}
+          className='flex items-center space-x-2 rtl:space-x-reverse cursor-pointer hover:opacity-80 transition'
+          title='View Profile & Settings'
+        >
           <img
             src={avatar}
             alt={t('nav.profile')}
@@ -98,7 +105,11 @@ const Navbar = () => {
         </div>
 
         {/* Settings Icon */}
-        <button className='p-2 rounded-full hover:bg-gray-100 text-gray-600 transition-colors'>
+        <button
+          onClick={() => navigate('/Settings')}
+          className='p-2 rounded-full hover:bg-gray-100 text-gray-600 transition-colors'
+          title='Settings'
+        >
           <FaCog />
         </button>
       </div>

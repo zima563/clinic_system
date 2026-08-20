@@ -56,7 +56,11 @@ export const createPatient = async (res: Response, body: any) => {
   body.birthdate = birthdate.toISOString();
 
   const patient = await prisma.patient.create({
-    data: body,
+    data: {
+      ...body,
+      info: body.info || '',
+      medicalHistory: body.medicalHistory || '',
+    },
   });
   return res.status(200).json(patient);
 };

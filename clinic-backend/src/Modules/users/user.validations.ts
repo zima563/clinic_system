@@ -14,13 +14,10 @@ export const addUser = Joi.object({
       "any.required": "Email is required.",
     }),
   password: Joi.string()
-    .pattern(
-      /^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[@$!%*?&])[A-Za-z0-9@$!%*?&]{8,}$/
-    )
+    .min(6)
     .required()
     .messages({
-      "string.pattern.base":
-        "Password must be at least 8 characters long, including uppercase, lowercase, a number, and a special character.",
+      "string.min": "Password must be at least 6 characters long.",
       "any.required": "Password is required.",
     }),
   phone: Joi.string()
@@ -59,13 +56,10 @@ export const changePassword = Joi.object({
     "any.required": "Current password is required.",
   }),
   password: Joi.string()
-    .pattern(
-      /^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[@$!%*?&])[A-Za-z0-9@$!%*?&]{8,}$/
-    )
+    .min(6)
     .required()
     .messages({
-      "string.pattern.base":
-        "Password must be at least 8 characters long, including uppercase, lowercase, a number, and a special character.",
+      "string.min": "New password must be at least 6 characters long.",
       "any.required": "New password is required.",
     }),
   repassword: Joi.string().valid(Joi.ref("password")).required().messages({

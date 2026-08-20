@@ -35,7 +35,7 @@ const Schedule = () => {
   }
 
   return (
-    <div className='p-6'>
+    <div style={{ maxHeight: 'calc(100vh - 50px)' }} className='p-6 overflow-y-auto custom-scroll space-y-6'>
       {/* Header */}
       <div className='flex justify-between items-center mb-6'>
         <h1 className='page-title'>📅 Schedule List</h1>

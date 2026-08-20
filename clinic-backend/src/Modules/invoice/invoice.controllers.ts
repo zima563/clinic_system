@@ -70,13 +70,19 @@ export class invoiceControllers {
     @Body() body: any,
     @Res() res: Response
   ) {
-    const invoiceDetail = await invoiceService.getInvoiceDetails(id);
+    let invoiceDetail = await invoiceService.getInvoiceDetails(id);
 
     if (!invoiceDetail) {
-      throw new ApiError("invoiceDetail not found");
+      invoiceDetail = await prisma.invoiceDetail.findFirst({
+        where: { invoiceId: id }
+      });
     }
 
-    await invoiceService.updateInvoice(id, body, invoiceDetail);
+    if (!invoiceDetail) {
+      throw new ApiError("invoiceDetail not found", 404);
+    }
+
+    await invoiceService.updateInvoice(invoiceDetail.id, body, invoiceDetail);
 
     return res.json({ message: "invoiceDetail updated Successfully" });
   }

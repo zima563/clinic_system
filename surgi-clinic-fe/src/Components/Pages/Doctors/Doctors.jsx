@@ -371,12 +371,12 @@ function Doctors() {
               <div className='grid grid-cols-1 sm:grid-cols-2 gap-4'>
                 <div>
                   <label className='form-label'>Phone Number</label>
-                  <div className='flex gap-2'>
+                  <div className='flex items-center gap-2'>
                     <select
                       name='phoneCode'
                       value={formInputs.phoneCode}
                       onChange={handleInputChange}
-                      className='form-input w-24'
+                      className='form-input !w-24 shrink-0'
                     >
                       <option>+20</option>
                       <option>+971</option>
@@ -388,7 +388,7 @@ function Doctors() {
                       placeholder='1012345678'
                       value={formInputs.phone}
                       onChange={handleInputChange}
-                      className='form-input flex-1'
+                      className='form-input w-full flex-1'
                     />
                   </div>
                 </div>
@@ -400,12 +400,12 @@ function Doctors() {
                     required
                     value={formInputs.specialty}
                     onChange={handleInputChange}
-                    className='form-input'
+                    className='form-input w-full'
                   >
-                    <option value=''>-- Select Specialty --</option>
-                    {specialties.map(spe => (
-                      <option key={spe.id} value={spe.id}>
-                        {spe.title}
+                    <option value=''>Select Specialty...</option>
+                    {specialties.map(spec => (
+                      <option key={spec.id} value={spec.id}>
+                        {spec.title}
                       </option>
                     ))}
                   </select>
