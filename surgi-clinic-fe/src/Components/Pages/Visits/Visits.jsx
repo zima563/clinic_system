@@ -14,6 +14,7 @@ import { MdMedicalServices } from 'react-icons/md'
 import Select from 'react-select'
 import { useNavigate } from 'react-router-dom'
 import { API_URL, getToken } from '../../../config'
+import { toast } from 'react-toastify'
 
 export default function Visits() {
   const navigate = useNavigate()
@@ -128,13 +129,15 @@ export default function Visits() {
       })
 
       if (response.ok) {
+        toast.success('Clinical visit created successfully!')
         fetchVisits()
         closeModal()
       } else {
-        alert('Failed to create visit record.')
+        toast.error('Failed to create visit record.')
       }
     } catch (error) {
       console.error('Error submitting visit:', error)
+      toast.error('Error submitting visit.')
     }
   }
 

@@ -90,7 +90,6 @@ function Specialties() {
   }
 
   const handleDelete = async id => {
-    if (!window.confirm('Are you sure you want to delete this medical specialty?')) return
     try {
       await axios.delete(`${APIURL}/${id}`, {
         headers: { Authorization: `Bearer ${token}` }

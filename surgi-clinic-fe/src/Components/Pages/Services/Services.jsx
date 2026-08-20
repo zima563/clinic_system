@@ -76,7 +76,6 @@ export default function Services() {
   }
 
   const handleDeleteService = async id => {
-    if (!window.confirm('Are you sure you want to delete this clinical service?')) return
     try {
       await axios.delete(`${API_URL}/api/services/${id}`, {
         headers: { Authorization: `Bearer ${token}` }

@@ -158,14 +158,15 @@ export default function Users() {
   }
 
   const deleteUser = async userId => {
-    if (!window.confirm('Are you sure you want to delete this user?')) return
     try {
       await axios.patch(`${API_URL}/api/users/soft/${userId}`, {}, {
         headers: { Authorization: `Bearer ${token}` }
       })
+      toast.success('User account deleted successfully.')
       fetchUsers()
     } catch (err) {
       console.error('Failed to delete user:', err)
+      toast.error('Failed to delete user.')
     }
   }
 
@@ -190,7 +191,6 @@ export default function Users() {
 
   // Handle Role Deletion
   const handleDeleteRole = async roleId => {
-    if (!window.confirm('Are you sure you want to delete this role?')) return
     try {
       await axios.delete(`${API_URL}/api/roles/${roleId}`, {
         headers: { Authorization: `Bearer ${token}` }

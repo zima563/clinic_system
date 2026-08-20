@@ -67,7 +67,6 @@ export default function Appointments() {
 
   // Convert Appointment to Visit Handler
   const handleConvertToVisit = async appointment => {
-    if (!window.confirm(`Convert appointment for ${appointment.patient?.name} into an active Clinical Visit?`)) return
     setConvertingId(appointment.id)
     try {
       const payload = {
