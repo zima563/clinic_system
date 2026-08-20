@@ -70,6 +70,7 @@ export class doctorControllers {
   }
 
   @Patch("/:id")
+  @Delete("/:id")
   @UseBefore(...secureRouteWithPermissions("DeactiveDoctor"))
   async DeactiveDoctor(@Param("id") id: number, @Res() res: Response) {
     await doctorServices.deactiveOrActive(res, id);
