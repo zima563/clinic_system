@@ -15,6 +15,7 @@ import { useNavigate } from 'react-router-dom'
 import axios from 'axios'
 import addDoctor from '../../../assets/addDoctor.png'
 import { API_URL, getToken } from '../../../config'
+import { toast } from 'react-toastify'
 
 function Doctors() {
   const navigate = useNavigate()
@@ -74,7 +75,7 @@ function Doctors() {
     if (file && file.type.startsWith('image/')) {
       setImage(file)
     } else {
-      alert('Please upload a valid image file.')
+      toast.error('Please upload a valid image file.')
     }
   }
 
@@ -91,11 +92,12 @@ function Doctors() {
       await axios.post(`${API_URL}/api/doctors`, formData, {
         headers: { Authorization: `Bearer ${token}` }
       })
+      toast.success('Doctor added successfully!')
       fetchDoctors()
       closeModal()
     } catch (error) {
       console.error('Error adding doctor:', error)
-      alert(error.response?.data?.message || 'Failed to add doctor.')
+      toast.error(error.response?.data?.message || 'Failed to add doctor.')
     }
   }
 
@@ -106,9 +108,10 @@ function Doctors() {
         headers: { Authorization: `Bearer ${token}` }
       })
       setDoctors(doctors.filter(d => d.id !== selectedDoctor.id))
+      toast.success('Doctor deleted successfully.')
     } catch (error) {
       console.error('Error deleting doctor:', error)
-      alert('Failed to delete doctor.')
+      toast.error('Failed to delete doctor.')
     } finally {
       closeConfirmModal()
     }

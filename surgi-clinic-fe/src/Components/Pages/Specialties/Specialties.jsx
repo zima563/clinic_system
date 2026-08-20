@@ -11,6 +11,7 @@ import {
 import { IoCameraOutline } from 'react-icons/io5'
 import specialPlaceholder from '../../../assets/special.png'
 import { API_URL, getToken } from '../../../config'
+import { toast } from 'react-toastify'
 
 const APIURL = `${API_URL}/api/specialist`
 
@@ -52,18 +53,18 @@ function Specialties() {
     if (file && file.type.startsWith('image/')) {
       setImage(file)
     } else {
-      alert('Please upload a valid image file.')
+      toast.error('Please upload a valid image file.')
     }
   }
 
   const handleSubmit = async e => {
     e.preventDefault()
     if (!specialtyName.trim()) {
-      alert('Please enter a specialty name')
+      toast.error('Please enter a specialty name')
       return
     }
     if (!image) {
-      alert('Please upload an image icon')
+      toast.error('Please upload an image icon')
       return
     }
 
@@ -78,10 +79,13 @@ function Specialties() {
           'Content-Type': 'multipart/form-data'
         }
       })
+      toast.success('Specialty added successfully!')
       fetchSpecialties()
       closeModal()
     } catch (err) {
-      setError(err.response?.data?.message || 'Failed to add specialty')
+      const msg = err.response?.data?.message || 'Failed to add specialty'
+      setError(msg)
+      toast.error(msg)
     }
   }
 
@@ -91,9 +95,10 @@ function Specialties() {
       await axios.delete(`${APIURL}/${id}`, {
         headers: { Authorization: `Bearer ${token}` }
       })
+      toast.success('Specialty deleted successfully.')
       fetchSpecialties()
     } catch (err) {
-      alert(err.response?.data?.message || 'Failed to delete specialty')
+      toast.error(err.response?.data?.message || 'Failed to delete specialty')
     }
   }
 

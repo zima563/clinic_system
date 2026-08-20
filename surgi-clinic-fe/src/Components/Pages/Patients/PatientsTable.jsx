@@ -19,6 +19,7 @@ import { useForm } from 'react-hook-form'
 import { yupResolver } from '@hookform/resolvers/yup'
 import { API_URL, getToken } from '../../../config'
 import { hasPermission } from '../../PrivateRoute'
+import { toast } from 'react-toastify'
 
 const validationSchema = yup.object().shape({
   name: yup
@@ -107,9 +108,10 @@ const PatientsTable = () => {
         }
       })
       setPatients(patients.filter(p => p.id !== selectedPatient.id))
+      toast.success('Patient deleted successfully.')
     } catch (error) {
       console.error('Error deleting patient:', error)
-      alert('Failed to delete the patient.')
+      toast.error('Failed to delete the patient.')
     } finally {
       closeConfirmModal()
     }
@@ -140,11 +142,14 @@ const PatientsTable = () => {
           Authorization: `Bearer ${token}`
         }
       })
+      toast.success('Patient created successfully!')
       fetchPatients()
       closeModal()
       reset()
     } catch (error) {
-      setErrorMessage(error.response?.data?.message || 'Failed to create patient')
+      const msg = error.response?.data?.message || 'Failed to create patient'
+      setErrorMessage(msg)
+      toast.error(msg)
     }
   }
 

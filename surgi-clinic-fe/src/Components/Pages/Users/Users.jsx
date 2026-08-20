@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import axios from 'axios'
 import { API_URL, getToken } from '../../../config'
+import { toast } from 'react-toastify'
 import {
   FaUserPlus,
   FaSearch,
@@ -178,11 +179,12 @@ export default function Users() {
         { name: newRoleName.trim() },
         { headers: { Authorization: `Bearer ${token}` } }
       )
+      toast.success('Custom role created successfully!')
       setNewRoleName('')
       setIsRoleModalOpen(false)
       fetchRoles()
     } catch (err) {
-      alert(err.response?.data?.message || 'Failed to create role')
+      toast.error(err.response?.data?.message || 'Failed to create role')
     }
   }
 
@@ -193,9 +195,10 @@ export default function Users() {
       await axios.delete(`${API_URL}/api/roles/${roleId}`, {
         headers: { Authorization: `Bearer ${token}` }
       })
+      toast.success('Role deleted successfully.')
       fetchRoles()
     } catch (err) {
-      alert(err.response?.data?.message || 'Failed to delete role')
+      toast.error(err.response?.data?.message || 'Failed to delete role')
     }
   }
 
@@ -245,9 +248,9 @@ export default function Users() {
         { headers: { Authorization: `Bearer ${token}` } }
       )
       setIsPermModalOpen(false)
-      alert(`Permissions updated successfully for ${selectedRoleForPerms.name}`)
+      toast.success(`Permissions updated successfully for ${selectedRoleForPerms.name}`)
     } catch (err) {
-      alert(err.response?.data?.message || 'Failed to update role permissions')
+      toast.error(err.response?.data?.message || 'Failed to update role permissions')
     } finally {
       setSavingPerms(false)
     }

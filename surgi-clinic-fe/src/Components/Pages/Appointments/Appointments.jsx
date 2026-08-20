@@ -15,6 +15,8 @@ import Select from 'react-select'
 import { useNavigate } from 'react-router-dom'
 import { API_URL, getToken } from '../../../config'
 
+import { toast } from 'react-toastify'
+
 export default function Appointments() {
   const navigate = useNavigate()
   const [data, setData] = useState([])
@@ -98,15 +100,15 @@ export default function Appointments() {
           },
           body: JSON.stringify({ status: 'visited' })
         })
-        alert(`✅ Visit created successfully for ${appointment.patient?.name}!`)
+        toast.success(`Visit created successfully for ${appointment.patient?.name}!`)
         fetchAppointments()
         navigate('/Visits')
       } else {
-        alert('Failed to convert appointment to visit.')
+        toast.error('Failed to convert appointment to visit.')
       }
     } catch (err) {
       console.error('Error converting appointment:', err)
-      alert('Error converting appointment to visit.')
+      toast.error('Error converting appointment to visit.')
     } finally {
       setConvertingId(null)
     }
@@ -171,14 +173,16 @@ export default function Appointments() {
       })
 
       if (response.ok) {
+        toast.success('Appointment created successfully!')
         fetchAppointments()
         closeModal()
       } else {
         const errData = await response.json()
-        alert(errData.message || 'Failed to create appointment.')
+        toast.error(errData.message || 'Failed to create appointment.')
       }
     } catch (error) {
       console.error('Error creating appointment:', error)
+      toast.error('Error creating appointment.')
     }
   }
 

@@ -12,6 +12,7 @@ import {
 } from 'react-icons/fa'
 import axios from 'axios'
 import { API_URL, getToken } from '../../../config'
+import { toast } from 'react-toastify'
 
 function Expenses() {
   const [selectedDate, setSelectedDate] = useState(null)
@@ -112,18 +113,19 @@ function Expenses() {
       await axios.delete(`${API_URL}/api/invoice/${expenseToDelete}`, {
         headers: { Authorization: `Bearer ${token}` }
       })
+      toast.success('Expense record deleted successfully.')
       fetchExpenses()
       closeDeleteModal()
     } catch (error) {
       console.error('Error deleting expense:', error)
-      alert('Failed to delete expense record.')
+      toast.error('Failed to delete expense record.')
     }
   }
 
   const handleSave = async e => {
     e.preventDefault()
     if (!expenseDetails.trim() || !expenseAmount) {
-      alert('Please fill in both description and amount.')
+      toast.error('Please fill in both description and amount.')
       return
     }
 
@@ -139,6 +141,7 @@ function Expenses() {
             Authorization: `Bearer ${token}`
           }
         })
+        toast.success('Expense updated successfully!')
       } else {
         const payload = {
           description: expenseDetails.trim(),
@@ -150,12 +153,13 @@ function Expenses() {
             Authorization: `Bearer ${token}`
           }
         })
+        toast.success('Expense created successfully!')
       }
       fetchExpenses()
       closeModal()
     } catch (error) {
       console.error('Error saving expense:', error)
-      alert(error.response?.data?.message || 'Failed to save expense.')
+      toast.error(error.response?.data?.message || 'Failed to save expense.')
     }
   }
 

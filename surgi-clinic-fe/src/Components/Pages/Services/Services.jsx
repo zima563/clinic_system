@@ -14,6 +14,7 @@ import Joi from 'joi'
 import { useFormik } from 'formik'
 import defaultServiceIcon from '../../../assets/heart.png'
 import { API_URL, getToken } from '../../../config'
+import { toast } from 'react-toastify'
 
 export default function Services() {
   const token = getToken()
@@ -70,7 +71,7 @@ export default function Services() {
     if (file && file.type.startsWith('image/')) {
       setImage(file)
     } else {
-      alert('Please upload a valid image file.')
+      toast.error('Please upload a valid image file.')
     }
   }
 
@@ -80,9 +81,10 @@ export default function Services() {
       await axios.delete(`${API_URL}/api/services/${id}`, {
         headers: { Authorization: `Bearer ${token}` }
       })
+      toast.success('Clinical service deleted successfully.')
       fetchServices()
     } catch (err) {
-      alert(err.response?.data?.message || 'Failed to delete service')
+      toast.error(err.response?.data?.message || 'Failed to delete service')
     }
   }
 
@@ -115,10 +117,12 @@ export default function Services() {
         await axios.post(`${API_URL}/api/services`, formData, {
           headers: { Authorization: `Bearer ${token}` }
         })
+        toast.success('Clinical service added successfully!')
         fetchServices()
         closeModal()
       } catch (error) {
         console.error('Error adding service:', error)
+        toast.error(error.response?.data?.message || 'Failed to add service')
       } finally {
         setLoading(false)
       }
