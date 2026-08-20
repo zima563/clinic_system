@@ -339,34 +339,55 @@ async function main() {
   }
   console.log('✅ Doctors seeded successfully.');
 
-  // 7. Seed Default Schedules
-  console.log('📅 Seeding default schedules...');
-  const firstDoc = await prisma.doctor.findFirst();
-  const firstServ = await prisma.service.findFirst();
+  // 7. Seed Rich Schedules for all Doctors
+  console.log('📅 Seeding comprehensive doctor working schedules...');
+  const allDocs = await prisma.doctor.findMany({ where: { isDeleted: false } });
+  const allServs = await prisma.service.findMany({ where: { isDeleted: false } });
 
-  if (firstDoc && firstServ) {
-    const existingSched = await prisma.schedule.findFirst({
-      where: { doctorId: firstDoc.id, servicesId: firstServ.id },
-    });
+  const daysList = ['Saturday', 'Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday'];
+  const timeSlots = [
+    { fromTime: '09:00 AM', toTime: '01:00 PM' },
+    { fromTime: '01:30 PM', toTime: '05:30 PM' },
+    { fromTime: '06:00 PM', toTime: '10:00 PM' },
+  ];
+  const pricesList = [250, 350, 450, 600, 750];
 
-    if (!existingSched) {
-      await prisma.schedule.create({
-        data: {
-          doctorId: firstDoc.id,
-          servicesId: firstServ.id,
-          price: 300,
-          createdBy: adminUser.id,
-          dates: {
-            create: [
-              { day: 'Sunday', fromTime: '09:00 AM', toTime: '01:00 PM' },
-              { day: 'Wednesday', fromTime: '02:00 PM', toTime: '06:00 PM' },
-            ],
-          },
-        },
+  for (let dIdx = 0; dIdx < allDocs.length; dIdx++) {
+    const doc = allDocs[dIdx];
+
+    for (let sIdx = 0; sIdx < allServs.length; sIdx++) {
+      const serv = allServs[sIdx];
+
+      const existingSched = await prisma.schedule.findFirst({
+        where: { doctorId: doc.id, servicesId: serv.id },
       });
+
+      if (!existingSched) {
+        // Assign 2 distinct days and timeslots per service per doctor
+        const day1 = daysList[(dIdx + sIdx) % daysList.length];
+        const day2 = daysList[(dIdx + sIdx + 3) % daysList.length];
+        const slot1 = timeSlots[(dIdx + sIdx) % timeSlots.length];
+        const slot2 = timeSlots[(dIdx + sIdx + 1) % timeSlots.length];
+        const assignedPrice = pricesList[(dIdx + sIdx) % pricesList.length];
+
+        await prisma.schedule.create({
+          data: {
+            doctorId: doc.id,
+            servicesId: serv.id,
+            price: assignedPrice,
+            createdBy: adminUser.id,
+            dates: {
+              create: [
+                { day: day1, fromTime: slot1.fromTime, toTime: slot1.toTime },
+                { day: day2, fromTime: slot2.fromTime, toTime: slot2.toTime },
+              ],
+            },
+          },
+        });
+      }
     }
   }
-  console.log('✅ Schedules seeded successfully.');
+  console.log('✅ Comprehensive doctor schedules seeded successfully.');
 
   console.log('🎉 Seeding completed successfully!');
 }
