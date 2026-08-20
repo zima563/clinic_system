@@ -1,5 +1,6 @@
 import {
   Body,
+  Delete,
   Get,
   JsonController,
   Param,
@@ -11,9 +12,8 @@ import {
   Res,
   UseBefore,
 } from "routing-controllers";
-import { Response } from "express";
+import { Request, Response } from "express";
 import { createValidationMiddleware } from "../../middlewares/validation";
-
 import ApiError from "../../utils/ApiError";
 import createUploadMiddleware from "../../middlewares/uploadFile";
 import { secureRouteWithPermissions } from "../../middlewares/secureRoutesMiddleware";
@@ -31,7 +31,7 @@ export class ServiceController {
   async addService(@Req() req: any, @Body() body: any, @Res() res: Response) {
     return await services.createService(req, res, {
       ...body,
-      createdBy: req.user.id,
+      createdBy: req.user?.id || 1,
     });
   }
 
@@ -67,9 +67,14 @@ export class ServiceController {
   }
 
   @Patch("/:id")
-  @Delete("/:id")
   @UseBefore(...secureRouteWithPermissions("deactiveService"))
   async deactiveService(@Param("id") id: number, @Res() res: Response) {
     return await services.deactiveService(res, id);
+  }
+
+  @Delete("/:id")
+  @UseBefore(...secureRouteWithPermissions("deactiveService"))
+  async deleteService(@Param("id") id: number, @Res() res: Response) {
+    return await services.deleteService(res, id);
   }
 }

@@ -75,12 +75,26 @@ export default function Services() {
     }
   }
 
+  const handleToggleStatus = async id => {
+    try {
+      const currentToken = getToken() || token
+      await axios.patch(`${API_URL}/api/services/${id}`, {}, {
+        headers: { Authorization: `Bearer ${currentToken}` }
+      })
+      toast.success('Service availability status updated!')
+      fetchServices()
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to update service status')
+    }
+  }
+
   const handleDeleteService = async id => {
     try {
+      const currentToken = getToken() || token
       await axios.delete(`${API_URL}/api/services/${id}`, {
-        headers: { Authorization: `Bearer ${token}` }
+        headers: { Authorization: `Bearer ${currentToken}` }
       })
-      toast.success('Clinical service deleted successfully.')
+      toast.success('Clinical service deleted completely.')
       fetchServices()
     } catch (err) {
       toast.error(err.response?.data?.message || 'Failed to delete service')
@@ -190,25 +204,38 @@ export default function Services() {
                       </div>
                       <div>
                         <h3 className='text-base font-bold text-gray-900'>{item.title}</h3>
-                        <span
-                          className={`badge ${item.status ? 'badge-confirmed' : 'badge-canceled'} text-[10px] inline-flex items-center gap-1`}
-                        >
-                          {item.status ? (
-                            <>
-                              <FaCheckCircle className='text-[9px]' /> Available
-                            </>
-                          ) : (
-                            <>
-                              <FaTimesCircle className='text-[9px]' /> Not Available
-                            </>
-                          )}
-                        </span>
                       </div>
                     </div>
 
-                    <button onClick={() => handleDeleteService(item.id)} className='btn-icon danger' title='Delete Service'>
-                      <FaTrash />
-                    </button>
+                    <div className='flex items-center gap-2'>
+                      <button
+                        onClick={() => handleToggleStatus(item.id)}
+                        className={`px-2.5 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 transition shadow-2xs ${
+                          item.status
+                            ? 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-200'
+                            : 'bg-amber-50 text-amber-700 hover:bg-amber-100 border border-amber-200'
+                        }`}
+                        title='Click to Toggle Availability Status (Available / Not Available)'
+                      >
+                        {item.status ? (
+                          <>
+                            <FaCheckCircle className='text-xs' /> Available
+                          </>
+                        ) : (
+                          <>
+                            <FaTimesCircle className='text-xs' /> Not Available
+                          </>
+                        )}
+                      </button>
+
+                      <button
+                        onClick={() => handleDeleteService(item.id)}
+                        className='btn-icon danger'
+                        title='Delete Service Permanently'
+                      >
+                        <FaTrash />
+                      </button>
+                    </div>
                   </div>
 
                   <p className='text-xs text-gray-600 line-clamp-3 leading-relaxed bg-gray-50 p-3 rounded-xl border border-gray-100/60'>

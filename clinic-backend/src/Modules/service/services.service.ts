@@ -184,3 +184,12 @@ export const deactiveService = async (res: Response, id: number) => {
   let updatedService = await getServiceById(id);
   return res.status(200).json(updatedService);
 };
+
+export const deleteService = async (res: Response, id: number) => {
+  await validateService(id);
+  await prisma.service.update({
+    where: { id },
+    data: { isDeleted: true },
+  });
+  return res.status(200).json({ message: "service deleted successfully" });
+};

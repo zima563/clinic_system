@@ -67,6 +67,7 @@ export class invoiceControllers {
     createValidationMiddleware(updateInvoiceDetailValidation)
   )
   async updateInvoiceDetail(
+    @Req() req: Request,
     @Param("id") id: number,
     @Body() body: any,
     @Res() res: Response
@@ -88,6 +89,7 @@ export class invoiceControllers {
             invoiceId: inv.id,
             description: body.description || "Invoice detail",
             amount: body.amount || inv.total || 0,
+            createdBy: req.user?.id || 1,
           }
         });
       }
