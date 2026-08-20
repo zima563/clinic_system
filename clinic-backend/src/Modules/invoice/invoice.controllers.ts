@@ -22,6 +22,7 @@ import { Decimal } from "@prisma/client/runtime/library";
 import { Request, Response } from "express";
 import { secureRouteWithPermissions } from "../../middlewares/secureRoutesMiddleware";
 import * as invoiceService from "./invoice.service";
+import { prisma } from "../../prismaClient";
 @JsonController("/api/invoice")
 export class invoiceControllers {
   @Post("/")
