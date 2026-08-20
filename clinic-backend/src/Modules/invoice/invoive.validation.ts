@@ -36,15 +36,15 @@ export const appendInvoiceDetailValidation = Joi.object({
 });
 
 export const updateInvoiceDetailValidation = Joi.object({
-  id: Joi.string().required(),
-  description: Joi.string().min(1).max(255).required().messages({
+  id: Joi.string().optional(),
+  description: Joi.string().min(1).max(255).optional().messages({
     "string.base": "Description must be a string.",
     "string.empty": "Description cannot be empty.",
     "string.min": "Description must be at least 1 character long.",
     "string.max": "Description must not exceed 255 characters.",
   }),
 
-  amount: Joi.number().precision(2).positive().required().messages({
+  amount: Joi.number().precision(2).positive().optional().messages({
     "number.base": "Amount must be a number.",
     "number.positive": "Amount must be a positive value.",
     "number.precision": "Amount can have up to 2 decimal places.",

@@ -67,6 +67,7 @@ export class ServiceController {
   }
 
   @Patch("/:id")
+  @Delete("/:id")
   @UseBefore(...secureRouteWithPermissions("deactiveService"))
   async deactiveService(@Param("id") id: number, @Res() res: Response) {
     return await services.deactiveService(res, id);
