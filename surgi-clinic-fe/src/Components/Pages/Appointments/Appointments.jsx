@@ -8,7 +8,8 @@ import {
   FaThLarge,
   FaList,
   FaUser,
-  FaCalendarAlt
+  FaCalendarAlt,
+  FaCheckCircle
 } from 'react-icons/fa'
 import Select from 'react-select'
 import { useNavigate } from 'react-router-dom'
@@ -20,6 +21,7 @@ export default function Appointments() {
   const [searchTerm, setSearchTerm] = useState('')
   const [viewMode, setViewMode] = useState('grid') // 'grid' | 'table'
   const [isModalOpen, setIsModalOpen] = useState(false)
+  const [convertingId, setConvertingId] = useState(null)
 
   // React Select States
   const [selectedOption, setSelectedOption] = useState(null)
@@ -59,6 +61,55 @@ export default function Appointments() {
   const closeModal = () => {
     setIsModalOpen(false)
     setErrorMessage({})
+  }
+
+  // Convert Appointment to Visit Handler
+  const handleConvertToVisit = async appointment => {
+    if (!window.confirm(`Convert appointment for ${appointment.patient?.name} into an active Clinical Visit?`)) return
+    setConvertingId(appointment.id)
+    try {
+      const payload = {
+        patientId: Number(appointment.patientId || appointment.patient?.id),
+        visitDetails: [
+          {
+            scheduleId: Number(appointment.scheduleId || appointment.schedule?.id),
+            dateId: Number(appointment.dateId || appointment.date?.id)
+          }
+        ],
+        paymentMethod: 'Cash'
+      }
+
+      const visitRes = await fetch(`${API_URL}/api/visit`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify(payload)
+      })
+
+      if (visitRes.ok) {
+        // Update appointment status to 'visited'
+        await fetch(`${API_URL}/api/appointment/${appointment.id}`, {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`
+          },
+          body: JSON.stringify({ status: 'visited' })
+        })
+        alert(`✅ Visit created successfully for ${appointment.patient?.name}!`)
+        fetchAppointments()
+        navigate('/Visits')
+      } else {
+        alert('Failed to convert appointment to visit.')
+      }
+    } catch (err) {
+      console.error('Error converting appointment:', err)
+      alert('Error converting appointment to visit.')
+    } finally {
+      setConvertingId(null)
+    }
   }
 
   // Filtered Appointments by search
@@ -284,66 +335,89 @@ export default function Appointments() {
                       ? item.schedule.doctor.image
                       : `https://ui-avatars.com/api/?name=${encodeURIComponent(item.schedule?.doctor?.name || 'Doctor')}&background=BF6159&color=fff`
 
+                    const isVisited = item.status === 'visited'
+
                     return (
                       <div
                         key={item.id}
-                        className='card p-5 bg-white border border-gray-200 shadow-sm space-y-4 hover:border-red-200 transition'
+                        className='card p-5 bg-white border border-gray-200 shadow-sm space-y-4 hover:border-red-200 transition flex flex-col justify-between'
                       >
-                        {/* Patient & Status */}
-                        <div className='flex justify-between items-start'>
-                          <div
-                            onClick={() => item.patient?.id && navigate(`/patient/${item.patient.id}`)}
-                            className='cursor-pointer group'
-                          >
-                            <h3 className='text-lg font-bold text-gray-900 group-hover:text-[#BF6159] transition flex items-center gap-1.5'>
-                              <FaUser className='text-xs text-gray-400' /> {item.patient?.name || 'Patient'}
-                            </h3>
-                            <p className='text-xs font-semibold text-gray-400 mt-0.5'>Phone: {item.patient?.phone || 'N/A'}</p>
+                        <div className='space-y-3'>
+                          {/* Patient & Status */}
+                          <div className='flex justify-between items-start'>
+                            <div
+                              onClick={() => item.patient?.id && navigate(`/patient/${item.patient.id}`)}
+                              className='cursor-pointer group'
+                            >
+                              <h3 className='text-lg font-bold text-gray-900 group-hover:text-[#BF6159] transition flex items-center gap-1.5'>
+                                <FaUser className='text-xs text-gray-400' /> {item.patient?.name || 'Patient'}
+                              </h3>
+                              <p className='text-xs font-semibold text-gray-400 mt-0.5'>Phone: {item.patient?.phone || 'N/A'}</p>
+                            </div>
+                            <span
+                              className={`badge ${
+                                isVisited
+                                  ? 'badge-confirmed'
+                                  : item.status === 'confirmed'
+                                  ? 'badge-info'
+                                  : item.status === 'canceled'
+                                  ? 'badge-canceled'
+                                  : 'badge-pending'
+                              }`}
+                            >
+                              {item.status || 'pending'}
+                            </span>
                           </div>
-                          <span
-                            className={`badge ${
-                              item.status === 'confirmed'
-                                ? 'badge-confirmed'
-                                : item.status === 'canceled'
-                                ? 'badge-canceled'
-                                : 'badge-pending'
-                            }`}
-                          >
-                            {item.status || 'pending'}
-                          </span>
+
+                          {/* Doctor Info */}
+                          <div className='flex items-center gap-3 p-2.5 bg-gray-50 rounded-xl border border-gray-100'>
+                            <img
+                              src={docImg}
+                              alt={item.schedule?.doctor?.name}
+                              className='w-10 h-10 rounded-full object-cover border border-red-100 shadow-2xs'
+                              onError={e => {
+                                e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(item.schedule?.doctor?.name || 'Doctor')}&background=BF6159&color=fff`
+                              }}
+                            />
+                            <div>
+                              <span className='block text-xs font-bold text-gray-900'>
+                                Dr. {item.schedule?.doctor?.name || 'Specialist'}
+                              </span>
+                              <span className='text-[11px] text-[#BF6159] font-medium'>
+                                {item.schedule?.service?.title || 'Consultation'}
+                              </span>
+                            </div>
+                          </div>
+
+                          {/* Timing & Price */}
+                          <div className='flex justify-between items-center pt-1 text-xs'>
+                            <div className='flex items-center gap-1.5 font-medium text-gray-600'>
+                              <FaClock className='text-gray-400' />
+                              <span>
+                                {item.date?.fromTime || '09:00 AM'} - {item.date?.toTime || '01:00 PM'}
+                              </span>
+                            </div>
+                            <span className='font-bold text-gray-900 bg-white px-2.5 py-1 rounded-lg border border-gray-200 shadow-2xs'>
+                              {item.schedule?.price || 0} L.E
+                            </span>
+                          </div>
                         </div>
 
-                        {/* Doctor Info */}
-                        <div className='flex items-center gap-3 p-2.5 bg-gray-50 rounded-xl border border-gray-100'>
-                          <img
-                            src={docImg}
-                            alt={item.schedule?.doctor?.name}
-                            className='w-10 h-10 rounded-full object-cover border border-red-100 shadow-2xs'
-                            onError={e => {
-                              e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(item.schedule?.doctor?.name || 'Doctor')}&background=BF6159&color=fff`
-                            }}
-                          />
-                          <div>
-                            <span className='block text-xs font-bold text-gray-900'>
-                              Dr. {item.schedule?.doctor?.name || 'Specialist'}
+                        {/* Action: Convert to Visit Button */}
+                        <div className='pt-3 border-t border-gray-100'>
+                          {isVisited ? (
+                            <span className='badge badge-confirmed w-full justify-center py-1.5 text-xs font-bold flex items-center gap-1'>
+                              <FaCheckCircle /> Converted to Visit
                             </span>
-                            <span className='text-[11px] text-[#BF6159] font-medium'>
-                              {item.schedule?.service?.title || 'Consultation'}
-                            </span>
-                          </div>
-                        </div>
-
-                        {/* Timing & Price */}
-                        <div className='flex justify-between items-center pt-2 border-t border-gray-100 text-xs'>
-                          <div className='flex items-center gap-1.5 font-medium text-gray-600'>
-                            <FaClock className='text-gray-400' />
-                            <span>
-                              {item.date?.fromTime || '09:00 AM'} - {item.date?.toTime || '01:00 PM'}
-                            </span>
-                          </div>
-                          <span className='font-bold text-gray-900 bg-white px-2.5 py-1 rounded-lg border border-gray-200 shadow-2xs'>
-                            {item.schedule?.price || 0} L.E
-                          </span>
+                          ) : (
+                            <button
+                              onClick={() => handleConvertToVisit(item)}
+                              disabled={convertingId === item.id}
+                              className='btn-primary w-full justify-center text-xs py-2 shadow-2xs'
+                            >
+                              <FaStethoscope /> {convertingId === item.id ? 'Converting...' : 'Convert to Visit'}
+                            </button>
+                          )}
                         </div>
                       </div>
                     )
@@ -373,6 +447,7 @@ export default function Appointments() {
                 <th>Time Slot</th>
                 <th>Price</th>
                 <th>Status</th>
+                <th className='text-center'>Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -399,8 +474,10 @@ export default function Appointments() {
                     <td>
                       <span
                         className={`badge ${
-                          item.status === 'confirmed'
+                          item.status === 'visited'
                             ? 'badge-confirmed'
+                            : item.status === 'confirmed'
+                            ? 'badge-info'
                             : item.status === 'canceled'
                             ? 'badge-canceled'
                             : 'badge-pending'
@@ -409,11 +486,24 @@ export default function Appointments() {
                         {item.status || 'pending'}
                       </span>
                     </td>
+                    <td className='text-center'>
+                      {item.status === 'visited' ? (
+                        <span className='badge badge-confirmed text-[10px]'>Converted</span>
+                      ) : (
+                        <button
+                          onClick={() => handleConvertToVisit(item)}
+                          disabled={convertingId === item.id}
+                          className='btn-primary text-xs py-1 px-3 shadow-2xs'
+                        >
+                          <FaStethoscope /> {convertingId === item.id ? 'Converting...' : 'Convert to Visit'}
+                        </button>
+                      )}
+                    </td>
                   </tr>
                 ))
               ) : (
                 <tr>
-                  <td colSpan={7} className='py-8 text-center text-gray-400'>
+                  <td colSpan={8} className='py-8 text-center text-gray-400'>
                     No appointment records found.
                   </td>
                 </tr>

@@ -4,11 +4,11 @@ import { prisma } from "../../prismaClient";
 import ApiFeatures from "../../utils/ApiFeatures";
 import ApiError from "../../utils/ApiError";
 
-export const createInvoice = async (total: any, createdBy: number) => {
+export const createInvoice = async (total: any, createdBy: number, ex: boolean = true) => {
   return prisma.invoice.create({
     data: {
       total: total,
-      ex: false,
+      ex: ex,
       createdBy,
     },
   });

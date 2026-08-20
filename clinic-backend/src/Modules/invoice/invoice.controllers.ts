@@ -34,7 +34,8 @@ export class invoiceControllers {
     @Body() body: any,
     @Res() res: Response
   ) {
-    let invoice = await invoiceService.createInvoice(body.amount, req.user.id);
+    const isExpense = body.ex !== undefined ? (body.ex === true || body.ex === 'true') : true;
+    let invoice = await invoiceService.createInvoice(body.amount, req.user.id, isExpense);
 
     let invoiceDetails = await invoiceService.createInvoiceDetails(
       invoice.id,
